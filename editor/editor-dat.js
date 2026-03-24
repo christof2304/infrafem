@@ -68,14 +68,22 @@ function generateSOFIMSHC(model) {
     lines.push('SPT NO       X         Y         Z         FIX');
     for (const node of model.nodes) {
         const sup = SUPPORT_TYPES[node.support];
-        const fix = (sup && sup.fix) ? sup.fix : '';
-        lines.push(`    ${String(node.id).padStart(4)}${fmtCoord(node.x)}${fmtCoord(node.z)}${fmtCoord(0)}     ${fix}`);
+        if (node.support === 'SPRING') {
+            // Spring support: SPT with PZ fix, then CA stiffness
+            lines.push(`    ${String(node.id).padStart(4)}${fmtCoord(node.x)}${fmtCoord(node.z)}${fmtCoord(0)}     PZ`);
+            const stiffness = node.springStiffness || 1e6;
+            lines.push(`SPT ${node.id} FIX PZ CA ${fmtNum(stiffness, 0)}`);
+        } else {
+            const fix = (sup && sup.fix) ? sup.fix : '';
+            lines.push(`    ${String(node.id).padStart(4)}${fmtCoord(node.x)}${fmtCoord(node.z)}${fmtCoord(0)}     ${fix}`);
+        }
     }
     lines.push('');
 
-    // SLN: generate boundary lines from areas + beam lines
+    // SLN: generate boundary lines from areas + beam lines + opening boundaries
     let nextSlnId = 1;
     const areaSlnMap = {}; // areaId → [slnIds]
+    const beamSlnMap = {}; // beamId → slnId
 
     const edgeFixMap = { NONE: '', FIXED: 'F', PINNED: 'PP', ROLLER_X: 'XP', ROLLER_Z: 'PX' };
 
@@ -97,22 +105,63 @@ function generateSOFIMSHC(model) {
         areaSlnMap[area.id] = slnIds;
     }
 
-    // SLN for beams with SNO + STYP B
+    // SLN for opening boundaries
+    const openingSlnMap = {}; // openingId → [slnIds]
+    for (const opening of (model.openings || [])) {
+        const slnIds = [];
+        const ids = opening.boundaryNodeIds;
+        for (let i = 0; i < ids.length; i++) {
+            const n1 = ids[i];
+            const n2 = ids[(i + 1) % ids.length];
+            const slnId = nextSlnId++;
+            lines.push(`SLN ${slnId}  ${n1}  ${n2}`);
+            slnIds.push(slnId);
+        }
+        openingSlnMap[opening.id] = slnIds;
+    }
+
+    // SLN for beams with SNO + STYP B (skip if edge overlaps area/opening boundary)
+    const boundaryEdges = new Set();
+    for (const area of (model.areas || [])) {
+        const ids = area.boundaryNodeIds;
+        for (let i = 0; i < ids.length; i++) {
+            const e = [ids[i], ids[(i+1) % ids.length]].sort((a,b) => a-b).join(',');
+            boundaryEdges.add(e);
+        }
+    }
+    for (const opening of (model.openings || [])) {
+        const ids = opening.boundaryNodeIds;
+        for (let i = 0; i < ids.length; i++) {
+            const e = [ids[i], ids[(i+1) % ids.length]].sort((a,b) => a-b).join(',');
+            boundaryEdges.add(e);
+        }
+    }
     for (const beam of model.beams) {
+        const e = [beam.nodeStart, beam.nodeEnd].sort((a,b) => a-b).join(',');
+        if (boundaryEdges.has(e)) continue; // skip — already an area/opening boundary
         const slnId = nextSlnId++;
+        beamSlnMap[beam.id] = slnId;
         lines.push(`SLN ${slnId}  ${beam.nodeStart}  ${beam.nodeEnd}  SNO ${beam.sectionId} STYP B`);
     }
     lines.push('');
 
-    // SAR: structural areas
+    // SAR: structural areas with openings as inner boundaries
     for (const area of (model.areas || [])) {
         const slnIds = areaSlnMap[area.id] || [];
         lines.push(`SAR ${area.id}  T ${fmtNum(area.thickness)} GRP ${area.groupId} MNO ${area.materialId}`);
-        lines.push(`SARB OUT ${slnIds.join(' ')}`);
+        // Collect opening SLN IDs for this area
+        lines.push(`SARB OUT ${slnIds.join(',')}`);
+        const areaOpenings = (model.openings || []).filter(o => o.areaId === area.id);
+        for (const o of areaOpenings) {
+            const oSlns = openingSlnMap[o.id] || [];
+            if (oSlns.length > 0) {
+                lines.push(`SARB IN ${oSlns.join(',')}`);
+            }
+        }
     }
 
     lines.push('END');
-    return lines;
+    return { lines, beamSlnMap };
 }
 
 // ─── SOFIMSHA Block ─────────────────────────────────────────
@@ -195,14 +244,15 @@ function generateSOFIMSHA(model) {
 }
 
 // ─── SOFILOAD Block ─────────────────────────────────────────
-function generateSOFILOAD(model) {
+function generateSOFILOAD(model, beamSlnMap = {}) {
     const hasAreas = (model.areas || []).length > 0;
     const lcEntries = [];
     for (const lc of model.loadcases) {
         const nodeLoads = lc.loads.filter(l => l.type === 'NODE_FORCE');
         const areaLoads = lc.loads.filter(l => l.type === 'AREA_LOAD');
-        if (nodeLoads.length > 0 || areaLoads.length > 0) {
-            lcEntries.push({ lc, nodeLoads, areaLoads });
+        const beamLoads = lc.loads.filter(l => l.type === 'BEAM_LINE');
+        if (nodeLoads.length > 0 || areaLoads.length > 0 || beamLoads.length > 0) {
+            lcEntries.push({ lc, nodeLoads, areaLoads, beamLoads });
         }
     }
     if (lcEntries.length === 0) return [];
@@ -211,7 +261,7 @@ function generateSOFILOAD(model) {
     lines.push('PROG SOFILOAD urs:3');
     lines.push('KOPF Lasten');
 
-    for (const { lc, nodeLoads, areaLoads } of lcEntries) {
+    for (const { lc, nodeLoads, areaLoads, beamLoads } of lcEntries) {
         lines.push(`LF ${lc.id}`);
         for (const load of nodeLoads) {
             const dir = load.direction;
@@ -226,6 +276,12 @@ function generateSOFILOAD(model) {
             const area = (model.areas || []).find(a => a.id === load.areaId);
             const grp = area ? area.groupId : 0;
             lines.push(`  QUAD GRP ${grp} TYPE ${load.direction} P ${fmtNum(load.value)}`);
+        }
+        for (const load of beamLoads) {
+            const slnId = beamSlnMap[load.elementId];
+            if (slnId) {
+                lines.push(`  LINE SLN ${slnId} TYPE ${load.direction} P1 ${fmtNum(load.p1)} P2 ${fmtNum(load.p2)}`);
+            }
         }
     }
 
@@ -256,8 +312,10 @@ function generateASE(model) {
 // ─── RESULTS Block ──────────────────────────────────────────
 function generateRESULTS(model) {
     const lines = [];
+    const hasBeams = model.beams.length > 0;
+    const hasAreas = (model.areas || []).length > 0;
 
-    // Node displacements
+    // Separate RESULTS blocks (RESULTS can only handle one type per run)
     lines.push('+PROG RESULTS urs:99');
     lines.push('HEAD Export Knotenverschiebungen');
     lines.push('PAGE UNII 0');
@@ -266,8 +324,7 @@ function generateRESULTS(model) {
     lines.push('END');
     lines.push('');
 
-    // Beam forces
-    if (model.beams.length > 0) {
+    if (hasBeams) {
         lines.push('+PROG RESULTS urs:100');
         lines.push('HEAD Export Stabkraefte');
         lines.push('PAGE UNII 0');
@@ -277,8 +334,7 @@ function generateRESULTS(model) {
         lines.push('');
     }
 
-    // Quad forces (for models with areas)
-    if ((model.areas || []).length > 0) {
+    if (hasAreas) {
         lines.push('+PROG RESULTS urs:101');
         lines.push('HEAD Export Flaechenschnittkraefte');
         lines.push('PAGE UNII 0');
@@ -300,6 +356,7 @@ export function generateDat(model) {
     lines.push('');
 
     const hasAreas = (model.areas || []).length > 0;
+    let beamSlnMap = {};
 
     // AQUA
     lines.push(...generateAQUA(model));
@@ -307,14 +364,16 @@ export function generateDat(model) {
 
     // Mesh generator: SOFIMSHC for areas, SOFIMSHA for beams-only
     if (hasAreas) {
-        lines.push(...generateSOFIMSHC(model));
+        const result = generateSOFIMSHC(model);
+        lines.push(...result.lines);
+        beamSlnMap = result.beamSlnMap;
     } else {
         lines.push(...generateSOFIMSHA(model));
     }
     lines.push('');
 
-    // SOFILOAD
-    const sofiloadLines = generateSOFILOAD(model);
+    // SOFILOAD (pass beamSlnMap for LINE SLN loads in SOFIMSHC models)
+    const sofiloadLines = generateSOFILOAD(model, beamSlnMap);
     if (sofiloadLines.length > 0) {
         lines.push(...sofiloadLines);
         lines.push('');

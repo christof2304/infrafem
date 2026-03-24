@@ -290,6 +290,20 @@ export class EditorCanvas {
             }
             shape.closePath();
 
+            // Add openings as holes in the shape
+            const openings = this.model.getOpeningsForArea(area.id);
+            for (const opening of openings) {
+                const holeNodes = opening.boundaryNodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+                if (holeNodes.length < 3) continue;
+                const hole = new THREE.Path();
+                hole.moveTo(holeNodes[0].x, holeNodes[0].z);
+                for (let i = 1; i < holeNodes.length; i++) {
+                    hole.lineTo(holeNodes[i].x, holeNodes[i].z);
+                }
+                hole.closePath();
+                shape.holes.push(hole);
+            }
+
             // Semi-transparent fill
             const geo = new THREE.ShapeGeometry(shape);
             const grp = this.model.data.groups.find(g => g.id === area.groupId);
@@ -314,6 +328,22 @@ export class EditorCanvas {
             const line = new THREE.Line(lineGeo, lineMat);
             line.userData = { type: 'area', id: area.id };
             this.areaGroup.add(line);
+
+            // Opening outlines (red dashed)
+            for (const opening of openings) {
+                const holeNodes = opening.boundaryNodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+                if (holeNodes.length < 3) continue;
+                const holePts = holeNodes.map(n => new THREE.Vector3(n.x, n.z, -0.003));
+                holePts.push(holePts[0].clone());
+                const holeGeo = new THREE.BufferGeometry().setFromPoints(holePts);
+                const holeMat = new THREE.LineDashedMaterial({
+                    color: 0xff4444, dashSize: 0.3, gapSize: 0.15, linewidth: 2,
+                });
+                const holeLine = new THREE.Line(holeGeo, holeMat);
+                holeLine.computeLineDistances();
+                holeLine.userData = { type: 'opening', id: opening.id };
+                this.areaGroup.add(holeLine);
+            }
         }
     }
 
@@ -386,6 +416,33 @@ export class EditorCanvas {
                 const mesh = new THREE.Mesh(geo, mat);
                 mesh.position.copy(pos);
                 this.supportGroup.add(mesh);
+            } else if (node.support === 'SPRING') {
+                // Feder: zigzag line pointing downward
+                const springColor = 0xcc44cc;
+                const nCoils = 4;
+                const coilH = scale * 0.15;
+                const coilW = scale * 0.3;
+                const springPts = [];
+                springPts.push(new THREE.Vector3(pos.x, pos.y, 0));
+                springPts.push(new THREE.Vector3(pos.x, pos.y - coilH * 0.5, 0));
+                for (let c = 0; c < nCoils; c++) {
+                    const yBase = pos.y - coilH * 0.5 - c * coilH;
+                    springPts.push(new THREE.Vector3(pos.x + coilW, yBase - coilH * 0.25, 0));
+                    springPts.push(new THREE.Vector3(pos.x - coilW, yBase - coilH * 0.75, 0));
+                }
+                const yEnd = pos.y - coilH * 0.5 - nCoils * coilH;
+                springPts.push(new THREE.Vector3(pos.x, yEnd, 0));
+                springPts.push(new THREE.Vector3(pos.x, yEnd - coilH * 0.3, 0));
+                const spGeo = new THREE.BufferGeometry().setFromPoints(springPts);
+                const spLine = new THREE.Line(spGeo, new THREE.LineBasicMaterial({ color: springColor, linewidth: 2 }));
+                this.supportGroup.add(spLine);
+                // Ground line at bottom
+                const gndPts = [
+                    new THREE.Vector3(pos.x - scale * 0.4, yEnd - coilH * 0.3, 0),
+                    new THREE.Vector3(pos.x + scale * 0.4, yEnd - coilH * 0.3, 0),
+                ];
+                const gndGeo = new THREE.BufferGeometry().setFromPoints(gndPts);
+                this.supportGroup.add(new THREE.Line(gndGeo, new THREE.LineBasicMaterial({ color: springColor })));
             }
         }
     }
@@ -1004,8 +1061,15 @@ export class EditorCanvas {
                 const cy = world.y; // editor Z = screen Y
                 const polygon = this._detectEnclosingPolygon(cx, cy);
                 if (polygon) {
-                    console.log('AREA: auto-detected polygon', polygon);
-                    this.model.addArea(polygon);
+                    // Check if this polygon is INSIDE an existing area → create opening
+                    const enclosingArea = this._findEnclosingArea(polygon);
+                    if (enclosingArea) {
+                        console.log('AREA: creating opening in area', enclosingArea.id, 'with nodes', polygon);
+                        this.model.addOpening(enclosingArea.id, polygon);
+                    } else {
+                        console.log('AREA: auto-detected polygon', polygon);
+                        this.model.addArea(polygon);
+                    }
                     this._areaNodes = [];
                     this.clearGhost();
                     return;
@@ -1022,8 +1086,15 @@ export class EditorCanvas {
 
         // If clicking the first node again → close polygon
         if (this._areaNodes.length >= 3 && nodeId === this._areaNodes[0]) {
-            console.log('AREA: closing polygon with nodes', this._areaNodes);
-            this.model.addArea(this._areaNodes);
+            // Check if this polygon is inside an existing area → create opening
+            const enclosingArea = this._findEnclosingArea(this._areaNodes);
+            if (enclosingArea) {
+                console.log('AREA: creating opening in area', enclosingArea.id, 'with nodes', this._areaNodes);
+                this.model.addOpening(enclosingArea.id, this._areaNodes);
+            } else {
+                console.log('AREA: closing polygon with nodes', this._areaNodes);
+                this.model.addArea(this._areaNodes);
+            }
             this._areaNodes = [];
             this.clearGhost();
             return;
@@ -1219,6 +1290,42 @@ export class EditorCanvas {
         return Math.abs(sum) / 2;
     }
 
+    /**
+     * Check if a detected polygon lies entirely inside an existing area.
+     * Returns the enclosing area or null.
+     */
+    _findEnclosingArea(polygonNodeIds) {
+        const areas = this.model.data.areas || [];
+        if (areas.length === 0) return null;
+
+        // Get centroid of the detected polygon
+        let cx = 0, cy = 0;
+        const polyNodes = polygonNodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+        if (polyNodes.length < 3) return null;
+        for (const n of polyNodes) {
+            cx += n.x;
+            cy += n.z;
+        }
+        cx /= polyNodes.length;
+        cy /= polyNodes.length;
+
+        // Check if centroid is inside any existing area
+        for (const area of areas) {
+            const areaNodes = area.boundaryNodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+            if (areaNodes.length < 3) continue;
+            const areaCoords = areaNodes.map(n => ({ x: n.x, y: n.z }));
+            if (this._pointInPolygon(cx, cy, areaCoords)) {
+                // Also check that polygon nodes are not the same as area boundary nodes
+                const areaNodeSet = new Set(area.boundaryNodeIds);
+                const isSubset = polygonNodeIds.every(id => areaNodeSet.has(id));
+                if (!isSubset) {
+                    return area;
+                }
+            }
+        }
+        return null;
+    }
+
     _onPointerMove(event) {
         const mode = this.model.mode;
         const pos = this.getSnappedPos(event);
@@ -1300,8 +1407,14 @@ export class EditorCanvas {
             return;
         }
         if (event.key === 'Enter' && this._areaNodes.length >= 3) {
-            console.log('AREA: closing polygon with Enter, nodes:', this._areaNodes);
-            this.model.addArea(this._areaNodes);
+            const enclosingArea = this._findEnclosingArea(this._areaNodes);
+            if (enclosingArea) {
+                console.log('AREA: creating opening in area', enclosingArea.id, 'with Enter, nodes:', this._areaNodes);
+                this.model.addOpening(enclosingArea.id, this._areaNodes);
+            } else {
+                console.log('AREA: closing polygon with Enter, nodes:', this._areaNodes);
+                this.model.addArea(this._areaNodes);
+            }
             this._areaNodes = [];
             this.clearGhost();
             return;

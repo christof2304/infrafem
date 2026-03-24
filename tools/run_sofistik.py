@@ -30,6 +30,7 @@ SUPPORT_FIX = {
     "PINNED": "PP",       # Fix UX + UY (both in-plane translations)
     "ROLLER_X": "XP",     # Fix only UY (vertical), UX free → horizontal roller
     "ROLLER_Z": "PX",     # Fix only UX (horizontal), UY free → vertical roller
+    "SPRING": "",         # Elastic spring — handled separately via SPT CA
 }
 
 
@@ -52,15 +53,26 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
     lines.append("$ Structural Points")
     lines.append("SPT NO       X         Y         Z         FIX")
     for node in model.get("nodes", []):
-        fix = SUPPORT_FIX.get(node.get("support", "NONE"), "")
-        lines.append(
-            f"    {node['id']:>4}{node['x']:>10.3f}{node['z']:>10.3f}{'0.000':>10}     {fix}"
-        )
+        support = node.get("support", "NONE")
+        if support == "SPRING":
+            # Spring support: SPT with PZ fix, then CA stiffness
+            lines.append(
+                f"    {node['id']:>4}{node['x']:>10.3f}{node['z']:>10.3f}{'0.000':>10}     PZ"
+            )
+            stiffness = node.get("springStiffness", 1e6)
+            lines.append(f"SPT {node['id']} FIX PZ CA {stiffness:.0f}")
+        else:
+            fix = SUPPORT_FIX.get(support, "")
+            lines.append(
+                f"    {node['id']:>4}{node['x']:>10.3f}{node['z']:>10.3f}{'0.000':>10}     {fix}"
+            )
     lines.append("")
 
-    # SLN: boundary lines from areas + beam lines
+    # SLN: boundary lines from areas + opening boundaries + beam lines
     next_sln_id = 1
     area_sln_map = {}  # area_id → [sln_ids]
+    beam_sln_map = {}  # beam_id → sln_id
+    opening_sln_map = {}  # opening_id → [sln_ids]
 
     edge_fix_map = {
         "NONE": "", "FIXED": "F", "PINNED": "PP", "ROLLER_X": "XP", "ROLLER_Z": "PX",
@@ -84,21 +96,58 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
             sln_ids.append(sln_id)
         area_sln_map[area["id"]] = sln_ids
 
+    # SLN for opening boundaries
+    for opening in model.get("openings", []):
+        sln_ids = []
+        boundary = opening["boundaryNodeIds"]
+        for i in range(len(boundary)):
+            n1 = boundary[i]
+            n2 = boundary[(i + 1) % len(boundary)]
+            sln_id = next_sln_id
+            next_sln_id += 1
+            lines.append(f"SLN {sln_id}  {n1}  {n2}")
+            sln_ids.append(sln_id)
+        opening_sln_map[opening["id"]] = sln_ids
+
     # SLN for beams with SNO + STYP B
+    # Skip beams that overlap with area boundary or opening edges (same node pairs)
+    boundary_edges = set()
+    for area in model.get("areas", []):
+        bnd = area["boundaryNodeIds"]
+        for i in range(len(bnd)):
+            edge = tuple(sorted([bnd[i], bnd[(i + 1) % len(bnd)]]))
+            boundary_edges.add(edge)
+    for opening in model.get("openings", []):
+        bnd = opening["boundaryNodeIds"]
+        for i in range(len(bnd)):
+            edge = tuple(sorted([bnd[i], bnd[(i + 1) % len(bnd)]]))
+            boundary_edges.add(edge)
+
     for beam in model.get("beams", []):
+        edge = tuple(sorted([beam["nodeStart"], beam["nodeEnd"]]))
+        if edge in boundary_edges:
+            continue  # skip — already covered by area/opening boundary SLN
         sln_id = next_sln_id
         next_sln_id += 1
+        beam_sln_map[beam["id"]] = sln_id
         lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}  SNO {beam.get('sectionId', 1)} STYP B")
     lines.append("")
 
-    # SAR: structural areas
+    # SAR: structural areas with openings as inner boundaries
     for area in model.get("areas", []):
         sln_ids = area_sln_map.get(area["id"], [])
         lines.append(
             f"SAR {area['id']}  T {area['thickness'] * 1000:.0f}[mm] "
             f"GRP {area.get('groupId', 0)} MNO {area.get('materialId', 1)}"
         )
+        # Collect opening SLN IDs for this area
+        area_openings = [o for o in model.get("openings", []) if o.get("areaId") == area["id"]]
         lines.append(f"SARB OUT {','.join(str(s) for s in sln_ids)}")
+        if area_openings:
+            for o in area_openings:
+                o_slns = opening_sln_map.get(o["id"], [])
+                if o_slns:
+                    lines.append(f"SARB IN {','.join(str(s) for s in o_slns)}")
 
     lines.append("END")
     lines.append("")
@@ -111,6 +160,7 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
     for lc in model.get("loadcases", []):
         lc_node_loads = []
         lc_area_loads = []
+        lc_beam_loads = []
         for load in lc.get("loads", []):
             if load["type"] == "NODE_FORCE":
                 direction = load["direction"]
@@ -129,13 +179,19 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
                 grp = area.get("groupId", 0) if area else 0
                 lc_area_loads.append((grp, load["direction"], load["value"]))
                 has_area_loads = True
+            elif load["type"] == "BEAM_LINE":
+                sln_id = beam_sln_map.get(load["elementId"])
+                if sln_id:
+                    lc_beam_loads.append((sln_id, load["direction"], load["p1"], load.get("p2", load["p1"])))
 
-        if lc_node_loads or lc_area_loads:
+        if lc_node_loads or lc_area_loads or lc_beam_loads:
             sofiload_lines.append(f"LC {lc['id']}")
             for nid, fx, fz in lc_node_loads:
                 sofiload_lines.append(f"  KNOT {nid} TYP PP P1 {fx:.3f} P2 {fz:.3f}")
             for grp, direction, value in lc_area_loads:
                 sofiload_lines.append(f"  QUAD GRP {grp} TYPE {direction} P {value:.3f}")
+            for sln_id, direction, p1, p2 in lc_beam_loads:
+                sofiload_lines.append(f"  LINE SLN {sln_id} TYPE {direction} P1 {p1:.3f} P2 {p2:.3f}")
 
     if sofiload_lines:
         lines.append("+PROG SOFILOAD urs:3")
@@ -154,7 +210,7 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
     lines.append("END")
     lines.append("")
 
-    # ── RESULTS
+    # ── RESULTS (separate blocks — RESULTS can only handle one type per run)
     lines.append("+PROG RESULTS urs:99")
     lines.append("HEAD Export Knotenverschiebungen")
     lines.append("PAGE UNII 0")

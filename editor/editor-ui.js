@@ -327,6 +327,12 @@ export class PropertiesPanel {
             `<option value="${key}" ${node.support === key ? 'selected' : ''}>${val.label}</option>`
         ).join('');
 
+        const springStiffnessHtml = node.support === 'SPRING' ? `
+            <div class="prop-group">
+                <label>Steifigkeit [kN/m]</label>
+                <input type="number" id="prop-spring-k" value="${node.springStiffness || 1e6}" step="1000">
+            </div>` : '';
+
         // Gather existing node loads for active loadcase
         const activeLc = this.model.activeLoadcase;
         const lc = this.model.data.loadcases.find(l => l.id === activeLc);
@@ -353,6 +359,7 @@ export class PropertiesPanel {
                 <label>Auflager</label>
                 <select id="prop-support">${supportOptions}</select>
             </div>
+            ${springStiffnessHtml}
 
             <h3>Lasten (LF ${activeLc})</h3>
             ${existingLoadsHtml || '<div style="font-size:11px;color:#667;margin-bottom:6px">Keine Lasten</div>'}
@@ -381,6 +388,12 @@ export class PropertiesPanel {
         this.el.querySelector('#prop-support').onchange = (e) => {
             this.model.updateNode(nodeId, { support: e.target.value });
         };
+        const springKInput = this.el.querySelector('#prop-spring-k');
+        if (springKInput) {
+            springKInput.onchange = (e) => {
+                this.model.updateNode(nodeId, { springStiffness: parseFloat(e.target.value) });
+            };
+        }
         this.el.querySelector('#del-node').onclick = () => {
             this.model.deleteNode(nodeId);
             this.model.deselect();
@@ -585,6 +598,19 @@ export class PropertiesPanel {
                 <span class="prop-val">${size.toFixed(3)}</span>
             </div>
 
+            <h3>Aussparungen</h3>
+            ${(() => {
+                const openings = this.model.getOpeningsForArea(areaId);
+                if (openings.length === 0) return '<div style="font-size:11px;color:#667;margin-bottom:6px">Keine Aussparungen</div>';
+                return openings.map(o => `
+                    <div class="prop-group" style="gap:4px">
+                        <label style="min-width:40px">Aussparung ${o.id}</label>
+                        <span class="prop-val" style="flex:1">${o.boundaryNodeIds.length} Knoten</span>
+                        <button class="btn-sm btn-del" data-action="del-opening" data-openingid="${o.id}" title="Aussparung löschen">&times;</button>
+                    </div>
+                `).join('');
+            })()}
+
             <h3>Lasten (LF ${activeLc})</h3>
             ${existingLoadsHtml || '<div style="font-size:11px;color:#667;margin-bottom:6px">Keine Lasten</div>'}
             <div class="prop-group">
@@ -636,6 +662,13 @@ export class PropertiesPanel {
         for (const btn of this.el.querySelectorAll('[data-action="del-area-load"]')) {
             btn.onclick = () => {
                 this.model.deleteLoad(activeLc, +btn.dataset.loadid);
+            };
+        }
+
+        // Delete opening buttons
+        for (const btn of this.el.querySelectorAll('[data-action="del-opening"]')) {
+            btn.onclick = () => {
+                this.model.deleteOpening(+btn.dataset.openingid);
             };
         }
     }

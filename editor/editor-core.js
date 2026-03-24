@@ -52,6 +52,7 @@ export const SUPPORT_TYPES = {
     PINNED:   { fix: 'PP', label: 'Gelenk',         dofs: { ux:true, uz:true } },
     ROLLER_X: { fix: 'XP', label: 'Verschieblich X', dofs: { uz:true } },
     ROLLER_Z: { fix: 'PX', label: 'Verschieblich Z', dofs: { ux:true } },
+    SPRING:   { fix: '',   label: 'Feder',          dofs: {} },
 };
 
 // ─── Section Type Definitions ───────────────────────────────
@@ -82,6 +83,7 @@ function createDefaultModel() {
         ],
         beams: [],
         areas: [],
+        openings: [],
         loadcases: [
             { id: 1, name: 'Lastfall 1', type: 'NONE', loads: [] },
         ],
@@ -269,9 +271,9 @@ export class EditorModel {
     }
 
     // ── Nodes ──────────────────────────────────────────────
-    addNode(x, z, support = 'NONE') {
+    addNode(x, z, support = 'NONE', springStiffness = 1e6) {
         const id = this._nextId(this.data.nodes);
-        const node = { id, x: Math.round(x * 1000) / 1000, z: Math.round(z * 1000) / 1000, support };
+        const node = { id, x: Math.round(x * 1000) / 1000, z: Math.round(z * 1000) / 1000, support, springStiffness };
         this.data.nodes.push(node);
         this._commit();
         return node;
@@ -293,6 +295,12 @@ export class EditorModel {
             .map(a => a.id);
         for (const areaId of areaIdsToDelete) {
             this.deleteArea(areaId);
+        }
+        // also delete openings referencing this node
+        if (this.data.openings) {
+            this.data.openings = this.data.openings.filter(
+                o => !o.boundaryNodeIds.includes(id)
+            );
         }
         // also delete node loads in all loadcases
         for (const lc of this.data.loadcases) {
@@ -358,10 +366,36 @@ export class EditorModel {
         for (const lc of this.data.loadcases) {
             lc.loads = lc.loads.filter(l => !(l.type === 'AREA_LOAD' && l.areaId === id));
         }
+        // also delete openings belonging to this area
+        if (this.data.openings) {
+            this.data.openings = this.data.openings.filter(o => o.areaId !== id);
+        }
         this.data.areas = this.data.areas.filter(a => a.id !== id);
         this._commit();
     }
     getArea(id) { return this.data.areas.find(a => a.id === id); }
+
+    // ── Openings ────────────────────────────────────────────
+    addOpening(areaId, boundaryNodeIds) {
+        if (boundaryNodeIds.length < 3) return null;
+        if (!this.data.openings) this.data.openings = [];
+        const id = this._nextId(this.data.openings);
+        const opening = { id, areaId, boundaryNodeIds: [...boundaryNodeIds] };
+        this.data.openings.push(opening);
+        this._commit();
+        return opening;
+    }
+    deleteOpening(id) {
+        if (!this.data.openings) return;
+        this.data.openings = this.data.openings.filter(o => o.id !== id);
+        this._commit();
+    }
+    getOpening(id) {
+        return (this.data.openings || []).find(o => o.id === id);
+    }
+    getOpeningsForArea(areaId) {
+        return (this.data.openings || []).filter(o => o.areaId === areaId);
+    }
 
     areaSize(areaId) {
         const area = this.getArea(areaId);

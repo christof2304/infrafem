@@ -1,0 +1,847 @@
+!#!Info  Beispiel:       Plattenbalkenphilosophie exzentrisch
+!#!Info  Schlagwort:     Plattenbalkenphilosophie
+!#!Info  Program:       CSM
+$
+$
+
+!#!KAPITEL Material and System generation
++PROG AQUA urs:1
+KOPF Plattenbalkenbrücke exzentrisch
+NORM  'DIN' 'en199X-200X-BRIDGE'     CAT 'B'    $ Strassenbrücken -> L_U + L_T gammau = 1.35 !
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+$ CTRL styp BEM
+ECHO MAT,QUER VOLL
+!*!Label Material
+BETO  1    C    40  $ = C40/50
+STAH  2    S 500    $ Bewehrungsstahl 500
+STAH  7    S  '235' $ TMAX  0 $ Baustahl
+STAH 11    Y '1860A' $ prestessing steel
+                    $ fp0,1k = 1600 N/mm2
+                    $ fpk    = 1860 N/mm2
+                    $            0.8*fpk    = 0.80*1860 = 1488 N/mm2
+                    $            0.9*fp0,1k = 0.90*1600 = 1440 N/mm2
+                    $ sigp,max = min(1488,1440)         = 1440 N/mm2 EN-1992-1-1 5.10.2.1(1) maximale Spannung
+                    $ sigp,SLS = 0.65*fpk   = 0.65*1860 = 1209 N/mm2 EN-1992-1-1 7.2(5)      bei Verkehrsübergabe quasiständig
+                    $ sigp,rare= sigp,max
+                    $ Die Spannstahlrelaxation sollte bei ca 1280 N/mm2 Vorspannung betragen:
+                    $ Verlust nach 1000h   : ca. 2 %
+                    $ Verlust t-undendlich : ca. 6 %
+                    $ vgl. Beispiele zur Bemessung nach Eurocode 2 Band 2 – Fertigteilbrücke
+STAH 12    Y '1860A' $ prestessing steel
+
+!*!Label  Section 1
+QNR  1 MNR  1
+#define section
+QPOL  UPZ MNR 1
+QP NR    Y        Z    EXP
+     1  0.00[m] 0.00[m] 0.50 $ Belüftung nur über Asphalt
+     2 -3.00[m] 0.00[m] 1.00 $ für alle folgenden QP !
+     3 -3.00[m] 0.25[m]
+     4 -2.50[m] 0.25[m]
+     5 -0.80[m] 0.45[m]
+     6 -0.80[m] 1.80[m]
+let#zmax   1800 $ mm
+$
+$  Torsionsbox:  *---------------------> y
+$                |
+$     *----------|----------*     #ztop
+$     |          |<--#ytop->|
+$     |          |          |
+$     |          |          |
+$     |          |<--#ybot->|
+$     *----------|----------*     #zbot
+$                z
+  let#ytop  720 $ [mm] y-Wert der Torsionsbox oben
+  let#ybot  720 $ [mm] y-Wert der Torsionsbox unten
+  let#ztop  110 $ [mm] z-Wert der Torsionsbox oben
+  let#zbot #zmax-110 $ " der Torsionsbox unten  "       of Torsionsbox below
+RANG 0 'TORS' TYP MIN $ Voreinstellung für Bewehrungsränge
+RANG 1 'BOT'  TYP OPT $ untere Bewehrung 'bot' 'bot'
+RANG 2 'TOP'  TYP OPT $ obere  Bewehrung 'top' 'top'
+BEW Y #ytop,-#ytop Z #ztop AS 10[cm2] RANG 0 TORS AKTI D  12
+BEW Y #ybot,-#ybot Z #zbot AS 10[cm2] RANG 0 TORS AKTI D  12
+$ Biegebewehrung:
+  let#ytop 2500 $ [mm]
+  let#ybot  650 $ [mm]
+  let#ztop   70 $ [mm]
+  let#zbot #zmax-70
+BEW Y #ytop,#ytop/3,-#ytop/3,-#ytop Z #ztop AS 10[cm2] RANG 2 TORS PASS D  20 $ oben
+BEW Y #ybot,#ybot/3,-#ybot/3,-#ybot Z #zbot AS 10[cm2] RANG 1 TORS PASS D  20 $ unten
+QS 1 ZA  450    MNR 1        RANG 1 $ Bei x=3.80 m von der Stütze oberhalb  Spannglied
+QS 2 ZA  700    MNR 1        RANG 1 $ Bei x=3.80 m von der Stütze unterhalb Spannglied
+QS 3 YA  820    MNR 1        RANG 3 TYP GURT  $ Gurt
+STEU WARN 10463
+QSP    NR    Y        Z     MNR
+     'TOP'   0        0      1
+     'BOT'   0       #zmax   1 $ Literal BOT muss in Grossbuchstaben eingegeben werden
+     'SIDE' 3000[mm] #zmax   1 $ nichtmitwirkender Teil
+#enddef
+#include section
+NEFF YMIN -9000 YMAX -2900  ZMIN -1000 ZMAX +9000 TYPE Z
+NEFF YMIN  2900 YMAX  9000  ZMIN -1000 ZMAX +9000 TYPE Z
+
+QNR  2 MNR  1   $ Nichtmitwirkende Breite über der Stütze
+#include section
+NEFF YMIN -9000 YMAX -1850  ZMIN -1000 ZMAX +9000 TYPE Z
+NEFF YMIN  1800 YMAX  9000  ZMIN -1000 ZMAX +9000 TYPE Z
+
+
+!*!Label Section 5
+QNR  5 MNR  1  BEZ 'Querträger Endauflager'
+let#bslab05 1.00 ; let#bweb05 0.80
+#define crossgirder
+QPOL  UPZ MNR 1
+QP NR    Y        Z    EXP
+     1  0.00[m] 0.00[m] 0.50 $ Belüftung nur über Asphalt
+     2 -#bslab05[m] 0.00[m] 1.00 $ für alle folgenden QP !
+     3 -#bslab05[m] 0.35[m]
+     5 -#bweb05[m]  0.35[m]
+     6 -#bweb05[m]  2.00[m]
+let#zmax   2000 $ mm
+$
+$  Torsionsbox:  *---------------------> y
+$                |
+$     *----------|----------*     #ztop
+$     |          |<--#ytop->|
+$     |          |          |
+$     |          |          |
+$     |          |<--#ybot->|
+$     *----------|----------*     #zbot
+$                z
+  let#ytop  720 $ [mm] y-Wert der Torsionsbox oben
+  let#ybot  720 $ [mm] y-Wert der Torsionsbox unten
+  let#ztop  110 $ [mm] z-Wert der Torsionsbox oben
+  let#zbot #zmax-110 $ " der Torsionsbox unten  "       of Torsionsbox below
+RANG 0 'TORS' TYP MIN $ Voreinstellung für Bewehrungsränge
+RANG 1 'BOT'  TYP OPT $ untere Bewehrung 'bot' 'bot'
+RANG 2 'TOP'  TYP OPT $ obere  Bewehrung 'top' 'top'
+BEW Y #ytop,-#ytop Z #ztop AS 10[cm2] RANG 0 TORS AKTI D  12
+BEW Y #ybot,-#ybot Z #zbot AS 10[cm2] RANG 0 TORS AKTI D  12
+$ Biegebewehrung:
+  let#ytop  900 $ [mm]
+  let#ybot  650 $ [mm]
+  let#ztop   70 $ [mm]
+  let#zbot #zmax-70
+BEW Y #ytop,#ytop/3,-#ytop/3,-#ytop Z #ztop AS 10[cm2] RANG 2 TORS PASS D  20 $ oben
+BEW Y #ybot,#ybot/3,-#ybot/3,-#ybot Z #zbot AS 10[cm2] RANG 1 TORS PASS D  20 $ unten
+QS 1 ZA  370    MNR 1        RANG 1 $ Bei x=3.80 m von der Stütze oberhalb  Spannglied
+QS 2 ZA  900    MNR 1        RANG 1 $ Bei x=3.80 m von der Stütze unterhalb Spannglied
+STEU WARN 10463
+QSP    NR    Y        Z     MNR
+     'TOP'   0        0      1
+     'BOT'   0       #zmax   1 $ Literal BOT muss in Grossbuchstaben eingegeben werden
+#enddef
+#include crossgirder
+
+QNR  6 MNR  1  BEZ 'Querträger Mittelauflager'
+let#bslab05 1.40 ; let#bweb05 1.00
+#include crossgirder
+
+!*!Label Section 9
+QB 9 H 1.5[m] B 4[m] BEZ 'Pfeiler'
+
+QNR 99 MNR  1 BEZ 'Testquerschnitt für ex_q'
+QPOL  UPZ MNR 1
+QP NR    Y        Z    EXP
+     1  0.00[m] 0.00[m] 0.50 $ Belüftung nur über Asphalt
+     2 -3.00[m] 0.00[m] 1.00 $ für alle folgenden QP !
+     3 -3.00[m] 0.25[m]
+     4 -2.50[m] 0.25[m]
+     5 -0.80[m] 0.45[m]
+ENDE
+
++PROG AQUA urs:2
+KOPF Plot sections
+STEU REST 3
+STEU WARN 10463
+ECHO MAT NEIN ; ECHO QUER JA ; ECHO PICT VOLL
+ENDE
+
++PROG RESULTS urs:7
+KOPF Plot sections
+SIZE DINA "URS"
+LF QNR 2 ; STRU TYP CROS
+ENDE
+
++PROG SOFIMSHA urs:4
+KOPF Plattenpalkenbrücke exzentrisch
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+SYST RAUM GDIR POSZ GDIV 1000
+KNOT  1 X  0   6 0 $ linke untere Ecke der Platte $
+KNOT 13 X  8  -6 0 $ linke obere  Ecke der Platte $
+sto#dxdy 8/12 $ dx/dy Brückenwinkel für Verkehrslasten $
+KNOT NR NR1 NR2    Y
+      2   1  13   5.50 $ Kante der Voute          $
+      3   1  13   3.80 $ Stegkante                $
+      4   1  13   3.00 $ Stabmitte                $
+      5   1  13   2.20 $ Stegkante                $
+      6   1  13   0.50 $ Kante der Voute          $
+      7   1  13   0.00 $ Brückenmitte             $
+      8   1  13  -0.50 $ Kante der Voute          $
+      9   1  13  -2.20 $ Stegkante                $
+     10   1  13  -3.00 $ Stabmitte                $
+     11   1  13  -3.80 $ Stegkante                $
+     12   1  13  -5.50 $ Kante der Voute          $
+TRAN KNOT VON 1 BIS 13 DNR 100 DX 1.00
+TRAN KNOT VON 1 BIS 13 DNR 200 DX 1.00+25.0
+TRAN KNOT VON 1 BIS 13 DNR 300 DX 1.00+30.0
+TRAN KNOT VON 1 BIS 13 DNR 400 DX 1.00+30.0+5.0
+TRAN KNOT VON 1 BIS 13 DNR 500 DX 1.00+30.0+30.0
+TRAN KNOT VON 1 BIS 13 DNR 600 DX 1.00+30.0+30.0+1.00
+$
+TRAN KNOT VON 104,304,504 DNR 1000 DZ 2.20  $ Pfeilerkopf
+TRAN KNOT VON 107,307,507 DNR 1000 DZ 2.20
+TRAN KNOT VON 110,310,510 DNR 1000 DZ 2.20
+TRAN KNOT VON 107,307,507 DNR 2000 DZ 8.00  $ Pfeiler unten
+
+KNOT 2107,2307,2507 FIX F
+
+let#1 250 $ Dicke am Kragarmende                 $
+let#2 450 $ Dicke am Kragarmanschnitt            $
+let#3 450 $ dicker Plattenbereich                $
+GRUP 3 BEZ 'Platte'
+let#k 0 ; let#m  1
+#define slab
+QUAD K1     K2     K3     K4      M  N T1 T2 T3 T4 MNR=1 MBW=2 LAGE=UNTE
+      1+#k 101+#k 102+#k   2+#k  #m  1 #1 #1 #1 #1 $ Kragarm   $
+      2+#k 102+#k 103+#k   3+#k  #m  2 #1 #1 #2 #2 $ Voute     $
+      3+#k 103+#k 104+#k   4+#k  #m  1 #3 #3 #3 #3 $ Steg      $
+      4+#k 104+#k 105+#k   5+#k  #m  1 #3 #3 #3 #3 $ Steg      $
+      5+#k 105+#k 106+#k   6+#k  #m  2 #2 #2 #1 #1 $ Voute     $
+      6+#k 106+#k 107+#k   7+#k  #m  1 #1 #1 #1 #1 $ Kragarm   $
+      7+#k 107+#k 108+#k   8+#k  #m  1 #1 #1 #1 #1 $ Kragarm   $
+      8+#k 108+#k 109+#k   9+#k  #m  2 #1 #1 #2 #2 $ Voute     $
+      9+#k 109+#k 110+#k  10+#k  #m  1 #3 #3 #3 #3 $ Steg      $
+     10+#k 110+#k 111+#k  11+#k  #m  1 #3 #3 #3 #3 $ Steg      $
+     11+#k 111+#k 112+#k  12+#k  #m  2 #2 #2 #1 #1 $ Voute     $
+     12+#k 112+#k 113+#k  13+#k  #m  1 #1 #1 #1 #1 $ Kragarm   $
+#enddef
+#include slab
+let#k 100 ; let#m 12
+#include slab
+let#k 200 ; let#m  4
+#include slab
+let#k 300 ; let#m  4
+#include slab
+let#k 400 ; let#m 12
+#include slab
+let#k 500 ; let#m  1
+#include slab
+
+GRUP 1 BEZ 'Überbau Stäbe Feldbereich'
+  STAB fit KA   4 KE 204 QNR 1 NP -1
+  STAB fit KA 404 KE 604 QNR 1 NP -1
+  STAB fit KA  10 KE 210 QNR 1 NP -1
+  STAB fit KA 410 KE 610 QNR 1 NP -1
+GRUP 2 BEZ 'Überbau Stäbe Stützbereich'
+  STAB fit KA 204 KE 404 QNR 2 NP -1
+  STAB fit KA 210 KE 410 QNR 2 NP -1
+
+GRUP 5 BEZ 'Querträger Endauflager'
+  STAB fit KA 102 KE 112 QNR 5 NP -1
+  STAB fit KA 502 KE 512 QNR 5 NP -1
+GRUP 6 BEZ 'Querträger Mittelauflager'
+  STAB fit KA 302 KE 312 QNR 6 NP -1
+
+GRUP 9 BEZ 'Pfeiler'
+  STAB fit KA 1107 KE 2107 QNR 9 NP 0 KR 101
+  STAB fit KA 1307 KE 2307 QNR 9 NP 0 KR 301
+  STAB fit KA 1507 KE 2507 QNR 9 NP 0 KR 501
+
+KNOT 1104,1110 FIX kf 1107
+KNOT 1304,1310 FIX kf 1307
+KNOT 1504,1510 FIX kf 1507
+
+GRUP 10 BEZ 'vertikale Lagerung'
+  let#ne 104 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+  let#ne 110 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+  let#ne 304 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+  let#ne 310 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+  let#ne 504 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+  let#ne 510 ; FEDE KA #ne+1000 KE #ne CP 1E7 CQ 1
+
+GRUP 11 BEZ 'Horizontale Lagerung'
+  let#ne 304 ; FEDE KA #ne+1000 KE #ne CP 1E6 DX 1
+  let#ne 304 ; FEDE KA #ne+1000 KE #ne CP 1E6 DY 1
+  let#ne 104 ; FEDE KA #ne+1000 KE #ne CP 1E6 DY 1
+  let#ne 504 ; FEDE KA #ne+1000 KE #ne CP 1E6 DY 1
+ENDE
+
++PROG SOFIMSHC urs:5
+KOPF Achse für SOFILOAD Lastenzüge, SSD Tendons, Animator Umwelt
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+SYST REST
+GAX 'AX_1'
+GAXB X1 0 0 0 X2 100 0 0  $ create axis from point 1 to point 2   (also with R)
+$ GAX...TYPC SPLI and GAXC can create an axis through a set of points
+ENDE
+!+!Kapitel Define Excentric T-beam philosophy !!!!!!!!!!!!!!!!!!!
++PROG ASE urs:3
+KOPF T-beam philosophy definition
+PLEX NRG AUTO $ Activates T-beam philosophy 2020 also for excentric beam elements - cathes also group 5+6 cross girderes
+PLEX NRG 1  NEFF 0.01 $ Überbau Stäbe Feldbereich
+PLEX NRG 2  NEFF 0.22 $ Überbau Stäbe Stützbereich
+       $ Die NEFF verwendet man um die Momente über der Stütze zu skalieren:
+       $ dazu am besten immer LF 8+9 rechnen (9=Stäbe ohne Platte : 8=PLEX) und dann:
+       $ ein größeres NEFF      im  Feld   vermindert Stab-Feldmoment  in LF 8
+       $ ein größeres NEFF über der Stütze vermindert Stab-Stützmoment in LF 8
+       $ Alle anderen Parameter am besten nicht anfassen, es sei denn man erhält eine Instabilität,
+       $ dann evtl. F_GZ verringern.
+
+       $  YOUTUBE Video  ->   https://youtu.be/GoT1f0aGdgs         SOFiSTiK T-beam philosophy    How to model a T-beam or composite beam
+
+
+             $ Der Faktor neff berücksichtigt, dass die Druckzwiebel in der Quadplatte
+             $ nicht sofort und vollständig bis zum Rand ausstrahlen kann und daher der
+             $ außenliegende Bereich der Platte nicht voll wirksam ist, besonders an Innenstützen.
+             $ Dies entspricht dem Effekt der mitwirkenden Breite.
+             $ Betrachten Sie hierzu die Quad Hauptnormalkräfte in Lastfall 8 (Druckzwiebel).
+             $ Der Faktor neff wurde hier mit den Testlastfällen 7 und 8 ermittelt
+             $ wobei man die Stabmomente aus LF 7 und 8 vergleicht.
+             $
+             $ Nur falls die automatische Ermittlung der mittleren Quaddicke nicht stimmt (->Report Liste)
+             $ kann man die genaue Quadfläche und Exzentrizität auch eingeben, z.B.
+             $ PLEX NRG 1 area 2.16[m2] ex_q 0.188[m] neff 0.01
+             $     (bitte area und ex_q immer mit Dimension eingeben)
+             $ area 2.16[m2] und ex_q hier gewonnen aus dem Testquerschnitt 99
+             $          = 2*(0.80*0.45+1.70*0.35+0.50*0.25)[m2]
+             $ Zum Skalieren der Eigengewichtsmomente aber besser NEFF verwenden!
+             $
+             $ Wenn Ihnen diese Manipulationen nicht zusagen könnte man auch die Quadplatte
+             $ ohne Normalkraftsteifigkeit laufen lassen (GRP2 3 QUEA 1E-6)
+             $
+             $ NEFF Definition siehe auch Testbeispiel plattenbalken_exzentrisch_test.dat
+<TEXT>
+Die Definition PLEX sollte wie hier in einem eigenen separaten ASE Lauf kurz nach der Systemdefinition erfolgen.
+Alle folgenden ASE Läufe verwenden dann diese Einstellung ohne erneute PLEX Eingabe,
+auch beim Aufruf über den CSM oder einen SSD Tasks (Eigenwerte Task).
+</TEXT>
+ENDE
+
++PROG SOFILOAD urs:8
+KOPF
+LF  9          BEZ 'Test beam load'  TYP none
+   STAB GRP 1,2 TYP PZZ 100
+ENDE
++PROG ASE URS:16
+KOPF Vergleich reine Stabberechnung - evtl. Skalierung NEFF Eingabe in PLEX
+GRUP - ; GRUP 3 NEIN
+LF 7 TYP NONE BEZ 'Test Stablast nur mit Stabelementen'
+  LC 9
+ENDE
+KOPF
+GRUP - ; GRUP 3 JA
+LF 8 TYP NONE BEZ 'Test Mit Quadplatte und PLEX'
+  LC 9
+ENDE      $ Bitte vergleichen Sie im WINGRAF die Stabmomente MY von LF 7 und LF 8
+         $ und justieren dann NEFF bis die Momente gut übereinstimmen
+
+!#!Kapitel Loading, Prestress
++PROG SOFILOAD URS:13
+KOPF Einwirkungen und Lasten
+$ Einwirkungsfaktoren :
+$ Für alle Brueckenberechnungen sollten zunächst alle verwendeten Einwirkungen definiert werden.
+$ Dies kann wie hier in einem separaten SOFILOAD Lauf erfolgen
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+ECHO ACT VOLL $ Bitte prüfen Sie die GAMU Werte. In Deutschland ist z.B. GAMU = 1.35 für L_U und L_T !
+ACT G_1                                                              BEZ 'Ständige Lasten'
+ACT G_2                                                              BEZ 'Ständige Lasten'
+ACT P                                                            BEZ 'Vorspannung'
+ACT C                                                                BEZ 'Kriechen+Schwinden'
+ACT ZC  GAMU 1.00 1 SUP PERM PSI0 1.00 PSI1 1.00 PSI2 1.00           BEZ ''
+ACT L_T GAMU   -  0 SUP EXCL PSI0 0.75 PSI1 0.75 PSI2 0.20 PS1S    - BEZ 'TS Tandemsystem'
+ACT L_U GAMU   -  0 SUP EXCL PSI0 0.40 PSI1 0.40 PSI2 0.20 PS1S    - BEZ 'UDL Gleichlast'
+  $ Verkehrbeanspruchung erfolgt mit ELLA - daher ist L_U EXCL erforderlich!
+ACT SL  GAMU 1.50 0 SUP COND PSI0 0.40 PSI1 0.40 PSI2 0.20 PS1S    - BEZ 'Gleichlast'
+$--------------------------------------------------------------------------
+ACT FAT GAMU 1.50 0 SUP EXCL PSI0 1 1 1                              BEZ 'Ermüdung LM3'
+ACT SF  GAMU 1.00 0 SUP EXCL PSI0 1 1 1                              BEZ 'mögl.Setzung ULS'
+ACT ZF  GAMU 1.00 0 SUP EXCL PSI0 1 1 1                              BEZ 'wahrscheinliche Setzung SLS'
+  $ Nach DIN FB 101 Anhang C.2.3 ist für Setzungen
+  $ ein Lastsicherheitsbeiwert GAMA=1.00 anzusetzen.
+ACT W                                                                BEZ 'wind transvers'
+ACT T   GAMU 0.81 0 SUP EXCL PSI0 0.80 PSI1 0.60 PSI2 0.50 PS1S    - BEZ 'temperatur'
+  $ Im Nachweis des Grenzzustandes der Tragfähigkeit können die Schnittgrößen aus Temperaturbelastung
+  $ in der Regel mit 60 % Steifigkeit ermittelt werden. Man darf hier annehmen dass der Beton
+  $ reißt und - da es eine Zwangsbelastung ist - die Schnittgröße durch die Rissbildung abfällt.
+  $ Daher wird der Einfachheit halber der GZT-gamma-u Wert von 1.35 auf 0.81 gesetzt (0.81 = 1.35*0.60).
+  $ also: Sicherheitsbeiwert 1.35 aber nur 0.6 fach wegen 60 % Steifigkeit
+  $---------------------------------------------------------------------------------------------------------
+ACT B   GAMU 1.35 1 PART G SUP PERM PSI0 1 1 1                              BEZ 'Bauzustand'
+ENDE
+
++PROG TENDON urs:9
+KOPF Evtl. alte Spannglieder löschen
+VDEL 0 0 0
+ENDE
+
++PROG TENDON urs:24
+KOPF Parabelvorspannung
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+$ Definition des Spannverfahrens:
+$ Wir empfehlen, alle Daten als benutzerdefiniertes Spannverfahrens
+$ explizit einzugeben. Für die Statik sind folgende Werte ausreichend:
+SYSP NRSV MAT   ZV       AZ    LITZ MINR   BETA  MUE EXZ  SS     DA
+      $ 1  11 2430[kN] 1800[mm2] 12 6.50[m] 0.3 0.20 4[mm] 3[mm] 82[mm] $ csm3_parabel and csm32_slab, 12 wires
+      $ 1  11 3078[kN] 2250[mm2] 15 7.10[m] 0.3 0.20 4[mm] 3[mm] 92[mm] $            15 wires
+        1  11 3848[kN] 2850[mm2] 19 6.50[m] 0.3 0.21 4[mm] 3[mm] 97[mm] $ csm31_beam 19 wires
+      $ 1  11 2430[kN] 1800[mm2] 12 6.50[m] 0.0 0.00 0[mm] 0[mm] 10[mm] $ csm3_casting_yard
+$
+$ reference axis and span definition:
+let#tendon 1
+AXES NRH #tendon TYP AUTO  4 604
+HOCH NRH #tendon TYP KNOT S 104,304,504 SF 1,2,3
+#define tend
+                   $ S=104 .. SP 1 =  Node 104 is beginning first span
+        $ tendon geometry definition:
+        SGEO NRG #tendon NRH #tendon NRSV 1
+        $ Definition points of geometry:  (TYP=SPAN/FELD station via highpoints)
+        ZPUV    S     U     V   DVS    RV   RL   TYP=FELD
+                0     0   0.5     -    -     -
+              1.4     -   1.62    0    -     -
+                2     0   0.16    0   12.5   2.8
+              2.6     -   1.62    0    -     -
+                4     0   0.5     -    -     -
+        $ Additional values: construction stages:
+        CS IBA1 11 12
+        $ prestress-procedure  $ Anspann-Vorgehen
+        VSIG 'RELI' ANWS 9 KAPA - K3 1280 $ kapa = Vorhaltemass Überspannreserve EN-1992-1-1 5.10.2.1
+        $ final tendon definition:
+        TEND NRS #tendon NRG #tendon NSP 3 LF 3 LF0 0
+#enddef
+#include tend
+let#tendon 2
+AXES NRH #tendon TYP AUTO 10 610
+HOCH NRH #tendon TYP KNOT S 110,310,510 SF 1,2,3
+#include tend
+$
+ECHO PLOT VOLL $ tendon plots:
+SIZE URS
+PLOT GEOA NR all FAKH  5 TYPG DUTE
+PLOT FAKT NR 1 FAKH 15
+ENDE
+
++PROG TENDON urs:23
+KOPF Plattenquervorspannung
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+SYSP NRSV MAT   ZV       AZ    LITZ MINR   BETA  MUE EXZ  SS     DA
+        2  12 1417[kN] 1050[mm2]  7 6.50[m] 0.3 0.20 4[mm] 3[mm] 76[mm]
+$ reference axis 12 = gobal y-axis:
+AXES NRH 12  VAL1  0.00  6.0 0.00  TYP=poly  ART=QUAD
+         12  VAL1  0.00 -6.0 0.00  BEZ "tendon_axis 12"
+let#tend_slab 101
+let#x 8.50  $ X-coordinate of first tendon
+#define tend12
+SGEO NRG #tend_slab NRH 12 NRSV 2 $ NOPS = prestressing system for max-min radius parameters + duct-excentricities
+ZPUV S    U    V   DVS TYP=REFX
+      0  #x   0.125
+      6  #x   0.125
+     12  #x   0.125
+CS IBA1 21 22                $ = construction stages
+VSIG RE ANWS 'AS' KAPA - K3 1280
+TEND NRS #tend_slab NRG #tend_slab NSP 1 LF 4 LF0 0
+
+let#tend_slab #tend_slab+1   $ für nächste Nummer hochzählen
+let#x #x+2.04  $ nächste X-Koordinate
+#enddef
+#include tend12
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+#include tend12 $ x= x+ 2.0m
+ENDE
+
++PROG SOFILOAD urs:21
+KOPF
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+LF  1 FAKG 1.0 BEZ 'G_1'  TYP none $ Typ none, da G_1, G_2 + P anschliessend vom CSM erzeugt werden !
+
+LF  2          BEZ 'G_2'  TYP none $ Typ none, da G_1, G_2 + P anschliessend vom CSM erzeugt werden !
+   QUAD GRP 3 TYP PZZ 3.5
+LF  3 BEZ 'prestress'     TYP none $ Typ none, da G_1, G_2 + P anschliessend vom CSM erzeugt werden !
+LF  4 BEZ 'prestress'     TYP none $ Typ none, da G_1, G_2 + P anschliessend vom CSM erzeugt werden !
+
+!*!Label Setzungen
+$ Im Nachweis des Grenzzustandes der Tragfähigkeit sind die möglichen Baugrundbewegungen
+$ anzusetzen, bei deren Ermittlung dÃ¼rfen aber nach DIN FB 102 II-2.3.2.2(103)P
+$ ohne weiteren Nachweis die 0.6-fachen Steifigkeiten des Zustandes I abgesetzt werden
+$ (wegen möglichem Übergang in den Zustand II). Nach Auffassung der SOFiSTiK (Dr. Bellmann)
+$ ist in der Überlagerung aber dann ein Lastsicherheitsbeiwert g=1.35 anzusetzen.
+LF 51 TYP SF BEZ 'possible settlement ULS 1+3'   $ 'mögl.Setzung ULS 1+3'
+   KNOT NR 2107,2507  TYP WZZ 1000*0.01*0.60[mm] $ entspricht Berechnungen mit 0.6-fachen Steifigkeiten
+                                           $ equivalent analysis with 0.6-times stiffness
+LF 52 TYP SF BEZ 'possible settlement ULS 2'     $ 'mögl.Setzung ULS 2'
+   KNOT NR 2307        TYP WZZ 1000*0.01*0.60[mm]
+$ Im Nachweis der Grenzzustände der Gebrauchstauglichkeit sind die wahrscheinlichen
+$ Baugrundbewegungen immer als ständige Einwirkung, also 1.0-fach anzusetzen,
+$ siehe DIN FB 102 II-2.3.4(110)P  . Hier ist die 0.6-Abminderung nicht zulässig!
+$ In der vorliegenden Berechnung werden 1 cm als mögliche Setzung und 0.5 cm als
+$ wahrscheinliche Setzung angesetzt, jeweils pro Stützenachse angesetzt und ungünstigst
+$ überlagert.
+LF 53 TYP ZF BEZ 'probable settlement SLS 1+3'    $ wahrscheinliche Setzung SLS 1+3
+   KNOT NR 2107,2507  TYP WZZ 1000*0.005[mm]
+LF 54 TYP ZF BEZ 'probable settlement SLS 2'       $ wahrscheinliche Setzung SLS 2
+   KNOT NR 2307       TYP WZZ 1000*0.005[mm]
+ENDE
+
++prog CSM urs:20
+KOPF Temperatur
+<TEXT> Besonderheiten bei PLEX
+Ein statisch bestimmt gelagerter Überbau soll aus Temperatur keine inneren Zwangsspannungen erhalten.
+Die Elemente sollen sich also gleichmäßig krümmen - und zwar auch gleichzeitig in Querrichtung (Doppelkrümmung)!
+Das erreicht man nur, indem vor allem an der Oberkante bei STAB und QUAD die gleiche Temperatur anliegt.
+
+Üblicherweise legt man die Krümmung für das wichtigste Bauteil fest, hier den Längsträger mit 1.80 m Höhe.
+Wollen wir z.B. ein dT/h von +7°C aufbringen sind das 7°/1.80m.
+Wenn der Schwerpunkt des Hauptträgers bei SM=0.656 m liegt soll in dieser Höhe keine Längsdehnung auftreten, also
+ein dt von 0.0 herrschen. An der Oberfläche oben ergeben sich daraus -0.656m*7°/1.80m = -2.53°
+
+Damit sich die 0.45m dicke Platte gleich krümmt soll sie die gleiche Krümmung, also nur 1.75°/0.45m (=7°/1.80m) erhalten
+Die 0.25m dicke Platte darf sogar nur 1.00°/0.25m erhalten.
+Damit die Längsausdehnung an der Oberkante der Brücke gleich ist erhalten wir also:
+- Oberkante Längsträger  -2.53°C      Unterkante +4.47°C
+- Oberkante 0.25m Platte -2.53°C      Unterkante -1.53°C   (-2.53+1.00)
+- Oberkante 0.45m Platte -2.53°C      Unterkante -0.78°C   (-2.53+1.75)
+
+Eine gleichmäßige Temperaturerhöhung TN muss natürlich konstant addiert werden.
+
+Eine solche Temperatur kann an einer gevouteten Quadplatte manuell nur mit absoluten Temperaturen QUAD TYP 'T' eingegeben
+werden. Da dies recht kompliziert ist haben wir im CSM ein Feature zur Erzeugung eines solchen Temperaturfeldes eingebaut:
+</TEXT>
+
+<TEXT> Additional Explanations
+
+According to EN1991-1-5 chapter 6 temperature loads belong to the variable actions.
+
+
+Constant temparature (relative to erection temperature T0)
+  delta TN,con = dT    =      -27.0°C  (con...contraction) Te,min=-17°C - T0=+10°C erection
+  delta TN,exp = dT    =      +27.0°C  (exp...expansion)   Te,max= 37°C - T0=+10°C erection
+
+A temperature gradient will be applied according to table 6.1
+  delta TM,heat = DTZ  =   12.3°C  top surface warmer (15*0.82)
+                                   including surface factor k_sur 0.82
+  delta TM,cool = DTZ  =   -8.0°C  bottom surface warmer
+
+Positive values of DTY and DTZ mean that the temperature raises in the positive
+direction of the corresponding Y resp.  Z axis.  This load type is only applicable
+for sections having a distinct extension or geometry
+
+  ---> x |===============|  Top = 40°C
+  |      |               |
+  |      |===============|
+  V  z   |               |  DTZ = 30°C - 40°C = -10°C
+         |               |
+         |               |
+         |===============|  Bottom = 30°C
+
+A simultaneous application of constant and variable temperature results in
+8 combination according to EN1991-1-5 chapter 6.1.5:
+   delta TN    + wm*delta TM and
+   wn*delta TN + delta TM
+
+The combination factors are:
+             wn =     0.35
+             wm =     0.75
+</TEXT>
+
+TEMP LF 90      TN +27.0*1.00     DT -12.3*0.75   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T summer posdt TN+wm*dT' $ top=hot
+TEMP LF 91      TN +27.0*1.00     DT  +8.0*0.75   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T summer negdt TN+wm*dT' $ top=cold
+
+TEMP LF 92      TN -27.0*1.00     DT -12.3*0.75   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T winter posdt TN+wm*dT'
+TEMP LF 93      TN -27.0*1.00     DT  +8.0*0.75   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T winter negdt TN+wm*dT'
+
+TEMP LF 94      TN +27.0*0.35     DT -12.3*1.00   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T summer posdt wn*TN+dT'
+TEMP LF 95      TN +27.0*0.35     DT  +8.0*1.00   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T summer negdt wn*TN+dT'
+
+TEMP LF 96      TN -27.0*0.35     DT -12.3*1.00   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T winter posdt wn*TN+dT'
+TEMP LF 97      TN -27.0*0.35     DT  +8.0*1.00   HM 1.80[m]    SM 0.656[m]  GRP 1 BIS 6  BEZ 'T winter negdt wn*TN+dT'
+
+STEU FILE 'temp' $ Dateiname der erzeugten Eingabedatei
+ENDE
++apply "$(NAME)_temp.dat"
+
++PROG SOFILOAD urs:19
+KOPF
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+
+sto#dxdy 8/12 $ dx/dy Brückenwinkel für Verkehrslasten $
+sto#L0  1 $ m Überstand vor erstem Feld $
+sto#L1 30 $ m Länge erstes Feld $
+
+!*!Label UDL Test
+$ Flächenlast UDL: Grundlast 3 kN/m2:
+LF 101 TYP L_U BEZ 'Grundlast 3.0 kN/m2 nur im 1. Feld'
+        let#y    6.00 $ m y-Wert Lastkante $
+        let#dy -12.00
+        let#x1 #L0+(6.00-#y)*#dxdy     $ m x-Wert erster Lastpunkt $
+        let#x2 #L0+(6.00-#y-#dy)*#dxdy $ m x-Wert 2. Lastpunkt $
+    AREA QGRP TYP PZZ P1   3.0      X1 #x1 #y  X2 #x2 #y+#dy  X3 #x2+#L1 #y+#dy  X4 #x1+#L1 #y
+LF 102 TYP L_U BEZ 'Überlast LM1 1. Spur im ersten Feld'
+        let#y   4.90 $ m y-Wert Bordsteinkante $
+        let#dy -3.00
+        let#x1 #L0+(6.00-#y)*#dxdy     $ m x-Wert erster Lastpunkt $
+        let#x2 #L0+(6.00-#y-#dy)*#dxdy $ m x-Wert 2. Lastpunkt $
+    AREA QGRP TYP PZZ P1 (12.0-3.0) X1 #x1 #y  X2 #x2 #y+#dy  X3 #x2+#L1 #y+#dy  X4 #x1+#L1 #y
+LF 103 TYP L_U BEZ 'Überlast LM1 2. Spur im ersten Feld'
+        let#y   1.90 $ m y-Wert Bordsteinkante $
+        let#dy -3.00
+        let#x1 #L0+(6.00-#y)*#dxdy     $ m x-Wert erster Lastpunkt $
+        let#x2 #L0+(6.00-#y-#dy)*#dxdy $ m x-Wert 2. Lastpunkt $
+    AREA QGRP TYP PZZ P1 (6.0-3.0) X1 #x1 #y  X2 #x2 #y+#dy  X3 #x2+#L1 #y+#dy  X4 #x1+#L1 #y  $ Fahrstreifen 2 je nach nationalem Anhang
+
+
+!*!Label TS Tandem Test
+
+LF 111 TYP L_T BEZ 'Tandemachsen im 1. Feld'
+        let#y1   4.90-1.50 $ m y-Wert Fahrzeugmitte $
+        let#x   11.00 $ m x-Wert Fahrzeugmitte $
+      #define axles
+   $ Wegen der Plattenschubbemessung besser Flächenlast mit 50*50cm Verteilungsfläche (bis Plattenmitte):
+        let#y #y1 $ m Fahrstreifen 1
+   AREA QGRP TYP PZZ P1 150/0.25 X1 #x-0.25-0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 1. Achse Fahrstreifen 1
+   AREA QGRP TYP PZZ P1 150/0.25 X1 #x-0.25-0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+   AREA QGRP TYP PZZ P1 150/0.25 X1 #x-0.25+0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 2. Achse Fahrstreifen 1
+   AREA QGRP TYP PZZ P1 150/0.25 X1 #x-0.25+0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+        let#y #y1-3.00 $ m Fahrstreifen 2
+   AREA QGRP TYP PZZ P1 100/0.25 X1 #x-0.25-0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 1. Achse Fahrstreifen 2
+   AREA QGRP TYP PZZ P1 100/0.25 X1 #x-0.25-0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+   AREA QGRP TYP PZZ P1 100/0.25 X1 #x-0.25+0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 2. Achse Fahrstreifen 2
+   AREA QGRP TYP PZZ P1 100/0.25 X1 #x-0.25+0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+        let#y #y1-6.00 $ m Fahrstreifen 3
+   AREA QGRP TYP PZZ P1  50/0.25 X1 #x-0.25-0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 1. Achse Fahrstreifen 2
+   AREA QGRP TYP PZZ P1  50/0.25 X1 #x-0.25-0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+   AREA QGRP TYP PZZ P1  50/0.25 X1 #x-0.25+0.60[m] Y1 #y+1.0-0.25[m] X2 DXY 0.5[m] 0.5[m] $ 2. Achse Fahrstreifen 2
+   AREA QGRP TYP PZZ P1  50/0.25 X1 #x-0.25+0.60[m] Y1 #y-1.0-0.25[m] X2 DXY 0.5[m] 0.5[m]
+      #enddef
+      #include axles
+LF 112 TYP L_T BEZ 'Tandemachsen im 1. Feld'
+        let#x   13.00 $ m x-Wert Fahrzeugmitte $
+      #include axles
+LF 113 TYP L_T BEZ 'Tandemachsen im 1. Feld'
+        let#x   15.00 $ m x-Wert Fahrzeugmitte $
+      #include axles
+LF 114 TYP L_T BEZ 'Tandemachsen im 1. Feld'
+        let#x   17.00 $ m x-Wert Fahrzeugmitte $
+      #include axles
+
+ENDE
+
++PROG ASE URS:6
+KOPF Einzellastfälle rechnen
+ECHO SCHN,VERS,LAST NEIN
+GRUP - BA 9998 $ Spannglieder im Verbund
+LF  1,2,3,4       $ G_1, G_2, P
+LF 9 FAKG 1.0 BEZ 'G_1+G_2+P' TYP none
+  LC 2,3 $ falls LF 1 ausser FAKG noch Lasten hat, dann auch LC 1 !
+          $ Zu Vergleichszwecken G1+G2+P in einem LF 9
+LF   (51  54 1) $ Setzungen
+LF   (90  97 1) $ Temperatur Stab+Quad für die Bemessung
+ENDE
+
++PROG ASE URS:18
+KOPF Test Temperatur TYP NONE ohne Lagerung zwängungsfrei
+GRUP - BA 9998 $ Spannglieder im Verbund
+GRUP 10 FAKS 1E-7
+LF 999 TYP NONE BEZ 'Test ohne Lagerung T summer posdt TN+wm*dT'
+  LC 90
+ENDE
+$ Zum Test ist hier das Mittelauflager entfernt. Man erkennt im Animator dann die gleichmäßige Krümmung des PLEX Stab-Quad Überbaues.
+$ Im Wingraf findet man nur schwindend geringe Eigenspannungen.
+
+!#!Kapitel CSM Stage Analysis
++PROG CSM URS:87
+KOPF Bauablauf
+STEU EG  AUTO  $ Eigengewicht aus gamma automatisch ansetzen
+
+$ PLAB QGRP 3 EACR 1E-5  $ Möglichkeit: Plattenbalkenphilosophie ohne  Quad EA Steifigkeit beim Kriechen und Schwinden
+$ Zur Problematik Kriechen und Schwinden bei der Plattenbalkenphilosophie siehe CSM Handbuch PLEX
+$ Wir haben das hier ausprobiert: ohne Plattenquervorspannung liefert der Checkprint  fast gleiche Spannungen mit/ohne EACR 1E-5 !
+$
+BA 10 TYP G_1 BEZ 'G_1'
+BA 11 TYP P   BEZ 'Vorspannung'
+BA 15 TYP C_1 BEZ 'Kriechen im Bauzustand'   T    40
+BA 21 TYP P   BEZ 'Plattenquervorspannung'
+BA 30 TYP G_2 BEZ 'G_2 Asphalt, Kappen'
+BA 35 TYP C_1 BEZ 'K+S bis Verkehrsübergabe'   T    40
+BA 45 TYP C_2 BEZ 'K+S t-unendlich'   T 365*100   NKRI 2
+$
+GRUP  NR  IBA1 T0 PHIF=1
+      -   10   14 $ alle Gruppen werden in Bauabschnitt 10 aktiviert, TO= 14 Tage
+$
+$ LF: nur Zusatzlasten definieren! Vorspannlastfälle werden automatisch eingehängt!
+LF  2                IBA1 30         $ g_2
+
+AUSW STAB 1008 X 0[m]    $ Stäbe für die AQB Spannungsausgabe
+SCAL AQ_S 5 $ Massstab fuer die Plot-Ausgabe -> $(NAME)_csm.plb
+BOX ZMIN -1 ZMAX 0.01 GRUP 1,2,3 $ Graphik Box für WING (auch für die Bemessung)
+ENDE
++apply "$(NAME)_csm.dat"
+
++PROG CSM URS:10
+KOPF Checkprint Bauphasen für einen anderen Stab
+AUSW STAB 2005 X 0[m]
+STEU FILE '2005' $ Dateiname der erzeugten Eingabedatei
+ENDE
++apply "$(NAME)_2005.dat"
+
+!#!Kapitel ELLA
++PROG SOFILOAD urs:17
+KOPF
+ECHO SPUR VOLL
+$ AUFTEILUNG DER SPUR NACH EC IN FAHRSPUREN AUTOMATISCH (SPUR...Typ=EC)
+$ |wr|+|wl|=Breite zwischen den Schrammborden
+$ |yla|+|yle|=Breite inclusive Restfläche
+SPUR 'AX_1'   TYP EC     WL -4.90[m] WR 4.90[m] YLA -6.00[m] YRA 6.00[m]
+LF 901 TYP none BEZ 'LM1_lane_1'  ; LZUG LM1 P1 300 P2 300 P3 0 P4 12.0 P5 3.0  $ definiert Hauptspur lane 1
+LF 902 TYP none BEZ 'LM1_lane_2'  ; LZUG LM1 P1 200 P2 200 P3 0 P4  6.0 P5 3.0  $ definiert 2. Spur   lane 2
+LF 903 TYP none BEZ 'LM1_lane 3+' ; LZUG LM1 P1 100 P2 100 P3 0 P4  3.0 P5 3.0  $ definiert 3. und weitere Spuren
+LF 909 TYP none BEZ 'sidewalk'    ; LZUG LM1 P1 100 P2   0 P3 0 P4  0.0 P5 3.0  $ definiert Gehweg
+ENDE
+
++PROG ASE URS:14
+KOPF Steifigkeit für ELLA und Test manuelle UDL Last
+ECHO SCHN,VERS,LAST NEIN
+LF  1
+LF 109 TYP none BEZ 'Test manuell L_U >> ELLA LF 851'
+  LC 101,102,103 $ zu vergleichen mit ELLA LF 851
+LF (111 114 1) TYP none BEZ 'Test TS im 1. Feld >> ELLA LF 951'
+  $ 4 manuelle Laststellungen zu vergleichen mit ELLA LF 951
+ENDE
+
++PROG ELLA urs:42.1
+KOPF Verkehr über Einflusslinienauswertung - UDL+TS Anteil
+
+ECHO LPOS $ für folgendes SOFILOAD COPY ELLA
+ECHO AUSW,ERG NEIN
+$ ECHO stat extr $ to show what ELLA is doing
+
+SAUS 'AX_1' INT 7 DZ 0.1
+$ ------------------------ Auswertung für Stabschnittgrößen:  --------------------
+AUSW MY  1  2     $ Definition der Lastfall Unternummern 1-12
+AUSW VZ  3  4   $ to save time only MY + VZ
+$ CALC MT  5  6
+$ CALC  N  7  8
+$ CALC MZ  9 10
+$ CALC VY 11 12
+$ ------------------------ Auswertung für Stabschnittgrößen:  --------------------
+
+AUSW MXX LMAX 1  2 $ Definition der Lastfall Unternummern 1-12
+AUSW MYY LMAX 3  4 $ to save time only MXX + MYY
+$ CALC VXX LMAX 5  6
+$ CALC VYY LMAX 7  8
+$ ------------------------ Auswertung für Stabschnittgrößen:  --------------------
+
+$  Hier passen drei  Spuren auf die Fahrbahn - also AX_1.10 bis AX_1.12 ansetzen !
+SAVE TYP L_U LFB 850 BEZ 'ELLA-UDL'          $ 850 = head number of envelope UDL
+    FALL 1 GRU        $ GRU = nur  UDL Flächenlasten
+      PZUG 'AX_1.10' LZUG 901 $ SYNC ON $ lane 1
+      PZUG 'AX_1.11' LZUG 902 $ SYNC ON $ lane 2
+      PZUG 'AX_1.12' LZUG 903 $ depending on country: here 3.0 kN/m UDL on lane 3
+    $ POSL 'AX_1.13' TRAI 903 $ depending on country: here 3.0 kN/m UDL on lane 4
+      PZUG 'AX_1.0'  LZUG 909 $ nur Restfläche auf Gehweg von WR bis YRA
+    FALL 2 GRU $ left: main vehicle standing left = internal lane 20:
+      PZUG 'AX_1.20' LZUG 901 $ SYNC ON
+      PZUG 'AX_1.21' LZUG 902 $ SYNC ON
+      PZUG 'AX_1.22' LZUG 903 $ depending on country: here 3.0 kN/m UDL on lane 3
+    $ POSL 'AX_1.23' TRAI 903 $ depending on country: here 3.0 kN/m UDL on lane 4
+      PZUG 'AX_1.0'  LZUG 909 $ nur Restfläche auf Gehweg von WR bis YRA
+SAVE TYP L_T LFB 950 BEZ 'ELLA-Tandemsystem' $ 950 = head number of envelope L_T
+    FALL 1 GR0        $ GR0 = nur Tandemsystem
+      PZUG 'AX_1.10' LZUG 901 $ SYNC ON
+      PZUG 'AX_1.11' LZUG 902 $ SYNC ON
+      PZUG 'AX_1.12' LZUG 903 $ SYNC ON
+    FALL 2 GR0 $ left: main vehicle standing left = internal lane 20:
+      PZUG 'AX_1.20' LZUG 901 $ SYNC ON
+      PZUG 'AX_1.21' LZUG 902 $ SYNC ON
+      PZUG 'AX_1.22' LZUG 903 $ SYNC ON
+      $ depending on country: here no tandem axle in lane 4
+ENDE
+
+!#!Kapitel Superposition
++PROG CSM URS:88
+KOPF Überlagerung für die folgende CSM Bemessung : ACT Eingaben und DESI MAX
+$
+ACT  TYP FUER    $ Definition der zusätzlichen Einwirkungen: G,P,C werden automatisch aktiviert
+     L_U GZG,GZT $ UDL Grundlast
+     L_T GZG,GZT $ Tandemachse
+     T   GZG,GZT $ Temperatur
+     ZF   GZG    $ wahrscheinliche Setzung GZG
+     SF   GZT    $ mögliche Setzung GZT
+DESI MAX $ Nur die Überlagerung ohne Bemessung durchführen
+STEU FILE 'maxi' $ Dateiname der erzeugten Eingabedatei
+ENDE
++apply "$(NAME)_maxi.dat"
+
+$ Wie man die verwendeten Kombinationsfaktoren prüfen kann ist in der erzeugten Eingabedatei _chek.dat beim Check-print Bruchnachweis
+$   ->    +PROG AQB $ Check Print Bruchnachweis          bei den KOMB Kombinationen erläutert.
+
+!#!Kapitel Design
++PROG CSM urs:11
+KOPF Checkprint Design eines Stabes und QUAD Spannungen der Kombinationen
+$ Nach der vorangegangenen Überlagerung kann jetzt mit alleinigem DESI CHEK eine kurze und übersichtliche Bemessung eines Stabes erzielt werden
+DESI CHEK $ Übersichtlicher Checkprint eines Stabes zum Prüfen der Spannung in Spannungspunkten
+          $ und Plot der QUAD Spannungen der MAXIMA Kombinationen
+AUSW STAB 1008 X 0[m] $ Stab für den Check Print
+STEU FILE 'chek' $ Dateiname der erzeugten Eingabedatei
+ENDE
++apply "$(NAME)_chek.dat"
+
+!#!Kapitel Bruchnachweis Stab Elemente
++PROG CSM urs:12
+KOPF Bruchnachweis alle Stäbe
+DESI BRUC ETYP STAB $ Bruchnachweis allein
+STEU FILE 'gzt'
+ENDE
++apply "$(NAME)_gzt.dat"
+
+<TEXT> Kommentar zum CSM DESI:
+Damit man in den Ergebnisdateien nicht von der Flut der Nachweise erdrückt wird
+empfehlen wir, die Nachweise wie hier einzeln anzufordern, hier nur DESI BRUC.
+Dann kann man die Ergebnisse auch einzeln sichten und behält besser einen Überblick.
+Im SSD fügt man am besten mehrere CSM-DESIGN Tasks mit jeweils nur einer Aufgabe ein.
+Im Teddy kann man auch die erzeugten $(NAME)_...dat Dateien einzeln rechnen und deren Ergebnisse
+einzeln sichten.
+Bitte beachten Sie, dass mit jedem CSM-DESI Lauf auch eine WINGRAF .gra Datei angelegt wird,
+die die Plots dieser Nachweise schon für interaktive Änderungen (Box, Gruppen) vorbereitet:
+   Bitte öffnen Sie hierzu den Windows Explorer und machen einen Doppelklick z.B. auf Datei _gzt.gra
+   Oder Sie starten WINGRAF und öffnen von dort Datei _gzt.gra
+   Speichern Sie die Datei dann gleich unter einem anderen Namen ab, damit Ihre Änderungen erhalten bleiben.
+   Oder im SSD: fügen Sie Task 'Interaktive Graphik' ein und öffnen von dort Datei _gzt.gra
+Mit einem CSM-DESI STAN (hier am Ende) erhält man einen Überblick über alle möglichen Nachweise.
+</TEXT>
+
+!#!Kapitel Bruchnachweis Quad Elemente
++PROG CSM urs:15
+KOPF Bruchnachweis Quad Elemente
+DESI BRUC ETYP QUAD $ Bruchnachweis allein
+STEU FILE 'gztq'
+ENDE
++apply "$(NAME)_gztq.dat"
+
+$ Dateiordner aufräumen:
++sys del $(project).$d?
+
+

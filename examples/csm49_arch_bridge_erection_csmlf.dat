@@ -1,0 +1,587 @@
+$ Tabelle der im CSM fuer AQB verwendeten Lastfälle:
+LF 5010  TYP "G_1 "  QT   10 REF TEIL SUP PERM
+LF 5020  TYP "G_1 "  QT   20 REF TEIL SUP PERM
+LF 5030  TYP "G_1 "  QT   30 REF TEIL SUP PERM
+LF 5111  TYP "G_1 "  QT  111 REF TEIL SUP PERM
+LF 5112  TYP "G_1 "  QT  112 REF TEIL SUP PERM
+LF 5121  TYP "G_1 "  QT  121 REF TEIL SUP PERM
+LF 5122  TYP "G_1 "  QT  122 REF TEIL SUP PERM
+LF 5201  TYP "G_1 "  QT  201 REF TEIL SUP PERM
+LF 5202  TYP "G_1 "  QT  202 REF TEIL SUP PERM
+LF 5203  TYP "G_1 "  QT  203 REF TEIL SUP PERM
+LF 5210  TYP "G_1 "  QT  210 REF TEIL SUP PERM
+LF 5211  TYP "G_1 "  QT  211 REF TEIL SUP PERM
+LF 5212  TYP "G_1 "  QT  212 REF TEIL SUP PERM
+LF 5213  TYP "G_1 "  QT  213 REF TEIL SUP PERM
+LF 5220  TYP "G_1 "  QT  220 REF TEIL SUP PERM
+LF 5221  TYP "G_1 "  QT  221 REF TEIL SUP PERM
+LF 5222  TYP "G_1 "  QT  222 REF TEIL SUP PERM
+LF 5250  TYP "G_1 "  QT  250 REF TEIL SUP PERM
+LF 5300  TYP "G_1 "  QT  300 REF TEIL SUP PERM
+LF 5301  TYP "G_1 "  QT  301 REF TEIL SUP PERM
+LF 5302  TYP "G_1 "  QT  302 REF TEIL SUP PERM
+LF 5310  TYP "G_1 "  QT  310 REF TEIL SUP PERM
+LF 5311  TYP "G_1 "  QT  311 REF TEIL SUP PERM
+LF 5312  TYP "G_1 "  QT  312 REF TEIL SUP PERM
+LF 5320  TYP "G_1 "  QT  320 REF TEIL SUP PERM
+LF 5321  TYP "G_1 "  QT  321 REF TEIL SUP PERM
+LF 5322  TYP "G_1 "  QT  322 REF TEIL SUP PERM
+LF 5330  TYP "G_1 "  QT  330 REF TEIL SUP PERM
+LF 5331  TYP "G_1 "  QT  331 REF TEIL SUP PERM
+LF 5332  TYP "G_1 "  QT  332 REF TEIL SUP PERM
+$ --------------------- Ende AQB-LF Liste ------------
+$
+$ *************************************************************
+$
+$ Block der STAB BA Definition:
+$    Zu verwenden als Folgezeile nach STAB Eingabe $$:
+$    STAB NR 10001 $$
+$    include aqb_beam_cs
+$
+#define aqb_beam_cs
+ BA - $ Querschnitte ohne Bauabschnitte
+#enddef
+$ *************************************************************
+$
+$ MAXIMA-Block fuer Einwirkung ACT GPC (5000-er Lastfälle):
+$ Zu verwenden im MAXIMA z.B.:
+$     [$(project)_csmlf.dat ist vor MAXIMA zu includieren]
+$     [damit die max_act_g Blöcke definiert sind,]
+$     [am besten nach einem zweifachen "ENDE"
+$                                      "ENDE"
+$      vgl. csm.dat\deutsch\more\csm31_design_maxi.dat ]:
+$
+$ ENDE
+$ ENDE
+$ #include "$(project)_csmlf.dat"
+$ PROG MAXIMA
+$ KOPF
+$   KOMB  .. desi BASE ..
+$     ACT G
+$       #include max_act_g
+$                (oder getrennt G_1 G_2 verwendbar)
+$     ACT P
+$       #include max_act_p  $ or   m_p_infsup
+$     ACT C
+$       #include max_act_c
+$
+#define max_act_g
+      LF  5010 ;  5020 ;  5030 ;  5111 ;  5112 ;  5121 ;  5122 ;  5201 ;  5202
+      LF  5203 ;  5210 ;  5211 ;  5212 ;  5213 ;  5220 ;  5221 ;  5222 ;  5250
+      LF  5300 ;  5301 ;  5302 ;  5310 ;  5311 ;  5312 ;  5320 ;  5321 ;  5322
+      LF  5330 ;  5331 ;  5332
+#enddef
+$
+$                 getrennt G_1 G_2 ... :
+#define maxactg_1
+      LF  5010 ;  5020 ;  5030 ;  5111 ;  5112 ;  5121 ;  5122 ;  5201 ;  5202
+      LF  5203 ;  5210 ;  5211 ;  5212 ;  5213 ;  5220 ;  5221 ;  5222 ;  5250
+      LF  5300 ;  5301 ;  5302 ;  5310 ;  5311 ;  5312 ;  5320 ;  5321 ;  5322
+      LF  5330 ;  5331 ;  5332
+#enddef
+$
+#define max_act_p
+#enddef
+$
+#define m_p_infsup
+#enddef
+$
+#define max_act_c
+#enddef
+$ *************************************************************
+$
+#define csmgrp10
+$ ----------------------------------- Construction Stage  10  ----------------
+GRUP   1 BA  10
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp20
+$ ----------------------------------- Construction Stage  20  ----------------
+GRUP   1 BA  20
+GRUP   2 BA  20
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp30
+$ ----------------------------------- Construction Stage  30  ----------------
+GRUP   1 BA  30
+GRUP   2 BA  30
+GRUP   3 BA  30
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp111
+$ ----------------------------------- Construction Stage 111  ----------------
+GRUP   1 BA 111
+GRUP   2 BA 111
+GRUP   3 BA 111
+GRUP   9 BA 111
+GRUP  11 BA 111
+GRUP  21 BA 111
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.872667
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.872667
+#enddef
+#define csmgrp112
+$ ----------------------------------- Construction Stage 112  ----------------
+GRUP   1 BA 112
+GRUP   2 BA 112
+GRUP   3 BA 112
+GRUP   9 BA 112
+GRUP  11 BA 112
+GRUP  21 BA 112
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.872667
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.872667
+#enddef
+#define csmgrp121
+$ ----------------------------------- Construction Stage 121  ----------------
+GRUP   1 BA 121
+GRUP   2 BA 121
+GRUP   3 BA 121
+GRUP   9 BA 121
+GRUP  11 BA 121
+GRUP  12 BA 121
+GRUP  21 BA 121
+GRUP  22 BA 121
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.872667
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.872667
+#enddef
+#define csmgrp122
+$ ----------------------------------- Construction Stage 122  ----------------
+GRUP   1 BA 122
+GRUP   2 BA 122
+GRUP   3 BA 122
+GRUP   9 BA 122
+GRUP  11 BA 122
+GRUP  12 BA 122
+GRUP  21 BA 122
+GRUP  22 BA 122
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.872667
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.872667
+#enddef
+#define csmgrp201
+$ ----------------------------------- Construction Stage 201  ----------------
+GRUP   1 BA 201
+GRUP   2 BA 201
+GRUP   3 BA 201
+GRUP   9 BA 201
+GRUP  11 BA 201
+GRUP  12 BA 201
+GRUP  21 BA 201
+GRUP  22 BA 201
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.698133
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.698133
+#enddef
+#define csmgrp202
+$ ----------------------------------- Construction Stage 202  ----------------
+GRUP   1 BA 202
+GRUP   2 BA 202
+GRUP   3 BA 202
+GRUP   9 BA 202
+GRUP  11 BA 202
+GRUP  12 BA 202
+GRUP  21 BA 202
+GRUP  22 BA 202
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.523600
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.523600
+#enddef
+#define csmgrp203
+$ ----------------------------------- Construction Stage 203  ----------------
+GRUP   1 BA 203
+GRUP   2 BA 203
+GRUP   3 BA 203
+GRUP   9 BA 203
+GRUP  11 BA 203
+GRUP  12 BA 203
+GRUP  21 BA 203
+GRUP  22 BA 203
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.349067
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.349067
+#enddef
+#define csmgrp210
+$ ----------------------------------- Construction Stage 210  ----------------
+GRUP   1 BA 210
+GRUP   2 BA 210
+GRUP   3 BA 210
+GRUP   9 BA 210
+GRUP  11 BA 210
+GRUP  12 BA 210
+GRUP  21 BA 210
+GRUP  22 BA 210
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.349067
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.349067
+#enddef
+#define csmgrp211
+$ ----------------------------------- Construction Stage 211  ----------------
+GRUP   1 BA 211
+GRUP   2 BA 211
+GRUP   3 BA 211
+GRUP   9 BA 211
+GRUP  11 BA 211
+GRUP  12 BA 211
+GRUP  21 BA 211
+GRUP  22 BA 211
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.174533
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.174533
+#enddef
+#define csmgrp212
+$ ----------------------------------- Construction Stage 212  ----------------
+GRUP   1 BA 212
+GRUP   2 BA 212
+GRUP   3 BA 212
+GRUP   9 BA 212
+GRUP  11 BA 212
+GRUP  12 BA 212
+GRUP  21 BA 212
+GRUP  22 BA 212
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI  0.0872667
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI -0.0872667
+#enddef
+#define csmgrp213
+$ ----------------------------------- Construction Stage 213  ----------------
+GRUP   1 BA 213
+GRUP   2 BA 213
+GRUP   3 BA 213
+GRUP   9 BA 213
+GRUP  11 BA 213
+GRUP  12 BA 213
+GRUP  21 BA 213
+GRUP  22 BA 213
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI  -1.7453334E-14
+#enddef
+#define csmgrp220
+$ ----------------------------------- Construction Stage 220  ----------------
+GRUP   1 BA 220
+GRUP   2 BA 220
+GRUP   3 BA 220
+GRUP   9 BA 220
+GRUP  11 BA 220
+GRUP  12 BA 220
+GRUP  21 BA 220
+GRUP  22 BA 220
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp221
+$ ----------------------------------- Construction Stage 221  ----------------
+GRUP   1 BA 221
+GRUP   2 BA 221
+GRUP   3 BA 221
+GRUP   9 BA 221
+GRUP  11 BA 221
+GRUP  12 BA 221
+GRUP  13 BA 221
+GRUP  21 BA 221
+GRUP  22 BA 221
+GRUP  23 BA 221
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp222
+$ ----------------------------------- Construction Stage 222  ----------------
+GRUP   1 BA 222
+GRUP   2 BA 222
+GRUP   3 BA 222
+GRUP   9 BA 222
+GRUP  11 BA 222
+GRUP  12 BA 222
+GRUP  13 BA 222
+GRUP  21 BA 222
+GRUP  22 BA 222
+GRUP  23 BA 222
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp250
+$ ----------------------------------- Construction Stage 250  ----------------
+GRUP   1 BA 250
+GRUP   2 BA 250
+GRUP   3 BA 250
+GRUP  11 BA 250
+GRUP  12 BA 250
+GRUP  13 BA 250
+GRUP  21 BA 250
+GRUP  22 BA 250
+GRUP  23 BA 250
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp300
+$ ----------------------------------- Construction Stage 300  ----------------
+GRUP   1 BA 300
+GRUP   2 BA 300
+GRUP   3 BA 300
+GRUP  11 BA 300
+GRUP  12 BA 300
+GRUP  13 BA 300
+GRUP  21 BA 300
+GRUP  22 BA 300
+GRUP  23 BA 300
+GRUP 101 BA 300
+GRUP 201 BA 300
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp301
+$ ----------------------------------- Construction Stage 301  ----------------
+GRUP   1 BA 301
+GRUP   2 BA 301
+GRUP   3 BA 301
+GRUP  11 BA 301
+GRUP  12 BA 301
+GRUP  13 BA 301
+GRUP  21 BA 301
+GRUP  22 BA 301
+GRUP  23 BA 301
+GRUP 101 BA 301
+GRUP 201 BA 301
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp302
+$ ----------------------------------- Construction Stage 302  ----------------
+GRUP   1 BA 302
+GRUP   2 BA 302
+GRUP   3 BA 302
+GRUP  11 BA 302
+GRUP  12 BA 302
+GRUP  13 BA 302
+GRUP  21 BA 302
+GRUP  22 BA 302
+GRUP  23 BA 302
+GRUP 101 BA 302
+GRUP 201 BA 302
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp310
+$ ----------------------------------- Construction Stage 310  ----------------
+GRUP   1 BA 310
+GRUP   2 BA 310
+GRUP   3 BA 310
+GRUP  11 BA 310
+GRUP  12 BA 310
+GRUP  13 BA 310
+GRUP  21 BA 310
+GRUP  22 BA 310
+GRUP  23 BA 310
+GRUP 101 BA 310
+GRUP 102 BA 310
+GRUP 201 BA 310
+GRUP 202 BA 310
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp311
+$ ----------------------------------- Construction Stage 311  ----------------
+GRUP   1 BA 311
+GRUP   2 BA 311
+GRUP   3 BA 311
+GRUP  11 BA 311
+GRUP  12 BA 311
+GRUP  13 BA 311
+GRUP  21 BA 311
+GRUP  22 BA 311
+GRUP  23 BA 311
+GRUP 101 BA 311
+GRUP 102 BA 311
+GRUP 201 BA 311
+GRUP 202 BA 311
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp312
+$ ----------------------------------- Construction Stage 312  ----------------
+GRUP   1 BA 312
+GRUP   2 BA 312
+GRUP   3 BA 312
+GRUP  11 BA 312
+GRUP  12 BA 312
+GRUP  13 BA 312
+GRUP  21 BA 312
+GRUP  22 BA 312
+GRUP  23 BA 312
+GRUP 101 BA 312
+GRUP 102 BA 312
+GRUP 201 BA 312
+GRUP 202 BA 312
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp320
+$ ----------------------------------- Construction Stage 320  ----------------
+GRUP   1 BA 320
+GRUP   2 BA 320
+GRUP   3 BA 320
+GRUP  11 BA 320
+GRUP  12 BA 320
+GRUP  13 BA 320
+GRUP  21 BA 320
+GRUP  22 BA 320
+GRUP  23 BA 320
+GRUP 101 BA 320
+GRUP 102 BA 320
+GRUP 103 BA 320
+GRUP 201 BA 320
+GRUP 202 BA 320
+GRUP 203 BA 320
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp321
+$ ----------------------------------- Construction Stage 321  ----------------
+GRUP   1 BA 321
+GRUP   2 BA 321
+GRUP   3 BA 321
+GRUP  11 BA 321
+GRUP  12 BA 321
+GRUP  13 BA 321
+GRUP  21 BA 321
+GRUP  22 BA 321
+GRUP  23 BA 321
+GRUP 101 BA 321
+GRUP 102 BA 321
+GRUP 103 BA 321
+GRUP 201 BA 321
+GRUP 202 BA 321
+GRUP 203 BA 321
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp322
+$ ----------------------------------- Construction Stage 322  ----------------
+GRUP   1 BA 322
+GRUP   2 BA 322
+GRUP   3 BA 322
+GRUP  11 BA 322
+GRUP  12 BA 322
+GRUP  13 BA 322
+GRUP  21 BA 322
+GRUP  22 BA 322
+GRUP  23 BA 322
+GRUP 101 BA 322
+GRUP 102 BA 322
+GRUP 103 BA 322
+GRUP 201 BA 322
+GRUP 202 BA 322
+GRUP 203 BA 322
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp330
+$ ----------------------------------- Construction Stage 330  ----------------
+GRUP   1 BA 330
+GRUP   2 BA 330
+GRUP   3 BA 330
+GRUP  11 BA 330
+GRUP  12 BA 330
+GRUP  13 BA 330
+GRUP  21 BA 330
+GRUP  22 BA 330
+GRUP  23 BA 330
+GRUP 101 BA 330
+GRUP 102 BA 330
+GRUP 103 BA 330
+GRUP 104 BA 330
+GRUP 201 BA 330
+GRUP 202 BA 330
+GRUP 203 BA 330
+GRUP 204 BA 330
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp331
+$ ----------------------------------- Construction Stage 331  ----------------
+GRUP   1 BA 331
+GRUP   2 BA 331
+GRUP   3 BA 331
+GRUP  11 BA 331
+GRUP  12 BA 331
+GRUP  13 BA 331
+GRUP  21 BA 331
+GRUP  22 BA 331
+GRUP  23 BA 331
+GRUP 101 BA 331
+GRUP 102 BA 331
+GRUP 103 BA 331
+GRUP 104 BA 331
+GRUP 201 BA 331
+GRUP 202 BA 331
+GRUP 203 BA 331
+GRUP 204 BA 331
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+#define csmgrp332
+$ ----------------------------------- Construction Stage 332  ----------------
+GRUP   1 BA 332
+GRUP   2 BA 332
+GRUP   3 BA 332
+GRUP  11 BA 332
+GRUP  12 BA 332
+GRUP  13 BA 332
+GRUP  21 BA 332
+GRUP  22 BA 332
+GRUP  23 BA 332
+GRUP 101 BA 332
+GRUP 102 BA 332
+GRUP 103 BA 332
+GRUP 104 BA 332
+GRUP 201 BA 332
+GRUP 202 BA 332
+GRUP 203 BA 332
+GRUP 204 BA 332
+TAKT GRP (  11  12 1) XM  -40.0330[m] ZM  -29.9450[m] PHI     0.000
+TAKT GRP (  21  22 1) XM   40.0330[m] ZM  -29.9450[m] PHI     0.000
+#enddef
+$ *************************************************************
+#define stage_design
+$ Tabelle fuer Bemessung in Bauzustaenden - Beispiel siehe  csm34_stage_design.dat
+$ Anwendung: Variable cs_design setzen, z.B. sto#cs_design 120
+$ dann die GAMU defines setzen, z.B.:
+$    #define GAMU_G_1=GAMU 1.35 GAMF 1.00   $  dead load       take sum of all effects of G_1 with 1.35 or 1.00
+$    #define GAMU_G_2=GAMU 1.35 GAMF 1.00   $  add.dead        take sum of all effects of G_2 with 1.35 or 1.00
+$    #define GAMU_P=GAMU 1.00 GAMF 1.00   $  prestress
+$     creep is already defined in the #include stage_design
+$ dann #include stage_design    setzen.
+$ -> es werden damit nur die Lastfaelle gesetzt, die zu diesem Bauzustand gehoeren.
+$    Diese koennen dann einfach mit z.B. KOMB ... LF1 G LF2 P LF3 C verwendet werden.
+$    Dabei werden die entsprechenden Sicherheits- und psi-Beiwerte  gesetzt.
+$
+LET#LOOPSIZE 4999
+$
+if $(cs_design)>=010 ; LF 5010  TYP "G_1 "  QT   10 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=020 ; LF 5020  TYP "G_1 "  QT   20 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=030 ; LF 5030  TYP "G_1 "  QT   30 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=111 ; LF 5111  TYP "G_1 "  QT  111 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=112 ; LF 5112  TYP "G_1 "  QT  112 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=121 ; LF 5121  TYP "G_1 "  QT  121 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=122 ; LF 5122  TYP "G_1 "  QT  122 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=201 ; LF 5201  TYP "G_1 "  QT  201 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=202 ; LF 5202  TYP "G_1 "  QT  202 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=203 ; LF 5203  TYP "G_1 "  QT  203 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=210 ; LF 5210  TYP "G_1 "  QT  210 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=211 ; LF 5211  TYP "G_1 "  QT  211 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=212 ; LF 5212  TYP "G_1 "  QT  212 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=213 ; LF 5213  TYP "G_1 "  QT  213 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=220 ; LF 5220  TYP "G_1 "  QT  220 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=221 ; LF 5221  TYP "G_1 "  QT  221 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=222 ; LF 5222  TYP "G_1 "  QT  222 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=250 ; LF 5250  TYP "G_1 "  QT  250 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=300 ; LF 5300  TYP "G_1 "  QT  300 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=301 ; LF 5301  TYP "G_1 "  QT  301 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=302 ; LF 5302  TYP "G_1 "  QT  302 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=310 ; LF 5310  TYP "G_1 "  QT  310 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=311 ; LF 5311  TYP "G_1 "  QT  311 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=312 ; LF 5312  TYP "G_1 "  QT  312 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=320 ; LF 5320  TYP "G_1 "  QT  320 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=321 ; LF 5321  TYP "G_1 "  QT  321 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=322 ; LF 5322  TYP "G_1 "  QT  322 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=330 ; LF 5330  TYP "G_1 "  QT  330 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=331 ; LF 5331  TYP "G_1 "  QT  331 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=332 ; LF 5332  TYP "G_1 "  QT  332 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+$ --------------------- Ende AQB Bemessung in Bauzustaenden - siehe  csm34_stage_design.dat ------------
+#enddef
+$ *************************************************************
+$

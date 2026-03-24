@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-server",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "server.app", "examples/csm6_freivorbau_gross.sqlite"],
+      "port": 8000
+    },
+    {
+      "name": "viewer",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "viewer"],
+      "port": 8080
+    }
+  ]
+}

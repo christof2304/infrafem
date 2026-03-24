@@ -1,0 +1,17 @@
++PROG RESULTS urs:1
+HEAD Export Node Displacements
+PAGE UNII 0
+
+$ Export node displacements for all load cases
+LC ALL
+NODE TYPE UX,UY,UZ,RX,RY,RZ REPR DLST
+END
+
++PROG RESULTS urs:2
+HEAD Export Quad Forces
+PAGE UNII 0
+
+$ Export quad forces for all load cases
+LC ALL
+QUAD TYPE MX,MY,MXY,VX,VY,NX,NY,NXY REPR DLST
+END

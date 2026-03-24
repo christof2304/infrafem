@@ -1,0 +1,290 @@
+!#!Info  Beispiel:      Gewölbe ohne Bewehrung nach Zustand II
+!#!Info  Schlagwort:    material nichtlinear; Betongesetz; Gewölbe; Riss; klaffende Fuge
+!#!Info  Program:       ASE
+$
+$
+
+$ english file name: arch_bridge.dat
+$--------------------------------------------------------------------------------
+$ Gewölbe nach Zustand II
+$
+$ Besonders das Aufgehen der Fuge bei einem Mauerwerksbogen
+$ ist mit den QUAD-Layerelementen super rechenbar und im Animator
+$ (evtl. animator21 schöner) darstellbar.
+$ - gewoelbe_bruecke.dat rechnen (ohne BEMESS)
+$ - Teddy Menü SOFiSTiK - animator21
+$ - LF 103 öffnen, Elementinfo - Element im First anklicken
+$--------------------------------------------------------------------------------
+!#!KAPITEL Material and System generation
++PROG AQUA URS:1
+KOPF
+ECHO MAT VOLL
+NORM 'DIN' 'en199X-200X'
+BETO 1 C 12 EC 10000 FC 12 FCT 0.001 FCTK 0.001 MUE 0.20
+$-----                Eingabe der Arbeitslinie Mauerwerk als Materialart Beton wegen ASE-NMAT JA
+$
+ARBL GEBR 1.00 ; let#fcr -1.20*12 $ Gebrauch
+ARBL    EPS     SIG       TYP
+        0       0         SPL
+       -2.0    #fcr       SPL
+       -2.01   #fcr       POL
+       -3.5    #fcr       POL     $  Druckbereich
+       -6.0    #fcr*0.80  POL
+       -9.0     0
+ARBL BRUC 1.50 ; let#fcr -0.85*12 $ fcr=alphac*fc Gebrauch
+ARBL    EPS     SIG       TYP
+        0       0         SPL
+       -2.0    #fcr       SPL
+       -2.01   #fcr       POL
+       -3.5    #fcr       POL
+       -6.0    #fcr*0.80  POL
+       -9.0     0
+ARBL RECH 1.30 ; let#fcr -0.70*12 $ Kalkulatorisch
+ARBL    EPS     SIG       TYP
+        0       0         SPL
+       -2.0    #fcr       SPL
+       -2.01   #fcr       POL
+       -3.5    #fcr       POL
+       -6.0    #fcr*0.80  POL
+       -9.0     0
+
+STAH 2 S 500
+ENDE
+
++PROG SOFIMSHA urs:2
+kopf Gewölbe ohne Bewehrung nach Zustand II
+UNIT 5 ; SYST RAUM GDIV 1000 POSZ XREF 0 0 0 T11 1 0 0 T12 0 -1 0
+KNOT      101 X    11.313708 Y          0.0 Z   -11.313708 FIX F
+KNOT      102 X    10.860812 Y          0.0 Z   -11.749160
+KNOT      103 X    10.391169 Y          0.0 Z   -12.166495
+KNOT      104 X    9.9055033 Y          0.0 Z   -12.565071
+KNOT      105 X    9.4045639 Y          0.0 Z   -12.944272
+KNOT      106 X    8.8891239 Y          0.0 Z   -13.303514
+KNOT      107 X    8.3599768 Y          0.0 Z   -13.642242
+KNOT      108 X    7.8179393 Y          0.0 Z   -13.959936
+KNOT      109 X    7.2638478 Y          0.0 Z   -14.256104
+KNOT      110 X    6.6985559 Y          0.0 Z   -14.530291
+KNOT      111 X    6.1229353 Y          0.0 Z   -14.782072
+KNOT      112 X    5.5378728 Y          0.0 Z   -15.011062
+KNOT      113 X    4.9442720 Y          0.0 Z   -15.216905
+KNOT      114 X    4.3430471 Y          0.0 Z   -15.399283
+KNOT      115 X    3.7351258 Y          0.0 Z   -15.557919
+KNOT      116 X    3.1214452 Y          0.0 Z   -15.692564
+KNOT      117 X    2.5029516 Y          0.0 Z   -15.803014
+KNOT      118 X    1.8805983 Y          0.0 Z   -15.889095
+KNOT      119 X    1.2553456 Y          0.0 Z   -15.950677
+KNOT      120 X    0.6281571 Y          0.0 Z   -15.987664
+KNOT      121 X    0.0000000 Y          0.0 Z   -16.000000
+KNOT      122 X   -0.6281571 Y          0.0 Z   -15.987664
+KNOT      123 X   -1.2553456 Y          0.0 Z   -15.950677
+KNOT      124 X   -1.8805983 Y          0.0 Z   -15.889095
+KNOT      125 X   -2.5029516 Y          0.0 Z   -15.803014
+KNOT      126 X   -3.1214452 Y          0.0 Z   -15.692564
+KNOT      127 X   -3.7351258 Y          0.0 Z   -15.557919
+KNOT      128 X   -4.3430471 Y          0.0 Z   -15.399283
+KNOT      129 X   -4.9442720 Y          0.0 Z   -15.216905
+KNOT      130 X   -5.5378728 Y          0.0 Z   -15.011062
+KNOT      131 X   -6.1229353 Y          0.0 Z   -14.782072
+KNOT      132 X   -6.6985559 Y          0.0 Z   -14.530291
+KNOT      133 X   -7.2638478 Y          0.0 Z   -14.256104
+KNOT      134 X   -7.8179393 Y          0.0 Z   -13.959936
+KNOT      135 X   -8.3599768 Y          0.0 Z   -13.642242
+KNOT      136 X   -8.8891239 Y          0.0 Z   -13.303514
+KNOT      137 X   -9.4045639 Y          0.0 Z   -12.944272
+KNOT      138 X   -9.9055033 Y          0.0 Z   -12.565071
+KNOT      139 X   -10.391169 Y          0.0 Z   -12.166495
+KNOT      140 X   -10.860812 Y          0.0 Z   -11.749160
+KNOT      141 X   -11.313708 Y          0.0 Z   -11.313708 FIX F
+KNOT      201 X    11.313708 Y    4.0000000 Z   -11.313708 FIX F
+KNOT      202 X    10.860812 Y    4.0000000 Z   -11.749160 $  FIX PY
+KNOT      203 X    10.391169 Y    4.0000000 Z   -12.166495 $  FIX PY
+KNOT      204 X    9.9055033 Y    4.0000000 Z   -12.565071 $  FIX PY
+KNOT      205 X    9.4045639 Y    4.0000000 Z   -12.944272 $  FIX PY
+KNOT      206 X    8.8891239 Y    4.0000000 Z   -13.303514 $  FIX PY
+KNOT      207 X    8.3599768 Y    4.0000000 Z   -13.642242 $  FIX PY
+KNOT      208 X    7.8179393 Y    4.0000000 Z   -13.959936 $  FIX PY
+KNOT      209 X    7.2638478 Y    4.0000000 Z   -14.256104 $  FIX PY
+KNOT      210 X    6.6985559 Y    4.0000000 Z   -14.530291 $  FIX PY
+KNOT      211 X    6.1229353 Y    4.0000000 Z   -14.782072 $  FIX PY
+KNOT      212 X    5.5378728 Y    4.0000000 Z   -15.011062 $  FIX PY
+KNOT      213 X    4.9442720 Y    4.0000000 Z   -15.216905 $  FIX PY
+KNOT      214 X    4.3430471 Y    4.0000000 Z   -15.399283 $  FIX PY
+KNOT      215 X    3.7351258 Y    4.0000000 Z   -15.557919 $  FIX PY
+KNOT      216 X    3.1214452 Y    4.0000000 Z   -15.692564 $  FIX PY
+KNOT      217 X    2.5029516 Y    4.0000000 Z   -15.803014 $  FIX PY
+KNOT      218 X    1.8805983 Y    4.0000000 Z   -15.889095 $  FIX PY
+KNOT      219 X    1.2553456 Y    4.0000000 Z   -15.950677 $  FIX PY
+KNOT      220 X    0.6281571 Y    4.0000000 Z   -15.987664 $  FIX PY
+KNOT      221 X    0.0000000 Y    4.0000000 Z   -16.000000 $  FIX PY
+KNOT      222 X   -0.6281571 Y    4.0000000 Z   -15.987664 $  FIX PY
+KNOT      223 X   -1.2553456 Y    4.0000000 Z   -15.950677 $  FIX PY
+KNOT      224 X   -1.8805983 Y    4.0000000 Z   -15.889095 $  FIX PY
+KNOT      225 X   -2.5029516 Y    4.0000000 Z   -15.803014 $  FIX PY
+KNOT      226 X   -3.1214452 Y    4.0000000 Z   -15.692564 $  FIX PY
+KNOT      227 X   -3.7351258 Y    4.0000000 Z   -15.557919 $  FIX PY
+KNOT      228 X   -4.3430471 Y    4.0000000 Z   -15.399283 $  FIX PY
+KNOT      229 X   -4.9442720 Y    4.0000000 Z   -15.216905 $  FIX PY
+KNOT      230 X   -5.5378728 Y    4.0000000 Z   -15.011062 $  FIX PY
+KNOT      231 X   -6.1229353 Y    4.0000000 Z   -14.782072 $  FIX PY
+KNOT      232 X   -6.6985559 Y    4.0000000 Z   -14.530291 $  FIX PY
+KNOT      233 X   -7.2638478 Y    4.0000000 Z   -14.256104 $  FIX PY
+KNOT      234 X   -7.8179393 Y    4.0000000 Z   -13.959936 $  FIX PY
+KNOT      235 X   -8.3599768 Y    4.0000000 Z   -13.642242 $  FIX PY
+KNOT      236 X   -8.8891239 Y    4.0000000 Z   -13.303514 $  FIX PY
+KNOT      237 X   -9.4045639 Y    4.0000000 Z   -12.944272 $  FIX PY
+KNOT      238 X   -9.9055033 Y    4.0000000 Z   -12.565071 $  FIX PY
+KNOT      239 X   -10.391169 Y    4.0000000 Z   -12.166495 $  FIX PY
+KNOT      240 X   -10.860812 Y    4.0000000 Z   -11.749160 $  FIX PY
+KNOT      241 X   -11.313708 Y    4.0000000 Z   -11.313708 FIX F
+GRUP 9
+FEDE       118      118 DX        0.0        0.0  1.0000000 CP 1000000 RISS 0
+FEDE       126      126 DX        0.0        0.0  1.0000000 CP 1000000 RISS 0
+FEDE       218      218 DX        0.0        0.0  1.0000000 CP 1000000 RISS 0
+FEDE       226      226 DX        0.0        0.0  1.0000000 CP 1000000 RISS 0
+GRUP 0
+QUAD       101      101      102      202      201 MNR    1 MBW    2 NRA 31 MITT T 0.9000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       102      102      103      203      202 MNR    1 MBW    2 NRA 31 MITT T 0.8600000[m]  DRX        0.0  1.0000000        0.0
+QUAD       103      103      104      204      203 MNR    1 MBW    2 NRA 31 MITT T 0.8200000[m]  DRX        0.0  1.0000000        0.0
+QUAD       104      104      105      205      204 MNR    1 MBW    2 NRA 31 MITT T 0.7800000[m]  DRX        0.0  1.0000000        0.0
+QUAD       105      105      106      206      205 MNR    1 MBW    2 NRA 31 MITT T 0.7400000[m]  DRX        0.0  1.0000000        0.0
+QUAD       106      106      107      207      206 MNR    1 MBW    2 NRA 31 MITT T 0.7000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       107      107      108      208      207 MNR    1 MBW    2 NRA 31 MITT T 0.6600000[m]  DRX        0.0  1.0000000        0.0
+QUAD       108      108      109      209      208 MNR    1 MBW    2 NRA 31 MITT T 0.6200000[m]  DRX        0.0  1.0000000        0.0
+QUAD       109      109      110      210      209 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       110      110      111      211      210 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       111      111      112      212      211 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       112      112      113      213      212 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       113      113      114      214      213 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       114      114      115      215      214 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       115      115      116      216      215 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       116      116      117      217      216 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       117      117      118      218      217 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       118      118      119      219      218 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       119      119      120      220      219 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       120      120      121      221      220 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       121      121      122      222      221 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       122      122      123      223      222 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       123      123      124      224      223 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       124      124      125      225      224 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       125      125      126      226      225 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       126      126      127      227      226 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       127      127      128      228      227 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       128      128      129      229      228 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       129      129      130      230      229 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       130      130      131      231      230 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       131      131      132      232      231 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       132      132      133      233      232 MNR    1 MBW    2 NRA 31 MITT T 0.6000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       133      133      134      234      233 MNR    1 MBW    2 NRA 31 MITT T 0.6200000[m]  DRX        0.0  1.0000000        0.0
+QUAD       134      134      135      235      234 MNR    1 MBW    2 NRA 31 MITT T 0.6600000[m]  DRX        0.0  1.0000000        0.0
+QUAD       135      135      136      236      235 MNR    1 MBW    2 NRA 31 MITT T 0.7000000[m]  DRX        0.0  1.0000000        0.0
+QUAD       136      136      137      237      236 MNR    1 MBW    2 NRA 31 MITT T 0.7400000[m]  DRX        0.0  1.0000000        0.0
+QUAD       137      137      138      238      237 MNR    1 MBW    2 NRA 31 MITT T 0.7800000[m]  DRX        0.0  1.0000000        0.0
+QUAD       138      138      139      239      238 MNR    1 MBW    2 NRA 31 MITT T 0.8200000[m]  DRX        0.0  1.0000000        0.0
+QUAD       139      139      140      240      239 MNR    1 MBW    2 NRA 31 MITT T 0.8600000[m]  DRX        0.0  1.0000000        0.0
+QUAD       140      140      141      241      240 MNR    1 MBW    2 NRA 31 MITT T 0.9000000[m]  DRX        0.0  1.0000000        0.0
+ENDE
+
+$ +prog bemess
+$ kopf Definition der Bemessungsparameter und Mindestbewehrung
+$ Ohne Bemessungsparameter -> unbewehrter Beton
+
+$ Damit kann eigentlich keine Rissweite ermittelt werden.
+$ da kein Rissabstand verfügbar ist.
+$ Zur graphischen Darstellung in WINGRAF wird aber trotzdem die positive
+$ Randzugdehnung als Rissweite abgespeichert um realistisch
+$ aussehende Rissbilder am unbewehrter Beton zu erhalten.
+
++PROG SOFILOAD urs:5
+KOPF
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+LF 901 TYP NONE
+  QUAD 119 122 1  TYP PZZ P 1 $ unit load 1 kN/m2
+ENDE
+
+!#!KAPITEL Analysis
++PROG ASE URS:4
+KOPF Linear
+GRUP - VOLL ; GRUP 9 NEIN
+LF 1 FAKG 1 BEZ linear_egz
+ENDE
+
+$ +PROG ASE
+KOPF TH3 cracked
+SYST PROB TH3 ITER 200 NMAT JA TOL4 -0.5
+GRUP - VOLL ; GRUP 9 NEIN
+LF 101 FAKT 1.35 FAKG 1.35 BEZ 'TH3 GAMU 1.35 SLD cracked'
+DEHN KSV SLD $ siehe Ausgabe "Maximal erreichbare Betonspannungen" "maxi. obtainable concrete stress"
+ENDE
+
+$ +PROG ASE
+KOPF
+SYST PROB TH3 ITER 200 NMAT JA TOL4 -0.5         PLF 101  ; DEHN KSV SLD
+GRUP - VOLL ; GRUP 9 NEIN
+LF 102 FAKT 1.35 FAKG 1.35 BEZ '+1.35*10 kN/m2 on top'
+  LC 901 FAKT 10 $  wird noch mit LF FAKT multipliziert !
+ENDE
+
+$ +PROG ASE
+KOPF
+SYST PROB TH3 ITER 200 NMAT JA TOL4 -0.5         PLF 102  ; DEHN KSV SLD
+GRUP - VOLL ; GRUP 9 NEIN
+LF 103 FAKT 1.35 FAKG 1.35 BEZ '+1.35*40 kN/m2 top starts to crack'
+  LC 901 FAKT 40
+ENDE
+
+$ +PROG ASE
+KOPF
+SYST PROB TH3 ITER 200 NMAT JA TOL4 -0.5         PLF 103  ; DEHN KSV SLD
+GRUP - VOLL $ jetzt alles aktiv = + Hilfsstütze, sonst stürzt der Bogen ein
+LF 104 FAKT 1.35 FAKG 1.35 BEZ 'more loading with temporary support'
+  LC 901 FAKT 45
+ENDE
+$ Bitte die Statistik nichtlineare Effekte prüfen
+$ Die Rissbreite ist hier die max. Zugdehnung multipliziert mit der Prozesszonenlänge  (falls keine Bewehrung vorhanden)
+$ Die Prozesszonenlänge ist meist 0.4m siehe hierzu ASE Handbuch QUAD Betongesetz
+$ Prüfen Sie bitte auch in WINGRAF die nichtlinearen Dehnungen.
+$ Und im Animator - Element-Info die max. Betondruckspannung checken
+$----------------------------------------------------------------------------------
+
+-PROG WING URS:19
+KOPF
+SIZE DINA URS
+STEU WARN 96
+MOVE
+MOVE X -20 Y 0.5 Z 0
+DRAW X  20 Y 0.5 Z 0 DTYP ZZ
+BEOB TYP STAN X 0 Y  1 Z 0 ACHS POSZ
+LF NR 104
+SCHN TYP  S2NO UNIT  5.00000 SCHR   .19000
+SCHN TYP  S2NU UNIT  5.00000 SCHR   .19000
+ENDE
+
+-PROG WING URS:20
+KOPF
+SIZE DINA URS
+STEU WARN 96
+FAR2 F5 -2071
+MOVE
+MOVE X -20 Y 0.5 Z 0
+DRAW X  20 Y 0.5 Z 0 DTYP ZZ
+BEOB TYP BLIC X 0 Y -1 Z 0 ACHS POSZ DREH 0
+LF NR 104
+QUAD TYP S2NO UNIT 4    SCHR JA FILL NEIN DARS DCUT MITT NEIN
+QUAD TYP S2NU UNIT 4    SCHR JA FILL NEIN DARS DCUT MITT NEIN
+QUAD TYP EPNO UNIT STAN SCHR JA FILL NEIN DARS DCUT MITT NEIN
+QUAD TYP EPNU UNIT STAN SCHR JA FILL NEIN DARS DCUT MITT NEIN
+ENDE
+
+$ Then please open animator,
+$ - select loadcase 103
+$ - select Amplitude and input 50
+$   (klick into Amplitude-Text and input 50)
+$   to get same deformation in all loadcases
+$ - double-click to Element in midspan -> element-info appears
+$ - click LF+  Button several times  -> to look all loadcases
+$
+
+$ Dateiordner aufräumen:
++sys del $(project).$d?
+
+

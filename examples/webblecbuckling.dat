@@ -1,0 +1,110 @@
+!#!Info  Example:       Web buckling
+!#!Info  Keyword:       buckling;
+!#!Info  Program:       ASE
+
+$                    Stegblechbeulen
+
+$ english file name: webbuckling.dat
+
+#define lx=4.00    $ m Plattenlaenge
+#define hl=1.50    $ m Plattenhoehe links
+#define hr=1.80    $ m Plattenhoehe rechts
+#define  t=15.0    $ mm Plattendicke
+$
+$ Belastung:
+#define Last_o_l=  129  $ N/mm2 Spannung oben  links
+#define Last_u_l= -212  $ N/mm2 Spannung unten rechts
+#define Last_o_r=  139  $ N/mm2 Spannung oben  links
+#define Last_u_r= -231  $ N/mm2 Spannung unten rechts
+$ Schub in kN:
+#define  Schub_l=   900/2/1.50  $ KN/m Schubkraft links    positiv
+#define  Schub_r= -1240/2/1.80  $ KN/m Schubkraft rechts   negativ
+#define  Schub_o=  1100/2/1.80  $ KN/m Schubkraft rechts   positiv
+$
+$ Differenzlasten gehen unten in den Flansch (elastische Stützung)
+$
+$ Netzeinteilung
+#define nx=30      $ Anzahl Elemente laengs
+#define nz=16      $ Anzahl Elemente hoch
+
+!#!KAPITEL Material and System generation
++prog aqua -e urs:1
+HEAD Materials and sections
+NORM 'NS' 'en199X-200X-BRIDGE'     CAT 'B'  $ road bridges
+STEE 1  S   355          TITL 'Stahlträger'
+
+SREC 101 H 150[mm] B 10[mm] MNO 1 REF UM
+END
+
++prog sofimshc urs:2
+HEAD Meshing
+UNIT 5 ; SYST SPAC GDIV 10000
+CTRL MESH 1 ; CTRL HMIN 0.12
+SPT NO X     Y Z
+     1 0     0 0       $ 1. Eckknoten
+     2 0     0 $(hl)   $ 2. Eckknoten
+     3 $(lx) 0 0       $ 3. Eckknoten
+     4 $(lx) 0 $(hr)   $ 4. Eckknoten
+
+SLN 1  1 2 ; SLNS DRY 1 CA 1E6 $ Lagerung Y
+SLN 2  2 4 ; SLNS DRY 1 CA 1E6 CL 10000 $ Lagerung unten
+SLN 3  4 3 ; SLNS DRY 1 CA 1E6 $ Lagerung Y
+SLN 4  3 1 ; SLNS DRY 1 CA 1E6 $ Lagerung Y
+SAR 1 T $(t)[mm] GRP 0 MNO 1 MCTL 1 ; SARB OUT 1,2,3,4
+
+$ Steifen:
+SPT NO  X          Y Z
+    101 $(lx)-2.50 0 1.20
+    201 $(lx)      0 1.20
+SLN 101 NPA 101 NPE 201 GRP 101 STYP B DRY 1 SNO 101
+
+END
+
++PROG SOFILOAD urs:5
+HEAD
+UNIT 5 $ units: sections in mm, geometry+loads in m
+let#f $(t)*0.001*1000 $ liefert kN/m in der Lasteingabe
+LC 11 TITL Längsspannungen
+  LINE X1 GPT 1 X2 GPT 2 TYPE PXX P1 -$(Last_o_l)*#f P2  -$(Last_u_l)*#f
+  LINE X1 GPT 3 X2 GPT 4 TYPE PXX P1  $(Last_o_r)*#f P2   $(Last_u_r)*#f
+LC 12 TITL Schubkräfte
+  LINE X1 GPT 1 X2 GPT 2 TYPE PZZ P1  $(Schub_l)
+  LINE X1 GPT 3 X2 GPT 4 TYPE PZZ P1  $(Schub_r)
+  LINE X1 GPT 1 X2 GPT 3 TYPE PXX P1  $(Schub_o)
+END
+
+!#!KAPITEL Analysis
++prog ase -e urs:3
+HEAD Lineare_Berechnung
+LC 1 TITL 'Beul Ausgangszustand'
+  LCC 11,12
+END
+
++prog ase -e urs:4
+HEAD Beuleigenwerte
+SYST PLC 1
+EIGE 5 BUCK LMIN AUTO !  gives only positive eigenvalues
+END
+
++PROG WING urs:6
+HEAD
+SIZE -lp SPLI 2x1
+VIEW STAN 0 1 0 POSZ
+LC 11 ; LOAD SCHH 0.45
+LC 12 ; LOAD SCHH 0.45
+LC 1
+QUAD TYPE HSU SCHH NO STYP NODE FILL NO REPR DVEC AVER NO
+QUAD TYPE SV  SCHH 0.33 STYP NODE FILL NO REPR DISO AVER NO
+
+LC 2001
+NODE TYPE UY UNIT DEFA SCHH NO FILL NO REPR DISO
+VIEW STAN  7 2 -1 POSZ
+DEFO YES FAC 20 ; NODE TYPE UY UNIT DEFA SCHH NO FILL AREA REPR DISO
+AND ; STRU 0 0
+END
+
+$ Clean file folder:
++sys del $(project).$d?
+
+
+

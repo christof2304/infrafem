@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# SOFiSTiK binaries
+*.cdb
+*.err
+*.erg
+*.plb
+*.lst
+*.prt
+*.$d1
+*.$d2
+*.$d3
+*.$d4
+*.error_positions
+
+# SQLite (large, uploaded separately)
+*.sqlite
+
+# SOFiSTiK project index (large binary)
+*.cdi
+
+# Test output
+tests/_output/
+
+# Generated SOFiSTiK temp files
+examples/Neues_Modell*
+examples/Test1*
+examples/ASE1*
+examples/test_rahmen*
+examples/test2*
+examples/_export_results.dat
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

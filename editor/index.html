@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>infraFEM Editor</title>
+<style>
+/* ─── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #c8d0e0;
+    background: #1a1a2e;
+}
+
+/* ─── Layout ───────────────────────────────────────────── */
+#app {
+    display: grid;
+    grid-template-columns: 48px 1fr 260px;
+    grid-template-rows: 1fr 28px;
+    height: 100vh;
+}
+#toolbar {
+    grid-row: 1;
+    grid-column: 1;
+    background: rgba(10, 10, 30, 0.92);
+    border-right: 1px solid #334;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    gap: 2px;
+    z-index: 10;
+    overflow-y: auto;
+}
+#canvas-container {
+    grid-row: 1;
+    grid-column: 2;
+    position: relative;
+    overflow: hidden;
+}
+#properties {
+    grid-row: 1;
+    grid-column: 3;
+    background: rgba(10, 10, 30, 0.92);
+    border-left: 1px solid #334;
+    overflow-y: auto;
+    padding: 12px;
+    z-index: 10;
+}
+#statusbar {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    background: rgba(10, 10, 30, 0.95);
+    border-top: 1px solid #334;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: 12px;
+    color: #8899aa;
+    z-index: 10;
+}
+
+/* ─── Toolbar Buttons ──────────────────────────────────── */
+.tool-btn {
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #8899bb;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    position: relative;
+}
+.tool-btn:hover {
+    background: rgba(126, 184, 255, 0.1);
+    border-color: #445;
+    color: #aabbdd;
+}
+.tool-btn.active {
+    background: rgba(126, 184, 255, 0.2);
+    border-color: #7eb8ff;
+    color: #7eb8ff;
+}
+.tool-icon { font-size: 18px; line-height: 1; }
+.tool-label { font-size: 9px; opacity: 0.6; margin-top: 1px; }
+.action-btn .tool-icon { font-size: 16px; }
+.tool-sep {
+    width: 30px;
+    height: 1px;
+    background: #334;
+    margin: 6px 0;
+}
+
+/* ─── Properties Panel ─────────────────────────────────── */
+#properties h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7eb8ff;
+    margin: 12px 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+#properties h3:first-child { margin-top: 0; }
+.prop-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.prop-group label {
+    min-width: 80px;
+    font-size: 11px;
+    color: #8899aa;
+}
+.prop-group input, .prop-group select {
+    flex: 1;
+    background: #16162b;
+    border: 1px solid #334;
+    border-radius: 4px;
+    color: #c8d0e0;
+    padding: 4px 6px;
+    font-size: 12px;
+}
+.prop-group input:focus, .prop-group select:focus {
+    outline: none;
+    border-color: #7eb8ff;
+}
+.prop-val {
+    color: #aab;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* ─── List Items ───────────────────────────────────────── */
+.list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    font-size: 11px;
+    cursor: default;
+}
+.list-item:hover { background: rgba(126, 184, 255, 0.08); }
+.list-item.active { background: rgba(126, 184, 255, 0.15); border-left: 2px solid #7eb8ff; }
+.lc-select { cursor: pointer; flex: 1; }
+
+/* ─── Buttons ──────────────────────────────────────────── */
+.btn-sm {
+    background: rgba(126, 184, 255, 0.15);
+    border: 1px solid #445;
+    border-radius: 4px;
+    color: #7eb8ff;
+    padding: 1px 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.btn-sm:hover { background: rgba(126, 184, 255, 0.3); }
+.btn-del { color: #ff6666; background: transparent; border: none; font-size: 14px; }
+.btn-del:hover { color: #ff4444; }
+.btn-full {
+    width: 100%;
+    padding: 6px 12px;
+    background: rgba(126, 184, 255, 0.15);
+    border: 1px solid #445;
+    border-radius: 4px;
+    color: #7eb8ff;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 6px;
+}
+.btn-full:hover { background: rgba(126, 184, 255, 0.25); }
+.btn-danger {
+    color: #ff6666;
+    border-color: #633;
+    background: rgba(255, 80, 80, 0.1);
+}
+.btn-danger:hover { background: rgba(255, 80, 80, 0.2); }
+
+/* ─── Status Bar ───────────────────────────────────────── */
+.status-mode {
+    color: #7eb8ff;
+    font-weight: 600;
+}
+.status-sep { color: #334; }
+.status-right { margin-left: auto; color: #7eb8ff; }
+
+/* ─── DAT Preview Overlay ──────────────────────────────── */
+.dat-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.dat-dialog {
+    background: #1a1a2e;
+    border: 1px solid #445;
+    border-radius: 8px;
+    width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+.dat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #334;
+}
+.dat-header h3 { margin: 0; color: #7eb8ff; }
+.dat-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #c8d0e0;
+    white-space: pre;
+    tab-size: 4;
+}
+.dat-footer {
+    padding: 8px 16px;
+    border-top: 1px solid #334;
+}
+
+/* ─── Result Floating Widget ──────────────────────────── */
+#result-widget {
+    position: fixed;
+    top: 12px;
+    right: 272px;
+    background: rgba(10, 10, 30, 0.92);
+    border: 1px solid #445;
+    border-radius: 8px;
+    padding: 10px 14px;
+    z-index: 20;
+    min-width: 180px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    display: none;
+    cursor: default;
+}
+#result-widget.visible { display: block; }
+.result-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    margin-bottom: 8px;
+    user-select: none;
+}
+.result-widget-title {
+    font-size: 11px;
+    color: #7eb8ff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.result-widget-close {
+    background: none;
+    border: none;
+    color: #667;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 2px;
+}
+.result-widget-close:hover { color: #aab; }
+.result-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 8px;
+}
+.result-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #8899bb;
+    cursor: pointer;
+    padding: 3px 4px;
+    border-radius: 3px;
+}
+.result-toggle:hover {
+    background: rgba(126, 184, 255, 0.1);
+    color: #aabbdd;
+}
+.result-toggle input[type="checkbox"] {
+    accent-color: #7eb8ff;
+    width: 14px;
+    height: 14px;
+}
+.result-toggle .color-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.result-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid #334;
+    padding-top: 8px;
+}
+.result-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #667;
+}
+.result-slider-row input[type="range"] {
+    flex: 1;
+    height: 4px;
+    accent-color: #7eb8ff;
+    cursor: pointer;
+}
+.result-slider-row .slider-val {
+    font-family: monospace;
+    font-size: 10px;
+    color: #8899bb;
+    min-width: 28px;
+    text-align: right;
+}
+
+/* ─── Result Summary (Properties) ─────────────────────── */
+.result-summary {
+    font-size: 11px;
+    margin-top: 4px;
+}
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(51, 68, 85, 0.3);
+}
+.result-label {
+    color: #8899aa;
+    font-weight: 500;
+    min-width: 65px;
+}
+.result-val {
+    color: #c8d0e0;
+    font-family: monospace;
+    font-size: 11px;
+    text-align: right;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #556; }
+
+/* ─── Quad Color Legend ───────────────────────────────── */
+#quad-color-legend {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    user-select: none;
+}
+</style>
+</head>
+<body>
+<div id="app">
+    <div id="toolbar"></div>
+    <div id="canvas-container"></div>
+    <div id="properties"></div>
+    <div id="statusbar"></div>
+</div>
+<div id="result-widget"></div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module">
+import { EditorModel } from './editor-core.js';
+import { EditorCanvas } from './editor-canvas.js';
+import { Toolbar, PropertiesPanel, StatusBar, ResultWidget } from './editor-ui.js';
+import { EditorAPI } from './editor-api.js';
+
+// ─── Init ─────────────────────────────────────────────────
+const model = new EditorModel();
+const api = new EditorAPI();
+
+const canvas = new EditorCanvas(
+    document.getElementById('canvas-container'),
+    model
+);
+
+const toolbar = new Toolbar(
+    document.getElementById('toolbar'),
+    model,
+    api,
+    canvas
+);
+
+const props = new PropertiesPanel(
+    document.getElementById('properties'),
+    model
+);
+
+const status = new StatusBar(
+    document.getElementById('statusbar'),
+    model
+);
+
+const resultWidget = new ResultWidget(model, canvas);
+
+// ─── Initial hint ─────────────────────────────────────────
+document.getElementById('status-msg').textContent = 'Bereit — N=Knoten, B=Stab, A=Auflager, L=Last';
+
+// ─── Expose for debugging ─────────────────────────────────
+window._editor = { model, canvas, api, resultWidget };
+</script>
+</body>
+</html>

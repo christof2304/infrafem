@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>infraFEM Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+canvas { display: block; }
+
+#ui { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+#ui > * { pointer-events: auto; }
+
+#info-panel {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(10,10,30,0.88); border: 1px solid #334; border-radius: 8px;
+  padding: 14px 18px; min-width: 240px; font-size: 13px; line-height: 1.6;
+  backdrop-filter: blur(8px);
+}
+#info-panel h2 { font-size: 15px; color: #7eb8ff; margin-bottom: 6px; font-weight: 600; }
+#info-panel .label { color: #889; }
+#info-panel .value { color: #cde; float: right; }
+
+#controls {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(10,10,30,0.88); border: 1px solid #334; border-radius: 8px;
+  padding: 14px 18px; min-width: 220px; font-size: 13px;
+  backdrop-filter: blur(8px);
+  max-height: calc(100vh - 24px); overflow-y: auto;
+}
+#controls::-webkit-scrollbar { width: 5px; }
+#controls::-webkit-scrollbar-thumb { background: #445; border-radius: 3px; }
+#group-toggles { max-height: 150px; overflow-y: auto; }
+#group-toggles::-webkit-scrollbar { width: 4px; }
+#group-toggles::-webkit-scrollbar-thumb { background: #445; border-radius: 2px; }
+#controls label { display: block; color: #889; margin: 8px 0 3px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+#controls select, #controls input[type=range] {
+  width: 100%; background: #222; color: #ddd; border: 1px solid #445;
+  border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none;
+}
+#controls select:focus { border-color: #7eb8ff; }
+#controls input[type=range] { padding: 0; margin-top: 4px; accent-color: #7eb8ff; }
+#scale-val { color: #7eb8ff; font-weight: 600; }
+
+#legend {
+  position: absolute; right: 12px; bottom: 40px;
+  background: rgba(10,10,30,0.88); border: 1px solid #334; border-radius: 8px;
+  padding: 10px 14px; font-size: 11px; display: none;
+  backdrop-filter: blur(8px);
+}
+#legend canvas { border-radius: 3px; }
+#legend .leg-label { display: flex; justify-content: space-between; margin-top: 4px; }
+
+#status {
+  position: absolute; bottom: 8px; left: 12px; font-size: 11px; color: #556;
+}
+#support-legend {
+  position: absolute; left: 12px; bottom: 40px;
+  background: rgba(10,10,30,0.88); border: 1px solid #334; border-radius: 8px;
+  padding: 10px 14px; font-size: 11px; display: none;
+  backdrop-filter: blur(8px);
+}
+#support-legend h4 { color: #7eb8ff; font-weight: 600; margin: 0 0 8px; font-size: 12px; }
+#support-legend .sl-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; color: #aab; }
+#support-legend .sl-icon { width: 28px; height: 22px; flex-shrink: 0; }
+#support-legend .sl-icon svg { width: 100%; height: 100%; }
+
+#stress-panel {
+  position: absolute; top: 60px; right: 260px;
+  background: rgba(10,10,30,0.95); border: 1px solid #445; border-radius: 10px;
+  padding: 20px; min-width: 340px; display: none;
+  backdrop-filter: blur(12px); z-index: 100; font-size: 13px;
+  cursor: default;
+}
+#stress-panel h3 { color: #7eb8ff; margin-bottom: 8px; font-weight: 600; cursor: grab; user-select: none; }
+#stress-panel .close-btn {
+  position: absolute; top: 8px; right: 14px;
+  cursor: pointer; color: #889; font-size: 20px; line-height: 1;
+}
+#stress-panel .close-btn:hover { color: #fff; }
+#stress-panel .info-row { display: flex; justify-content: space-between; margin: 2px 0; }
+#stress-panel .info-row .label { color: #889; }
+#stress-panel .info-row .value { color: #cde; }
+#stress-panel select {
+  background: #222; color: #ddd; border: 1px solid #445;
+  border-radius: 4px; padding: 4px 8px; font-size: 12px; margin: 8px 0;
+}
+#stress-panel canvas { display: block; margin: 8px auto 0; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div id="info-panel">
+    <select id="sel-db" style="width:100%;background:#222;color:#7eb8ff;border:1px solid #445;border-radius:4px;padding:4px 8px;font-size:12px;font-weight:600;margin-bottom:8px;outline:none;cursor:pointer"></select>
+    <h2 id="project-name">infraFEM Viewer</h2>
+    <div><span class="label">Knoten</span><span class="value" id="v-nodes">-</span></div>
+    <div><span class="label">Balken</span><span class="value" id="v-beams">-</span></div>
+    <div><span class="label">QUAD</span><span class="value" id="v-quads">-</span></div>
+    <div><span class="label">Lastfall</span><span class="value" id="v-lc">-</span></div>
+    <div><span class="label">Ergebnis</span><span class="value" id="v-result">-</span></div>
+    <div><span class="label">Min</span><span class="value" id="v-min">-</span></div>
+    <div><span class="label">Max</span><span class="value" id="v-max">-</span></div>
+  </div>
+
+  <div id="controls">
+    <label>Lastfall</label>
+    <select id="sel-lc"><option value="">Laden...</option></select>
+    <label>Ergebnis</label>
+    <select id="sel-result">
+      <option value="">Keine (Geometrie)</option>
+      <option value="uz">Verformung uz</option>
+      <option value="uy">Verformung uy</option>
+      <option value="ux">Verformung ux</option>
+      <option value="u_abs">Verformung |u|</option>
+      <option value="quad_mxx">Moment mxx</option>
+      <option value="quad_myy">Moment myy</option>
+      <option value="quad_mxy">Moment mxy</option>
+      <option value="quad_vx">Querkraft vx</option>
+      <option value="quad_vy">Querkraft vy</option>
+      <option value="quad_nx">Normalkraft nx</option>
+      <option value="quad_ny">Normalkraft ny</option>
+      <option value="quad_nxy">Normalkraft nxy</option>
+      <option value="stress_sxo">Spannung &#963;x oben</option>
+      <option value="stress_sxu">Spannung &#963;x unten</option>
+      <option value="stress_syo">Spannung &#963;y oben</option>
+      <option value="stress_syu">Spannung &#963;y unten</option>
+      <option value="stress_sxyo">Spannung &#964;xy oben</option>
+      <option value="stress_sxyu">Spannung &#964;xy unten</option>
+      <option value="beam_N">Stabelemente N</option>
+      <option value="beam_My">Stabelemente My</option>
+      <option value="beam_Vz">Stabelemente Vz</option>
+    </select>
+    <label id="diagram-scale-label" style="display:none">Diagramm skalieren</label>
+    <input type="range" id="diagram-slider" min="400" max="600" value="500" step="1" style="display:none">
+    <div id="diagram-scale-row" style="display:none;text-align:right;margin-top:2px"><span id="diagram-scale-val" style="color:#7eb8ff;font-weight:600">500</span></div>
+    <label>Verformung skalieren</label>
+    <input type="range" id="scale-slider" min="0" max="500" value="0" step="1">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+      <label style="margin:0;cursor:pointer;display:flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0">
+        <input type="checkbox" id="anim-toggle" style="width:auto;accent-color:#7eb8ff"> Animation
+      </label>
+      <span id="scale-val">0x</span>
+    </div>
+    <label id="support-scale-label" style="display:none">Lagersymbole</label>
+    <input type="range" id="support-slider" min="5" max="50" value="15" step="1" style="display:none">
+    <div id="support-scale-row" style="display:none;text-align:right;margin-top:2px"><span id="support-scale-val" style="color:#7eb8ff;font-weight:600">15</span></div>
+    <div style="margin-top:10px;border-top:1px solid #334;padding-top:8px">
+      <label style="cursor:pointer;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;margin:4px 0">
+        <input type="checkbox" id="toggle-beam-section" style="width:auto;accent-color:#7eb8ff"> Stabquerschnitte
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;margin:4px 0">
+        <input type="checkbox" id="toggle-quad-thickness" checked style="width:auto;accent-color:#7eb8ff"> Plattendicke
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;margin:4px 0">
+        <input type="checkbox" id="toggle-stress-click" style="width:auto;accent-color:#7eb8ff"> Spannungsverlauf (Klick)
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;margin:4px 0">
+        <input type="checkbox" id="toggle-tendons" checked style="width:auto;accent-color:#ffdd44"> Spannglieder
+      </label>
+    </div>
+    <div id="group-panel" style="margin-top:10px;border-top:1px solid #334;padding-top:8px;display:none">
+      <label style="text-transform:uppercase;letter-spacing:1px;font-size:10px;color:#889;margin-bottom:4px;display:block">Gruppen</label>
+      <div id="group-toggles"></div>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid #334;padding-top:8px">
+      <label style="text-transform:uppercase;letter-spacing:1px;font-size:10px;color:#889;margin-bottom:4px;display:block">Bauablauf</label>
+      <div style="display:flex;gap:4px;margin-bottom:6px">
+        <button id="btn-phase-prev" style="flex:1;padding:4px;background:#335;color:#acd;border:1px solid #557;border-radius:3px;cursor:pointer;font-size:14px" title="Vorherige Phase">&#9664;</button>
+        <button id="btn-phase-play" style="flex:1;padding:4px;background:#335;color:#acd;border:1px solid #557;border-radius:3px;cursor:pointer;font-size:14px" title="Abspielen">&#9654;</button>
+        <button id="btn-phase-next" style="flex:1;padding:4px;background:#335;color:#acd;border:1px solid #557;border-radius:3px;cursor:pointer;font-size:14px" title="Nächste Phase">&#9654;&#9654;</button>
+        <button id="btn-phase-reset" style="flex:1;padding:4px;background:#335;color:#acd;border:1px solid #557;border-radius:3px;cursor:pointer;font-size:11px" title="Alle anzeigen">Alle</button>
+      </div>
+      <div id="phase-label" style="color:#7eb8ff;font-size:11px;text-align:center;min-height:16px">Alle Phasen</div>
+      <input type="range" id="phase-slider" min="-1" max="7" value="-1" step="1" style="width:100%;margin-top:4px;accent-color:#7eb8ff">
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <span style="color:#889;font-size:10px;white-space:nowrap">Tempo</span>
+        <input type="range" id="phase-speed" min="100" max="3000" value="800" step="100" style="flex:1;accent-color:#7eb8ff">
+        <span id="phase-speed-val" style="color:#7eb8ff;font-size:11px;font-weight:600;min-width:32px;text-align:right">0.8s</span>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <button id="btn-export-glb" style="width:100%;padding:6px 12px;background:#335;color:#acd;border:1px solid #557;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit">GLB exportieren</button>
+    </div>
+  </div>
+
+  <div id="support-legend">
+    <h4>Lager</h4>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><rect x="4" y="4" width="20" height="14" fill="#ff3344" opacity="0.7" rx="1"/><line x1="8" y1="18" x2="6" y2="4" stroke="#ff3344" stroke-width="1.2"/><line x1="14" y1="18" x2="12" y2="4" stroke="#ff3344" stroke-width="1.2"/><line x1="20" y1="18" x2="18" y2="4" stroke="#ff3344" stroke-width="1.2"/></svg></div>
+      <span>Einspannung</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><polygon points="14,2 4,18 24,18" fill="#ff3344" opacity="0.7"/><line x1="3" y1="19" x2="25" y2="19" stroke="#ff3344" stroke-width="1.5"/></svg></div>
+      <span>Festes Lager</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><polygon points="14,2 5,15 23,15" fill="#ff3344" opacity="0.7"/><circle cx="9" cy="18" r="2.5" fill="#ff3344" opacity="0.7"/><circle cx="19" cy="18" r="2.5" fill="#ff3344" opacity="0.7"/><line x1="3" y1="21" x2="25" y2="21" stroke="#ff3344" stroke-width="1.2"/></svg></div>
+      <span>Verschieblich</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><line x1="14" y1="4" x2="14" y2="18" stroke="#ff3344" stroke-width="2"/><polygon points="10,16 14,22 18,16" fill="#ff3344" opacity="0.7"/></svg></div>
+      <span>Einzelrichtung</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><polyline points="4,11 8,5 12,17 16,5 20,17 24,11" fill="none" stroke="#00ccaa" stroke-width="1.5"/></svg></div>
+      <span>Feder</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><line x1="4" y1="11" x2="24" y2="11" stroke="#ffaa00" stroke-width="1.5"/><polygon points="7,7 11,11 7,15 3,11" fill="#ffaa00" opacity="0.7"/><polygon points="21,7 25,11 21,15 17,11" fill="#ffaa00" opacity="0.7"/></svg></div>
+      <span>Kopplung</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-icon"><svg viewBox="0 0 28 22"><path d="M3,16 Q10,4 18,12 Q22,16 26,8" fill="none" stroke="#ffdd44" stroke-width="2"/></svg></div>
+      <span>Spannglied</span>
+    </div>
+  </div>
+
+  <div id="legend">
+    <div id="leg-title" style="color:#7eb8ff;font-weight:600;margin-bottom:4px;font-size:12px"></div>
+    <canvas id="legend-canvas" width="24" height="180"></canvas>
+    <div class="leg-label"><span id="leg-max">-</span></div>
+    <div class="leg-label"><span id="leg-min">-</span></div>
+    <div id="leg-unit" style="color:#889;text-align:center;margin-top:2px;font-size:10px"></div>
+  </div>
+</div>
+<div id="stress-panel">
+  <span class="close-btn" id="stress-close">&times;</span>
+  <h3>Spannungsverlauf</h3>
+  <div id="stress-info"></div>
+  <select id="stress-comp">
+    <option value="sx">&#963;x</option>
+    <option value="sy">&#963;y</option>
+    <option value="txy">&#964;xy</option>
+  </select>
+  <canvas id="stress-canvas" width="300" height="200"></canvas>
+</div>
+<div id="status">infraFEM v0.1</div>
+
+<!-- Three.js r170 -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+// ── Config ────────────────────────────────────────────────────────────────
+const API = new URLSearchParams(location.search).get('api') || 'http://127.0.0.1:8000/api';
+const COL_BG       = 0x1a1a2e;
+const COL_NODE     = 0x5577aa;
+const COL_SUPPORT  = 0xff3344;
+const COL_BEAM     = 0x88aacc;
+const COL_QUAD     = 0x3a5070;
+const COL_WIRE     = 0x556688;
+
+// Distinct group color palette (up to 12 groups)
+const GROUP_COLORS = [
+  0x5599dd, // 1 - steel blue
+  0x44bb88, // 2 - teal
+  0x7788cc, // 3 - slate blue
+  0xcc8844, // 4 - amber
+  0x66aaaa, // 5 - cyan
+  0x9977bb, // 6 - purple
+  0xbb6666, // 7 - red
+  0x88aa55, // 8 - olive
+  0xdd7799, // 9 - pink
+  0x55aa77, // 10 - green
+  0xaa8866, // 11 - tan
+  0x6688bb, // 12 - blue
+];
+const NODE_RADIUS  = 0.02;
+
+// ── Coordinate transform (SOFiSTiK → Three.js) ──────────────────────────
+// Adapted at runtime based on gravity_direction from API
+// toView: position {x,y,z} → THREE.Vector3
+// toViewD: displacement {ux,uy,uz} → THREE.Vector3 (same rotation, no offset)
+let toView  = (n) => new THREE.Vector3(n.x, -n.z, -n.y);
+let toViewD = (d) => new THREE.Vector3(d.ux, -d.uz, -d.uy);
+function setupCoordinates(system) {
+  const gx = system.gravity_direction_x || 0;
+  const gy = system.gravity_direction_y || 0;
+  const gz = system.gravity_direction_z || 0;
+  if (Math.abs(gz) >= Math.abs(gx) && Math.abs(gz) >= Math.abs(gy)) {
+    if (gz > 0) {
+      toView  = (n) => new THREE.Vector3(n.x, -n.z, -n.y);
+      toViewD = (d) => new THREE.Vector3(d.ux, -d.uz, -d.uy);
+    } else {
+      toView  = (n) => new THREE.Vector3(n.x,  n.z, -n.y);
+      toViewD = (d) => new THREE.Vector3(d.ux,  d.uz, -d.uy);
+    }
+  } else if (Math.abs(gy) >= Math.abs(gx)) {
+    if (gy > 0) {
+      toView  = (n) => new THREE.Vector3(n.x, -n.y, n.z);
+      toViewD = (d) => new THREE.Vector3(d.ux, -d.uy, d.uz);
+    } else {
+      toView  = (n) => new THREE.Vector3(n.x,  n.y, n.z);
+      toViewD = (d) => new THREE.Vector3(d.ux,  d.uy, d.uz);
+    }
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────
+let nodes = [];         // [{nr, x, y, z, support}]
+let nodeMap = {};       // nr -> index into nodes[]
+let beams = [];
+let quads = [];
+let sections = {};      // sectionNr -> {width, height, name}
+let springs = [];       // [{nr, node_start, node_end, direction, cp, cq, cm}]
+let constraints = [];   // [{nr, node, ref_node, type}]
+let groups = {};        // groupNr -> {name, color, visible}
+let tendons = [];       // [{nr, name, diameter, segments}]
+let loadcases = [];
+let currentLC = null;
+let currentResult = '';
+let resultData = null;  // raw API response
+let dispCache = {};     // LC -> displacement data {node_nr: {ux,uy,uz,...}}
+let deformScale = 0;
+let animating = false;
+
+// Three objects
+let scene, camera, renderer, controls;
+let nodeMeshes, quadMesh, quadWireMesh, beamMeshes, thicknessMesh;
+let basePositions = null;     // Float32Array of quad vertex positions
+let nodeBasePositions = null; // Map nr -> {x,y,z}
+let faceToQuad = [];          // triangle faceIndex -> quad element nr
+let highlightMesh = null;     // outline mesh for selected quad
+let beamDiagramGroup = null;  // 3D ribbon diagrams for beam forces
+let supportGroup = null;      // 3D support/bearing symbols
+let beamSectionGroup = null;  // 3D beam cross-section rendering
+let couplingGroup = null;     // 3D spring / constraint symbols
+let tendonGroup = null;       // 3D tendon path lines
+
+// Construction phase animation — loaded dynamically from API
+let CONSTRUCTION_PHASES = [];
+let constructionPhase = -1;   // -1 = all visible, 0..N = phase index
+let constructionPlaying = false;
+let constructionTimer = null;
+let modelExtent = 1;          // max bounding box dimension (for scaling symbols)
+let diagramScale = 500;       // diagram exaggeration (slider)
+let lastBeamComp = null;      // last beam component for rebuild
+let lastBeamData = null;      // last beam data for rebuild
+
+// ── Result metadata (label, unit) ─────────────────────────────────────────
+const RESULT_META = {
+  ux:     { label: 'Verformung ux',    unit: 'm' },
+  uy:     { label: 'Verformung uy',    unit: 'm' },
+  uz:     { label: 'Verformung uz',    unit: 'm' },
+  u_abs:  { label: 'Verformung |u|',   unit: 'm' },
+  quad_mxx: { label: 'Moment mxx',     unit: 'kNm/m' },
+  quad_myy: { label: 'Moment myy',     unit: 'kNm/m' },
+  quad_mxy: { label: 'Moment mxy',     unit: 'kNm/m' },
+  quad_vx:  { label: 'Querkraft vx',   unit: 'kN/m' },
+  quad_vy:  { label: 'Querkraft vy',   unit: 'kN/m' },
+  quad_nx:  { label: 'Normalkraft nx',  unit: 'kN/m' },
+  quad_ny:  { label: 'Normalkraft ny',  unit: 'kN/m' },
+  quad_nxy: { label: 'Normalkraft nxy', unit: 'kN/m' },
+  stress_sxo:  { label: '\u03C3x oben',  unit: 'MPa' },
+  stress_sxu:  { label: '\u03C3x unten', unit: 'MPa' },
+  stress_syo:  { label: '\u03C3y oben',  unit: 'MPa' },
+  stress_syu:  { label: '\u03C3y unten', unit: 'MPa' },
+  stress_sxyo: { label: '\u03C4xy oben', unit: 'MPa' },
+  stress_sxyu: { label: '\u03C4xy unten',unit: 'MPa' },
+  beam_N:  { label: 'Normalkraft N',   unit: 'kN' },
+  beam_My: { label: 'Moment My',       unit: 'kNm' },
+  beam_Vz: { label: 'Querkraft Vz',    unit: 'kN' },
+};
+
+// ── Jet colormap ──────────────────────────────────────────────────────────
+function jet(t) {
+  // t in [0,1] -> {r,g,b} in [0,1]
+  t = Math.max(0, Math.min(1, t));
+  const r = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.75) * 4));
+  const g = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.5)  * 4));
+  const b = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.25) * 4));
+  return { r, g, b };
+}
+
+function formatValue(v) {
+  const abs = Math.abs(v);
+  if (abs === 0) return '0';
+  if (abs >= 100) return v.toFixed(1);
+  if (abs >= 1) return v.toFixed(2);
+  if (abs >= 0.01) return v.toFixed(4);
+  return v.toExponential(2);
+}
+
+function drawLegend(vmin, vmax, resultKey) {
+  const el = document.getElementById('legend');
+  const canvas = document.getElementById('legend-canvas');
+  const ctx = canvas.getContext('2d');
+  const h = canvas.height;
+  for (let y = 0; y < h; y++) {
+    const t = 1 - y / h;
+    const c = jet(t);
+    ctx.fillStyle = `rgb(${c.r*255|0},${c.g*255|0},${c.b*255|0})`;
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+  const meta = RESULT_META[resultKey] || {};
+  document.getElementById('leg-title').textContent = meta.label || resultKey || '';
+  document.getElementById('leg-max').textContent = formatValue(vmax);
+  document.getElementById('leg-min').textContent = formatValue(vmin);
+  document.getElementById('leg-unit').textContent = meta.unit ? `[${meta.unit}]` : '';
+  el.style.display = 'block';
+}
+
+function hideLegend() {
+  document.getElementById('legend').style.display = 'none';
+  document.getElementById('leg-title').textContent = '';
+  document.getElementById('leg-unit').textContent = '';
+}
+
+// ── API helpers ───────────────────────────────────────────────────────────
+async function api(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(`API ${r.status}: ${path}`);
+  return r.json();
+}
+
+// ── Build scene ───────────────────────────────────────────────────────────
+function initThree() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(COL_BG);
+
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 500);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  document.body.appendChild(renderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+
+  // Double-click to set orbit center
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  renderer.domElement.addEventListener('dblclick', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    if (hits.length > 0) {
+      controls.target.copy(hits[0].point);
+      controls.update();
+    }
+  });
+
+  // Lights
+  const amb = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(amb);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0x8899bb, 0.3);
+  dir2.position.set(-5, -3, -5);
+  scene.add(dir2);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function buildNodeMeshes() {
+  // Instanced spheres for all nodes
+  const geo = new THREE.SphereGeometry(NODE_RADIUS, 8, 6);
+  const mat = new THREE.MeshPhongMaterial({ color: COL_NODE });
+  nodeMeshes = new THREE.InstancedMesh(geo, mat, nodes.length);
+
+  const dummy = new THREE.Object3D();
+  const color = new THREE.Color();
+  nodeBasePositions = {};
+
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const p = toView(n); dummy.position.copy(p);
+    dummy.updateMatrix();
+    nodeMeshes.setMatrixAt(i, dummy.matrix);
+
+    const hasSupport = Object.values(n.support).some(v => v !== 0);
+    nodeMeshes.setColorAt(i, color.setHex(hasSupport ? COL_SUPPORT : COL_NODE));
+    const bp = toView(n); nodeBasePositions[n.nr] = { x: bp.x, y: bp.y, z: bp.z };
+  }
+  nodeMeshes.instanceMatrix.needsUpdate = true;
+  nodeMeshes.instanceColor.needsUpdate = true;
+  scene.add(nodeMeshes);
+}
+
+// ── Support / Bearing Symbols (3D) ──────────────────────────────────────
+function classifySupport(s) {
+  const tx = s.ux, ty = s.uy, tz = s.uz;
+  const rx = s.phix, ry = s.phiy, rz = s.phiz;
+  const nTrans = tx + ty + tz;
+  const nRot   = rx + ry + rz;
+  if (nTrans === 3 && nRot === 3) return 'fixed';     // Einspannung
+  if (nTrans === 3 && nRot === 0) return 'pinned';    // Festes Gelenklager
+  if (nTrans >= 1 && nTrans <= 2 && nRot === 0) return 'roller'; // Verschieblich
+  if (nTrans > 0 || nRot > 0) return 'partial';       // Teilweise
+  return null;
+}
+
+function buildSupportSymbols() {
+  if (supportGroup) {
+    scene.remove(supportGroup);
+    supportGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+  }
+  supportGroup = new THREE.Group();
+
+  const sliderVal = parseFloat(document.getElementById('support-slider').value) || 15;
+  const S = modelExtent * sliderVal / 1000; // base size relative to model, slider-controlled
+  const matSupport = new THREE.MeshPhongMaterial({
+    color: COL_SUPPORT, transparent: true, opacity: 0.85, side: THREE.DoubleSide
+  });
+  const matLine = new THREE.LineBasicMaterial({ color: COL_SUPPORT });
+
+  // Gravity direction in view space → "down" vector for symbol orientation
+  const downDir = new THREE.Vector3(0, -1, 0); // Three.js Y is up
+
+  for (const n of nodes) {
+    const type = classifySupport(n.support);
+    if (!type) continue;
+
+    const pos = toView(n);
+    const group = new THREE.Group();
+    group.position.copy(pos);
+    group.userData = { nodeNr: n.nr };
+
+    if (type === 'fixed') {
+      // Einspannung: Box with hatch lines
+      const boxH = S * 0.6, boxW = S * 1.6, boxD = S * 1.6;
+      const box = new THREE.Mesh(
+        new THREE.BoxGeometry(boxW, boxH, boxD),
+        matSupport.clone()
+      );
+      box.position.set(0, -boxH / 2, 0);
+      group.add(box);
+
+      // Hatch lines on front face
+      const hatchPts = [];
+      const nHatch = 5;
+      for (let i = 0; i < nHatch; i++) {
+        const t = (i + 0.5) / nHatch;
+        const x0 = -boxW / 2 + t * boxW;
+        hatchPts.push(new THREE.Vector3(x0, -boxH, boxD / 2 + 0.001));
+        hatchPts.push(new THREE.Vector3(x0 - boxW / nHatch * 0.5, 0, boxD / 2 + 0.001));
+      }
+      const hatchGeo = new THREE.BufferGeometry().setFromPoints(hatchPts);
+      group.add(new THREE.LineSegments(hatchGeo, matLine));
+
+    } else if (type === 'pinned') {
+      // Festes Gelenklager: Triangle / Cone pointing down
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(S * 0.8, S * 1.2, 3),
+        matSupport.clone()
+      );
+      cone.rotation.z = Math.PI; // tip down
+      cone.position.set(0, -S * 0.6, 0);
+      group.add(cone);
+
+      // Ground line
+      const linePts = [
+        new THREE.Vector3(-S, -S * 1.2, 0),
+        new THREE.Vector3( S, -S * 1.2, 0),
+      ];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+      group.add(new THREE.LineSegments(lineGeo, matLine));
+
+    } else if (type === 'roller') {
+      // Verschiebliches Lager: Triangle + rollers (spheres)
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(S * 0.8, S * 1.0, 3),
+        matSupport.clone()
+      );
+      cone.rotation.z = Math.PI;
+      cone.position.set(0, -S * 0.5, 0);
+      group.add(cone);
+
+      // Rollers
+      const rollerR = S * 0.2;
+      const rollerY = -S * 1.0 - rollerR;
+      const roller1 = new THREE.Mesh(
+        new THREE.SphereGeometry(rollerR, 8, 6),
+        matSupport.clone()
+      );
+      roller1.position.set(-S * 0.35, rollerY, 0);
+      group.add(roller1);
+
+      const roller2 = new THREE.Mesh(
+        new THREE.SphereGeometry(rollerR, 8, 6),
+        matSupport.clone()
+      );
+      roller2.position.set(S * 0.35, rollerY, 0);
+      group.add(roller2);
+
+      // Ground line below rollers
+      const linePts = [
+        new THREE.Vector3(-S, rollerY - rollerR, 0),
+        new THREE.Vector3( S, rollerY - rollerR, 0),
+      ];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+      group.add(new THREE.LineSegments(lineGeo, matLine));
+
+    } else if (type === 'partial') {
+      // Partial constraints: small arrows for each locked DOF
+      const arrowLen = S * 1.0;
+      const dirs = [
+        { key: 'ux', dir: new THREE.Vector3(1, 0, 0) },
+        { key: 'uy', dir: new THREE.Vector3(0, 0, -1) },  // SOFiSTiK Y → view -Z
+        { key: 'uz', dir: new THREE.Vector3(0, -1, 0) },   // SOFiSTiK Z → view -Y
+      ];
+      for (const { key, dir } of dirs) {
+        if (!n.support[key]) continue;
+        const arrow = new THREE.ArrowHelper(
+          dir.clone().negate(), dir.clone().multiplyScalar(arrowLen * 0.5),
+          arrowLen, COL_SUPPORT, arrowLen * 0.3, arrowLen * 0.2
+        );
+        group.add(arrow);
+      }
+    }
+
+    supportGroup.add(group);
+  }
+
+  scene.add(supportGroup);
+
+  // Show/hide support legend + slider
+  const hasSupports = supportGroup.children.length > 0;
+  const hasCouplings = springs.length > 0 || constraints.length > 0;
+  const showHide = (hasSupports || hasCouplings) ? 'block' : 'none';
+  const slEl = document.getElementById('support-legend');
+  if (slEl) slEl.style.display = showHide;
+  document.getElementById('support-scale-label').style.display = showHide;
+  document.getElementById('support-slider').style.display = showHide;
+  document.getElementById('support-scale-row').style.display = showHide;
+}
+
+function buildQuadMesh() {
+  // Build extruded quads with thickness for 3D appearance
+  const positions = [];
+  const indices = [];
+  const colors = [];
+  const nodeIndexInGeo = {}; // nr -> position index (mid-surface)
+
+  // Map node → group via quads (for vertex coloring)
+  const nodeGroupMap = {};
+  for (const q of quads) {
+    for (const nr of q.nodes) {
+      if (nr !== 0 && !nodeGroupMap[nr]) nodeGroupMap[nr] = q.group;
+    }
+  }
+
+  // Add all nodes as mid-surface vertices
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const vp = toView(n);
+    positions.push(vp.x, vp.y, vp.z);
+    const grp = groups[nodeGroupMap[n.nr]];
+    if (grp) {
+      const c = new THREE.Color(grp.color);
+      colors.push(c.r, c.g, c.b);
+    } else {
+      colors.push(0.23, 0.31, 0.44);
+    }
+    nodeIndexInGeo[n.nr] = i;
+  }
+
+  // Triangulate quads on mid-surface (used for coloring + raycasting)
+  faceToQuad = [];
+  for (const q of quads) {
+    const i0 = nodeIndexInGeo[q.nodes[0]];
+    const i1 = nodeIndexInGeo[q.nodes[1]];
+    const i2 = nodeIndexInGeo[q.nodes[2]];
+    if (i0 === undefined || i1 === undefined || i2 === undefined) continue;
+
+    if (q.nodes[3] === 0 || q.nodes[3] === q.nodes[2]) {
+      indices.push(i0, i1, i2);
+      faceToQuad.push(q.nr);
+    } else {
+      const i3 = nodeIndexInGeo[q.nodes[3]];
+      if (i3 === undefined) continue;
+      indices.push(i0, i1, i2);
+      faceToQuad.push(q.nr);
+      indices.push(i0, i2, i3);
+      faceToQuad.push(q.nr);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  const posArr = new Float32Array(positions);
+  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(colors), 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+
+  basePositions = new Float32Array(posArr);
+
+  const mat = new THREE.MeshPhongMaterial({
+    vertexColors: true, side: THREE.DoubleSide,
+    transparent: true, opacity: 0.85,
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+  });
+  quadMesh = new THREE.Mesh(geo, mat);
+  scene.add(quadMesh);
+
+  // Build extruded thickness mesh (top + bottom offset along normals)
+  buildThicknessMesh(geo);
+
+  // Wireframe on mid-surface
+  const wireMat = new THREE.MeshBasicMaterial({ color: COL_WIRE, wireframe: true, transparent: true, opacity: 0.3 });
+  quadWireMesh = new THREE.Mesh(geo.clone(), wireMat);
+  scene.add(quadWireMesh);
+}
+
+function buildThicknessMesh(midGeo) {
+  // Create top/bottom surfaces offset from mid-surface by ±thickness/2
+  if (quads.length === 0) return;
+
+  // Compute per-node average thickness
+  const nodeThickness = {};
+  const nodeThickCount = {};
+  for (const q of quads) {
+    for (let k = 0; k < 4; k++) {
+      const nr = q.nodes[k];
+      if (nr === 0) continue;
+      const t = q.thickness[k] || q.thickness[0];
+      nodeThickness[nr] = (nodeThickness[nr] || 0) + t;
+      nodeThickCount[nr] = (nodeThickCount[nr] || 0) + 1;
+    }
+  }
+  for (const nr in nodeThickness) nodeThickness[nr] /= nodeThickCount[nr];
+
+  // Get normals from mid-surface geometry
+  const normals = midGeo.getAttribute('normal');
+  const midPos = midGeo.getAttribute('position');
+  if (!normals) return;
+
+  // Build top + bottom surfaces
+  const positions = [];
+  const indices = [];
+  const n = midPos.count;
+
+  // Top surface (offset +t/2 along normal)
+  for (let i = 0; i < n; i++) {
+    const t = (nodeThickness[nodes[i].nr] || 0.1) / 2;
+    positions.push(
+      midPos.getX(i) + normals.getX(i) * t,
+      midPos.getY(i) + normals.getY(i) * t,
+      midPos.getZ(i) + normals.getZ(i) * t,
+    );
+  }
+  // Bottom surface (offset -t/2 along normal)
+  for (let i = 0; i < n; i++) {
+    const t = (nodeThickness[nodes[i].nr] || 0.1) / 2;
+    positions.push(
+      midPos.getX(i) - normals.getX(i) * t,
+      midPos.getY(i) - normals.getY(i) * t,
+      midPos.getZ(i) - normals.getZ(i) * t,
+    );
+  }
+
+  // Top face triangles (same winding as mid-surface)
+  const midIdx = midGeo.getIndex();
+  for (let i = 0; i < midIdx.count; i++) {
+    indices.push(midIdx.getX(i));  // top surface uses indices 0..n-1
+  }
+  // Bottom face triangles (reversed winding)
+  for (let i = 0; i < midIdx.count; i += 3) {
+    indices.push(midIdx.getX(i) + n, midIdx.getX(i+2) + n, midIdx.getX(i+1) + n);
+  }
+
+  // Side faces for each quad edge
+  for (const q of quads) {
+    const qNodes = q.nodes.filter(nr => nr !== 0);
+    for (let k = 0; k < qNodes.length; k++) {
+      const nr0 = qNodes[k];
+      const nr1 = qNodes[(k + 1) % qNodes.length];
+      const i0 = nodes.findIndex(nd => nd.nr === nr0);
+      const i1 = nodes.findIndex(nd => nd.nr === nr1);
+      if (i0 < 0 || i1 < 0) continue;
+      // Side quad: top0, top1, bot1, bot0
+      indices.push(i0, i1, i1 + n);
+      indices.push(i0, i1 + n, i0 + n);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0x4a6080, side: THREE.DoubleSide,
+    transparent: true, opacity: 0.4,
+  });
+  thicknessMesh = new THREE.Mesh(geo, mat);
+  scene.add(thicknessMesh);
+}
+
+function buildBeamMeshes() {
+  beamMeshes = new THREE.Group();
+  const mat = new THREE.MeshPhongMaterial({ color: COL_BEAM });
+
+  for (const b of beams) {
+    const n0 = nodeMap[b.node_start];
+    const n1 = nodeMap[b.node_end];
+    if (n0 === undefined || n1 === undefined) continue;
+
+    const p0 = toView(nodes[n0]);
+    const p1 = toView(nodes[n1]);
+    const len = p0.distanceTo(p1);
+    if (len < 1e-6) continue;
+
+    // Scale beam radius to ~1% of model size for visibility
+    const beamRadius = Math.max(0.02, len * 0.03);
+    const geo = new THREE.CylinderGeometry(beamRadius, beamRadius, len, 8);
+    const mesh = new THREE.Mesh(geo, mat.clone());
+
+    const mid = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+    mesh.position.copy(mid);
+    mesh.lookAt(p1);
+    mesh.rotateX(Math.PI / 2);
+
+    mesh.userData = { beamNr: b.nr, nodeStart: b.node_start, nodeEnd: b.node_end, group: b.group };
+    // Apply group color
+    const grp = groups[b.group];
+    if (grp) mesh.material.color.setHex(grp.color);
+    beamMeshes.add(mesh);
+  }
+  scene.add(beamMeshes);
+}
+
+function buildBeamSectionMeshes() {
+  if (beamSectionGroup) {
+    scene.remove(beamSectionGroup);
+    beamSectionGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+  }
+  beamSectionGroup = new THREE.Group();
+  const mat = new THREE.MeshPhongMaterial({
+    color: COL_BEAM, transparent: true, opacity: 0.6, side: THREE.DoubleSide
+  });
+
+  // Cache triangulated shapes per section number
+  const shapeCache = {};
+
+  for (const b of beams) {
+    const sec = sections[b.section_start];
+    if (!sec || !sec.polygon || sec.polygon.length < 3) continue;
+
+    const n0 = nodeMap[b.node_start];
+    const n1 = nodeMap[b.node_end];
+    if (n0 === undefined || n1 === undefined) continue;
+
+    const p0 = toView(nodes[n0]);
+    const p1 = toView(nodes[n1]);
+    const len = p0.distanceTo(p1);
+    if (len < 1e-6) continue;
+
+    // Build extruded polygon geometry
+    // Polygon is in local Y,Z plane; extrude along local X (beam axis)
+    const secNr = b.section_start;
+    if (!shapeCache[secNr]) {
+      const shape = new THREE.Shape();
+      const poly = sec.polygon;
+      // Negate Z so that the web hangs downward (SOFiSTiK Z+ is up in section)
+      shape.moveTo(poly[0][0], -poly[0][1]);
+      for (let i = 1; i < poly.length; i++) {
+        shape.lineTo(poly[i][0], -poly[i][1]);
+      }
+      shape.closePath();
+      shapeCache[secNr] = shape;
+    }
+
+    const extrudeSettings = {
+      steps: 1,
+      depth: len,
+      bevelEnabled: false,
+    };
+    const geo = new THREE.ExtrudeGeometry(shapeCache[secNr], extrudeSettings);
+
+    // ExtrudeGeometry: shape in XY, extruded along +Z by 'depth'.
+    // Polygon coords are (localY, localZ) of the cross-section.
+    // We need: local X = polygon Y, local Y = polygon Z, local Z = beam axis.
+    // So after extrude the mesh local +Z must point along beam direction.
+
+    // Build orientation matrix: local Z = beam axis, local Y = gravity up
+    const beamDir = new THREE.Vector3().subVectors(p1, p0).normalize();
+    const up = new THREE.Vector3(0, 1, 0); // view-space up
+    let localX = new THREE.Vector3().crossVectors(up, beamDir);
+    if (localX.lengthSq() < 1e-6) {
+      // Beam is vertical — use alternative up
+      localX.crossVectors(new THREE.Vector3(1, 0, 0), beamDir);
+    }
+    localX.normalize();
+    const localY = new THREE.Vector3().crossVectors(beamDir, localX).normalize();
+
+    const rotMat = new THREE.Matrix4().makeBasis(localX, localY, beamDir);
+
+    const mesh = new THREE.Mesh(geo, mat.clone());
+    mesh.position.copy(p0);
+    mesh.setRotationFromMatrix(rotMat);
+
+    mesh.userData = { beamNr: b.nr, group: b.group };
+    const grp = groups[b.group];
+    if (grp) mesh.material.color.setHex(grp.color);
+    beamSectionGroup.add(mesh);
+  }
+  beamSectionGroup.visible = document.getElementById('toggle-beam-section').checked;
+  scene.add(beamSectionGroup);
+}
+
+// ── Coupling Symbols (Springs + Kinematic Constraints) ──────────────────
+const COL_SPRING = 0x00ccaa;
+const COL_CONSTRAINT = 0xffaa00;
+
+function buildCouplingSymbols() {
+  if (couplingGroup) {
+    scene.remove(couplingGroup);
+    couplingGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+  }
+  couplingGroup = new THREE.Group();
+
+  const S = modelExtent * 0.012;
+
+  // ── Springs: zig-zag line between two nodes ──
+  const springMat = new THREE.LineBasicMaterial({ color: COL_SPRING, linewidth: 2 });
+  const springSolidMat = new THREE.MeshPhongMaterial({
+    color: COL_SPRING, transparent: true, opacity: 0.7
+  });
+
+  for (const sp of springs) {
+    const i0 = nodeMap[sp.node_start];
+    const i1 = nodeMap[sp.node_end];
+    if (i0 === undefined || i1 === undefined) continue;
+
+    const p0 = toView(nodes[i0]);
+    const p1 = toView(nodes[i1]);
+    const dist = p0.distanceTo(p1);
+    if (dist < 1e-6) continue;
+
+    const dir = new THREE.Vector3().subVectors(p1, p0).normalize();
+    const mid = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+
+    // Build zig-zag spring shape along the axis
+    const nCoils = 6;
+    const pts = [];
+    const perpA = new THREE.Vector3();
+    const perpB = new THREE.Vector3();
+
+    // Find two perpendicular vectors
+    if (Math.abs(dir.x) < 0.9) {
+      perpA.crossVectors(dir, new THREE.Vector3(1, 0, 0)).normalize();
+    } else {
+      perpA.crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+    }
+    perpB.crossVectors(dir, perpA).normalize();
+
+    const coilR = S * 0.5;
+    const segLen = dist / (nCoils * 2 + 2);
+
+    // Start straight segment
+    pts.push(p0.clone());
+    pts.push(p0.clone().addScaledVector(dir, segLen));
+
+    // Zig-zag coils
+    for (let c = 0; c < nCoils; c++) {
+      const t1 = (c * 2 + 1) * segLen + segLen;
+      const t2 = (c * 2 + 2) * segLen + segLen;
+      const sign = c % 2 === 0 ? 1 : -1;
+      pts.push(p0.clone().addScaledVector(dir, t1).addScaledVector(perpA, coilR * sign));
+      pts.push(p0.clone().addScaledVector(dir, t2));
+    }
+
+    // End straight segment
+    pts.push(p1.clone().addScaledVector(dir, -segLen));
+    pts.push(p1.clone());
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(lineGeo, springMat);
+    line.userData = { group: sp.group, nodeStart: sp.node_start, nodeEnd: sp.node_end };
+    couplingGroup.add(line);
+
+    // Small diamonds at both ends
+    for (const p of [p0, p1]) {
+      const diamond = new THREE.Mesh(
+        new THREE.OctahedronGeometry(S * 0.25),
+        springSolidMat.clone()
+      );
+      diamond.position.copy(p);
+      diamond.userData = { group: sp.group, nodeStart: sp.node_start, nodeEnd: sp.node_end };
+      couplingGroup.add(diamond);
+    }
+  }
+
+  // ── Kinematic Constraints: double-headed arrow between nodes ──
+  const constraintMat = new THREE.MeshPhongMaterial({
+    color: COL_CONSTRAINT, transparent: true, opacity: 0.8
+  });
+  const constraintLineMat = new THREE.LineBasicMaterial({ color: COL_CONSTRAINT, linewidth: 2 });
+
+  for (const kc of constraints) {
+    const i0 = nodeMap[kc.node];
+    const i1 = nodeMap[kc.ref_node];
+    if (i0 === undefined || i1 === undefined) continue;
+
+    const p0 = toView(nodes[i0]);
+    const p1 = toView(nodes[i1]);
+    const dist = p0.distanceTo(p1);
+    if (dist < 1e-6) continue;
+
+    // Dashed line between nodes
+    const linePts = [p0.clone(), p1.clone()];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+    couplingGroup.add(new THREE.Line(lineGeo, constraintLineMat));
+
+    // Small diamonds at both ends
+    for (const p of [p0, p1]) {
+      const diamond = new THREE.Mesh(
+        new THREE.OctahedronGeometry(S * 0.2),
+        constraintMat.clone()
+      );
+      diamond.position.copy(p);
+      couplingGroup.add(diamond);
+    }
+  }
+
+  scene.add(couplingGroup);
+}
+
+// ── Tendon Visualization ─────────────────────────────────────────────────
+const COL_TENDON = 0xffdd44;
+
+function buildTendonPaths() {
+  if (tendonGroup) {
+    scene.remove(tendonGroup);
+    tendonGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+  }
+  tendonGroup = new THREE.Group();
+  if (tendons.length === 0) {
+    document.getElementById('toggle-tendons').parentElement.style.display = 'none';
+    return;
+  }
+
+  const lineMat = new THREE.LineBasicMaterial({ color: COL_TENDON, linewidth: 2 });
+  const tubeMat = new THREE.MeshPhongMaterial({
+    color: COL_TENDON, transparent: true, opacity: 0.75,
+  });
+
+  const showTubes = document.getElementById('toggle-beam-section').checked;
+
+  for (const t of tendons) {
+    if (!t.segments || t.segments.length === 0) continue;
+
+    // Collect all segment endpoints into a continuous polyline
+    const pts = [];
+    for (const seg of t.segments) {
+      const p0 = toView({ x: seg.x0, y: seg.y0, z: seg.z0 });
+      const p1 = toView({ x: seg.x1, y: seg.y1, z: seg.z1 });
+      if (pts.length === 0) pts.push(p0);
+      pts.push(p1);
+    }
+    if (pts.length < 2) continue;
+
+    if (showTubes && t.diameter > 0) {
+      // 3D tube with real duct diameter
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const radius = t.diameter / 2;
+      const tubeGeo = new THREE.TubeGeometry(curve, pts.length * 4, radius, 8, false);
+      const tube = new THREE.Mesh(tubeGeo, tubeMat.clone());
+      tube.userData = { tendonNr: t.nr, isTube: true };
+      tendonGroup.add(tube);
+    } else {
+      // Simple line
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(geo, lineMat);
+      line.userData = { tendonNr: t.nr, isTube: false };
+      tendonGroup.add(line);
+    }
+  }
+
+  tendonGroup.visible = document.getElementById('toggle-tendons').checked;
+  scene.add(tendonGroup);
+}
+
+function clearBeamDiagrams() {
+  if (beamDiagramGroup) {
+    scene.remove(beamDiagramGroup);
+    beamDiagramGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+    beamDiagramGroup = null;
+  }
+  // Restore thickness mesh visibility
+  if (thicknessMesh) thicknessMesh.visible = true;
+}
+
+function buildBeamDiagrams(comp, data) {
+  clearBeamDiagrams();
+  lastBeamComp = comp;
+  lastBeamData = data;
+  // Hide thickness mesh so it doesn't occlude diagrams
+  if (thicknessMesh) thicknessMesh.visible = false;
+  beamDiagramGroup = new THREE.Group();
+
+  const NSUB = 12; // intermediate stations per beam segment
+
+  // Group data by beam element
+  const byElem = {};
+  for (const r of data) {
+    if (!byElem[r.elem_nr]) byElem[r.elem_nr] = [];
+    byElem[r.elem_nr].push(r);
+  }
+
+  // Interpolation: reconstruct intermediate values from 2 endpoint stations
+  // V(x) linear, M(x) parabolic (from beam mechanics: q = dV/dx = const)
+  // N(x) linear
+  const isMoment = (comp === 'My' || comp === 'Mz');
+  const shearComp = comp === 'My' ? 'Vz' : comp === 'Mz' ? 'Vy' : null;
+
+  // Pre-compute global max (including interpolated parabolic extremes)
+  let globalMax = 0;
+  for (const b of beams) {
+    const rows = byElem[b.nr];
+    if (!rows || rows.length < 2) continue;
+    rows.sort((a, c) => a.x - c.x);
+    const r0 = rows[0], r1 = rows[rows.length - 1];
+    const L = r1.x - r0.x || b.length;
+    if (isMoment && shearComp) {
+      const M0 = r0[comp] || 0, M1 = r1[comp] || 0;
+      const V0 = r0[shearComp] || 0, V1 = r1[shearComp] || 0;
+      const q = (V1 - V0) / L;
+      for (let i = 0; i <= NSUB; i++) {
+        const x = (i / NSUB) * L;
+        const M = M0 + V0 * x + 0.5 * q * x * x;
+        globalMax = Math.max(globalMax, Math.abs(M));
+      }
+    } else {
+      globalMax = Math.max(globalMax, Math.abs(r0[comp] || 0), Math.abs(r1[comp] || 0));
+    }
+  }
+  if (globalMax < 1e-10) { scene.add(beamDiagramGroup); return; }
+
+  // Scale: diagram height relative to average beam length, controlled by slider
+  let totalLen = 0, nBeams = 0;
+  for (const b of beams) {
+    if (b.length > 0) { totalLen += b.length; nBeams++; }
+  }
+  const avgLen = nBeams > 0 ? totalLen / nBeams : 1;
+  const scaleFactor = avgLen * (diagramScale / 100) * 0.4 / globalMax;
+
+  const viewUp = new THREE.Vector3(0, 1, 0);
+  const posVerts = [];
+  const negVerts = [];
+  const outlineVerts = []; // contour + ordinate lines
+
+  for (const b of beams) {
+    const rows = byElem[b.nr];
+    if (!rows || rows.length < 2) continue;
+    rows.sort((a, c) => a.x - c.x);
+
+    const ni0 = nodeMap[b.node_start];
+    const ni1 = nodeMap[b.node_end];
+    if (ni0 === undefined || ni1 === undefined) continue;
+
+    const p0 = toView(nodes[ni0]);
+    const p1 = toView(nodes[ni1]);
+
+    // Apply deformation if active
+    const dm = dispCache[currentLC];
+    if (dm && deformScale) {
+      const d0 = dm[b.node_start];
+      const d1 = dm[b.node_end];
+      if (d0) { const dv = toViewD(d0); p0.x += dv.x*deformScale; p0.y += dv.y*deformScale; p0.z += dv.z*deformScale; }
+      if (d1) { const dv = toViewD(d1); p1.x += dv.x*deformScale; p1.y += dv.y*deformScale; p1.z += dv.z*deformScale; }
+    }
+
+    const axis = new THREE.Vector3().subVectors(p1, p0);
+    const beamLen3D = axis.length();
+    if (beamLen3D < 1e-6) continue;
+    axis.normalize();
+
+    let perp = new THREE.Vector3().crossVectors(axis, viewUp);
+    if (perp.length() < 0.1) perp.crossVectors(axis, new THREE.Vector3(1, 0, 0));
+    perp.normalize();
+
+    // Compute interpolated stations
+    const r0 = rows[0], r1 = rows[rows.length - 1];
+    const L = r1.x - r0.x || b.length;
+    const V0val = r0[shearComp] || 0;
+    const V1val = r1[shearComp] || 0;
+    const q = shearComp ? (V1val - V0val) / L : 0;
+    const comp0 = r0[comp] || 0;
+    const comp1 = r1[comp] || 0;
+
+    const stations = []; // {t, val} where t in [0,1]
+    for (let i = 0; i <= NSUB; i++) {
+      const frac = i / NSUB;
+      const x = frac * L;
+      let val;
+      if (isMoment && shearComp) {
+        val = comp0 + V0val * x + 0.5 * q * x * x;
+      } else {
+        val = comp0 + (comp1 - comp0) * frac;
+      }
+      stations.push({ t: frac, val: val * scaleFactor });
+    }
+
+    // Build triangles between consecutive stations
+    // Each segment is a trapezoid: axis-start, axis-end, diagram-end, diagram-start
+    for (let i = 0; i < stations.length - 1; i++) {
+      const s0 = stations[i], s1 = stations[i + 1];
+      const a0 = new THREE.Vector3().lerpVectors(p0, p1, s0.t);
+      const a1 = new THREE.Vector3().lerpVectors(p0, p1, s1.t);
+      const d0 = new THREE.Vector3().copy(a0).addScaledVector(perp, s0.val);
+      const d1 = new THREE.Vector3().copy(a1).addScaledVector(perp, s1.val);
+
+      // Handle sign change: split at zero crossing
+      if (s0.val * s1.val < 0) {
+        const frac = Math.abs(s0.val) / (Math.abs(s0.val) + Math.abs(s1.val));
+        const aZ = new THREE.Vector3().lerpVectors(a0, a1, frac);
+        // First half: a0 -> aZ -> aZ -> d0  (trapezoid collapses to triangle at zero)
+        const half1 = [
+          a0.x,a0.y,a0.z, aZ.x,aZ.y,aZ.z, d0.x,d0.y,d0.z,
+        ];
+        // Second half: aZ -> a1 -> d1 -> aZ  (triangle from zero to end)
+        const half2 = [
+          aZ.x,aZ.y,aZ.z, a1.x,a1.y,a1.z, d1.x,d1.y,d1.z,
+        ];
+        (s0.val > 0 ? posVerts : negVerts).push(...half1);
+        (s1.val > 0 ? posVerts : negVerts).push(...half2);
+        // Extra ordinate line at zero crossing
+        outlineVerts.push(aZ.x,aZ.y,aZ.z, aZ.x,aZ.y,aZ.z);
+      } else {
+        // Normal trapezoid: 2 triangles
+        const target = (s0.val >= 0 && s1.val >= 0) ? posVerts : negVerts;
+        target.push(
+          a0.x,a0.y,a0.z, a1.x,a1.y,a1.z, d1.x,d1.y,d1.z,
+          a0.x,a0.y,a0.z, d1.x,d1.y,d1.z, d0.x,d0.y,d0.z,
+        );
+      }
+
+      // Contour line (diagram edge)
+      outlineVerts.push(d0.x,d0.y,d0.z, d1.x,d1.y,d1.z);
+    }
+
+    // Ordinate lines at each station
+    for (const s of stations) {
+      const a = new THREE.Vector3().lerpVectors(p0, p1, s.t);
+      const d = new THREE.Vector3().copy(a).addScaledVector(perp, s.val);
+      outlineVerts.push(a.x,a.y,a.z, d.x,d.y,d.z);
+    }
+  }
+
+  // Positive fill (magenta)
+  if (posVerts.length > 0) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(posVerts, 3));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: 0xcc00cc, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
+      depthWrite: true, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+    }));
+    mesh.renderOrder = 10;
+    beamDiagramGroup.add(mesh);
+  }
+
+  // Negative fill (cyan)
+  if (negVerts.length > 0) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(negVerts, 3));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: 0x00cccc, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
+      depthWrite: true, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+    }));
+    mesh.renderOrder = 10;
+    beamDiagramGroup.add(mesh);
+  }
+
+  // Outline + ordinate lines
+  if (outlineVerts.length > 0) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(outlineVerts, 3));
+    const lines = new THREE.LineSegments(geo,
+      new THREE.LineBasicMaterial({ color: 0x556688, depthTest: true })
+    );
+    lines.renderOrder = 11;
+    beamDiagramGroup.add(lines);
+  }
+
+  scene.add(beamDiagramGroup);
+}
+
+function fitCamera() {
+  if (nodes.length === 0) return;
+  const box = new THREE.Box3();
+  // Use average of node positions as orbit center (better than bbox center for hollow models)
+  const avg = new THREE.Vector3();
+  for (const n of nodes) {
+    const p = toView(n);
+    box.expandByPoint(p);
+    avg.add(p);
+  }
+  avg.divideScalar(nodes.length);
+
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  modelExtent = maxDim;
+
+  controls.target.copy(avg);
+  camera.position.set(avg.x + maxDim * 0.8, avg.y + maxDim * 0.6, avg.z + maxDim * 1.2);
+  controls.update();
+}
+
+// ── Coloring & deformation ────────────────────────────────────────────────
+function applyNodeColors(valueMap, vmin, vmax, resultKey) {
+  // valueMap: {nodeNr: value}
+  const color = new THREE.Color();
+  const range = vmax - vmin || 1;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const val = valueMap[nodes[i].nr];
+    if (val !== undefined) {
+      const t = (val - vmin) / range;
+      const c = jet(t);
+      color.setRGB(c.r, c.g, c.b);
+    } else {
+      color.setHex(COL_NODE);
+    }
+    nodeMeshes.setColorAt(i, color);
+  }
+  nodeMeshes.instanceColor.needsUpdate = true;
+
+  // Also color quad vertices
+  if (quadMesh) {
+    const colAttr = quadMesh.geometry.getAttribute('color');
+    for (let i = 0; i < nodes.length; i++) {
+      const val = valueMap[nodes[i].nr];
+      if (val !== undefined) {
+        const t = (val - vmin) / range;
+        const c = jet(t);
+        colAttr.setXYZ(i, c.r, c.g, c.b);
+      } else {
+        colAttr.setXYZ(i, 0.23, 0.31, 0.44);
+      }
+    }
+    colAttr.needsUpdate = true;
+  }
+
+  const meta = RESULT_META[resultKey] || {};
+  drawLegend(vmin, vmax, resultKey);
+  document.getElementById('v-min').textContent = formatValue(vmin);
+  document.getElementById('v-max').textContent = formatValue(vmax);
+  document.getElementById('v-result').textContent = meta.label || resultKey;
+}
+
+function applyBeamColors(valueMap, vmin, vmax, resultKey) {
+  const range = vmax - vmin || 1;
+  for (const mesh of beamMeshes.children) {
+    const nr = mesh.userData.beamNr;
+    const val = valueMap[nr];
+    if (val !== undefined) {
+      const t = (val - vmin) / range;
+      const c = jet(t);
+      mesh.material.color.setRGB(c.r, c.g, c.b);
+    } else {
+      mesh.material.color.setHex(COL_BEAM);
+    }
+  }
+  const meta = RESULT_META[resultKey] || {};
+  drawLegend(vmin, vmax, resultKey);
+  document.getElementById('v-min').textContent = formatValue(vmin);
+  document.getElementById('v-max').textContent = formatValue(vmax);
+  document.getElementById('v-result').textContent = meta.label || resultKey;
+}
+
+function applyDeformation(scale) {
+  const dispMap = dispCache[currentLC];
+  if (!dispMap) return;
+
+  // Deform quad mesh vertices
+  if (quadMesh && basePositions) {
+    const posAttr = quadMesh.geometry.getAttribute('position');
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const d = dispMap[n.nr];
+      const bx = basePositions[i * 3];
+      const by = basePositions[i * 3 + 1];
+      const bz = basePositions[i * 3 + 2];
+      if (d) {
+        const dv = toViewD(d);
+        posAttr.setXYZ(i,
+          bx + dv.x * scale,
+          by + dv.y * scale,
+          bz + dv.z * scale,
+        );
+      }
+    }
+    posAttr.needsUpdate = true;
+    quadMesh.geometry.computeVertexNormals();
+
+    // Also update wireframe
+    const wPosAttr = quadWireMesh.geometry.getAttribute('position');
+    for (let i = 0; i < posAttr.count; i++) {
+      wPosAttr.setXYZ(i, posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+    }
+    wPosAttr.needsUpdate = true;
+  }
+
+  // Deform node instances
+  if (nodeMeshes) {
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const d = dispMap[n.nr];
+      const bp = toView(n);
+      if (d) {
+        const dv = toViewD(d);
+        dummy.position.set(
+          bp.x + dv.x * scale,
+          bp.y + dv.y * scale,
+          bp.z + dv.z * scale,
+        );
+      } else {
+        dummy.position.copy(bp);
+      }
+      dummy.updateMatrix();
+      nodeMeshes.setMatrixAt(i, dummy.matrix);
+    }
+    nodeMeshes.instanceMatrix.needsUpdate = true;
+  }
+
+  // Deform support symbols
+  if (supportGroup) {
+    for (const child of supportGroup.children) {
+      const nr = child.userData.nodeNr;
+      if (nr == null) continue;
+      const n = nodes[nodeMap[nr]];
+      if (!n) continue;
+      const bp = toView(n);
+      const d = dispMap[nr];
+      if (d) {
+        const dv = toViewD(d);
+        child.position.set(
+          bp.x + dv.x * scale,
+          bp.y + dv.y * scale,
+          bp.z + dv.z * scale,
+        );
+      } else {
+        child.position.copy(bp);
+      }
+    }
+  }
+}
+
+function applyGroupVisibility() {
+  // Toggle beam line meshes
+  if (beamMeshes) {
+    for (const mesh of beamMeshes.children) {
+      const grp = groups[mesh.userData.group];
+      mesh.visible = grp ? grp.visible : true;
+    }
+  }
+  // Toggle beam section meshes
+  if (beamSectionGroup) {
+    for (const mesh of beamSectionGroup.children) {
+      const grp = groups[mesh.userData.group];
+      mesh.visible = grp ? grp.visible : true;
+    }
+  }
+  // Toggle quad vertices by making hidden group vertices transparent
+  if (quadMesh) {
+    const colAttr = quadMesh.geometry.getAttribute('color');
+    const nodeGrp = {};
+    for (const q of quads) {
+      for (const nr of q.nodes) {
+        if (nr !== 0 && !nodeGrp[nr]) nodeGrp[nr] = q.group;
+      }
+    }
+    const color = new THREE.Color();
+    for (let i = 0; i < nodes.length; i++) {
+      const gnr = nodeGrp[nodes[i].nr];
+      const grp = groups[gnr];
+      if (grp && !grp.visible) {
+        colAttr.setXYZ(i, 0, 0, 0); // transparent/hidden via black
+      } else if (grp) {
+        color.setHex(grp.color);
+        colAttr.setXYZ(i, color.r, color.g, color.b);
+      }
+    }
+    colAttr.needsUpdate = true;
+  }
+  // Toggle coupling symbols
+  if (couplingGroup) {
+    for (const child of couplingGroup.children) {
+      // Springs/constraints don't have group in userData yet, skip
+    }
+  }
+}
+
+function resetColors() {
+  const color = new THREE.Color();
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const hasSupport = Object.values(n.support).some(v => v !== 0);
+    nodeMeshes.setColorAt(i, color.setHex(hasSupport ? COL_SUPPORT : COL_NODE));
+  }
+  nodeMeshes.instanceColor.needsUpdate = true;
+
+  if (quadMesh) {
+    const colAttr = quadMesh.geometry.getAttribute('color');
+    // Map node → group via quads
+    const nodeGrp = {};
+    for (const q of quads) {
+      for (const nr of q.nodes) {
+        if (nr !== 0 && !nodeGrp[nr]) nodeGrp[nr] = q.group;
+      }
+    }
+    for (let i = 0; i < nodes.length; i++) {
+      const grp = groups[nodeGrp[nodes[i].nr]];
+      if (grp) {
+        color.setHex(grp.color);
+        colAttr.setXYZ(i, color.r, color.g, color.b);
+      } else {
+        colAttr.setXYZ(i, 0.23, 0.31, 0.44);
+      }
+    }
+    colAttr.needsUpdate = true;
+  }
+
+  for (const mesh of beamMeshes.children) {
+    const grp = groups[mesh.userData.group];
+    mesh.material.color.setHex(grp ? grp.color : COL_BEAM);
+  }
+
+  clearBeamDiagrams();
+  hideLegend();
+  document.getElementById('v-min').textContent = '-';
+  document.getElementById('v-max').textContent = '-';
+  document.getElementById('v-result').textContent = '-';
+}
+
+function resetDeformation() {
+  if (quadMesh && basePositions) {
+    const posAttr = quadMesh.geometry.getAttribute('position');
+    for (let i = 0; i < basePositions.length / 3; i++) {
+      posAttr.setXYZ(i, basePositions[i*3], basePositions[i*3+1], basePositions[i*3+2]);
+    }
+    posAttr.needsUpdate = true;
+    quadMesh.geometry.computeVertexNormals();
+
+    const wPosAttr = quadWireMesh.geometry.getAttribute('position');
+    for (let i = 0; i < posAttr.count; i++) {
+      wPosAttr.setXYZ(i, posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+    }
+    wPosAttr.needsUpdate = true;
+  }
+
+  if (nodeMeshes) {
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < nodes.length; i++) {
+      dummy.position.set(nodes[i].x, nodes[i].z, -nodes[i].y);
+      dummy.updateMatrix();
+      nodeMeshes.setMatrixAt(i, dummy.matrix);
+    }
+    nodeMeshes.instanceMatrix.needsUpdate = true;
+  }
+}
+
+// ── Result loading ────────────────────────────────────────────────────────
+async function loadResult() {
+  currentResult = document.getElementById('sel-result').value;
+  currentLC = parseInt(document.getElementById('sel-lc').value);
+
+  if (!currentResult || !currentLC) {
+    resetColors();
+    resetDeformation();
+    resultData = null;
+    return;
+  }
+
+  document.getElementById('v-lc').textContent = currentLC;
+  clearBeamDiagrams();
+  lastBeamComp = null;
+  lastBeamData = null;
+  const showDiagSlider = currentResult.startsWith('beam_');
+  document.getElementById('diagram-scale-label').style.display = showDiagSlider ? 'block' : 'none';
+  document.getElementById('diagram-slider').style.display = showDiagSlider ? 'block' : 'none';
+  document.getElementById('diagram-scale-row').style.display = showDiagSlider ? 'block' : 'none';
+
+  try {
+    // Always load displacements for deformation overlay (cached per LC)
+    if (!dispCache[currentLC]) {
+      try {
+        const dispResp = await api(`/results/node-displacements?lc=${currentLC}`);
+        const map = {};
+        for (const d of dispResp.data) map[d.node_nr] = d;
+        dispCache[currentLC] = map;
+      } catch (e) {
+        // No displacements for this LC — deformation not available
+      }
+    }
+
+    if (currentResult.startsWith('u') || currentResult === 'u_abs') {
+      resultData = { data: Object.values(dispCache[currentLC] || {}) };
+      const data = resultData.data;
+      const valueMap = {};
+      let vmin = Infinity, vmax = -Infinity;
+
+      for (const d of data) {
+        let val;
+        if (currentResult === 'uz') val = d.uz;
+        else if (currentResult === 'uy') val = d.uy;
+        else if (currentResult === 'ux') val = d.ux;
+        else val = Math.sqrt(d.ux**2 + d.uy**2 + d.uz**2);
+        valueMap[d.node_nr] = val;
+        if (val < vmin) vmin = val;
+        if (val > vmax) vmax = val;
+      }
+      applyNodeColors(valueMap, vmin, vmax, currentResult);
+      applyDeformation(deformScale);
+
+    } else if (currentResult.startsWith('quad_')) {
+      const comp = currentResult.replace('quad_', '');
+      const resp = await api(`/results/quad-forces?lc=${currentLC}`);
+      resultData = resp;
+
+      // Build element-centered value map
+      const elemVals = {};
+      for (const f of resp.data) {
+        elemVals[f.elem_nr] = f[comp];
+      }
+
+      // Average at nodes (smoothed plot)
+      const nodeSum = {};
+      const nodeCount = {};
+      for (const q of quads) {
+        const val = elemVals[q.nr];
+        if (val === undefined) continue;
+        for (const nr of q.nodes) {
+          if (nr === 0) continue;
+          nodeSum[nr] = (nodeSum[nr] || 0) + val;
+          nodeCount[nr] = (nodeCount[nr] || 0) + 1;
+        }
+      }
+      const valueMap = {};
+      let vmin = Infinity, vmax = -Infinity;
+      for (const nr in nodeSum) {
+        const avg = nodeSum[nr] / nodeCount[nr];
+        valueMap[nr] = avg;
+        if (avg < vmin) vmin = avg;
+        if (avg > vmax) vmax = avg;
+      }
+      applyNodeColors(valueMap, vmin, vmax, currentResult);
+      applyDeformation(deformScale);
+
+    } else if (currentResult.startsWith('stress_')) {
+      const comp = currentResult.replace('stress_', '');
+      const resp = await api(`/results/quad-stresses?lc=${currentLC}`);
+      resultData = resp;
+
+      // Build element-centered value map
+      const elemVals = {};
+      for (const s of resp.data) {
+        elemVals[s.elem_nr] = s[comp];
+      }
+
+      // Average at nodes (smoothed plot)
+      const nodeSum = {};
+      const nodeCount = {};
+      for (const q of quads) {
+        const val = elemVals[q.nr];
+        if (val === undefined) continue;
+        for (const nr of q.nodes) {
+          if (nr === 0) continue;
+          nodeSum[nr] = (nodeSum[nr] || 0) + val;
+          nodeCount[nr] = (nodeCount[nr] || 0) + 1;
+        }
+      }
+      const valueMap = {};
+      let vmin = Infinity, vmax = -Infinity;
+      for (const nr in nodeSum) {
+        const avg = nodeSum[nr] / nodeCount[nr];
+        valueMap[nr] = avg;
+        if (avg < vmin) vmin = avg;
+        if (avg > vmax) vmax = avg;
+      }
+      applyNodeColors(valueMap, vmin, vmax, currentResult);
+      applyDeformation(deformScale);
+
+    } else if (currentResult.startsWith('beam_')) {
+      const comp = currentResult.replace('beam_', '');
+      const resp = await api(`/results/beam-forces?lc=${currentLC}`);
+      resultData = resp;
+
+      // Average per beam element
+      const beamVals = {};
+      const beamCounts = {};
+      for (const f of resp.data) {
+        const key = f.elem_nr;
+        const val = f[comp];
+        beamVals[key] = (beamVals[key] || 0) + val;
+        beamCounts[key] = (beamCounts[key] || 0) + 1;
+      }
+      for (const k in beamVals) beamVals[k] /= beamCounts[k];
+
+      const vals = Object.values(beamVals);
+      const vmin = Math.min(...vals);
+      const vmax = Math.max(...vals);
+      applyBeamColors(beamVals, vmin, vmax, currentResult);
+      buildBeamDiagrams(comp, resp.data);
+      applyDeformation(deformScale);
+    }
+  } catch (e) {
+    console.error('Result load error:', e);
+    document.getElementById('v-result').textContent = 'Fehler: ' + e.message;
+    resetColors();
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+// ── Stress panel ──────────────────────────────────────────────────────────
+let cachedStress = null; // cached stress data for clicked element
+
+function drawStressDiagram(stress, comp) {
+  const canvas = document.getElementById('stress-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 20, bot: 20, left: 60, right: 30 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bot;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Get upper/lower values based on component
+  let sUpper, sLower, label;
+  if (comp === 'sx') { sUpper = stress.sxo; sLower = stress.sxu; label = '\u03C3x'; }
+  else if (comp === 'sy') { sUpper = stress.syo; sLower = stress.syu; label = '\u03C3y'; }
+  else { sUpper = stress.sxyo; sLower = stress.sxyu; label = '\u03C4xy'; }
+
+  const maxAbs = Math.max(Math.abs(sUpper), Math.abs(sLower), 0.001);
+  const scale = plotW / 2 / maxAbs;
+
+  // Background
+  ctx.fillStyle = '#0a0a1e';
+  ctx.fillRect(pad.left, pad.top, plotW, plotH);
+
+  // Zero line (vertical center of plot)
+  const zeroX = pad.left + plotW / 2;
+  ctx.strokeStyle = '#445';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(zeroX, pad.top);
+  ctx.lineTo(zeroX, pad.top + plotH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Thickness labels
+  ctx.fillStyle = '#889';
+  ctx.font = '10px Segoe UI';
+  ctx.textAlign = 'right';
+  ctx.fillText('oben', pad.left - 6, pad.top + 12);
+  ctx.fillText('unten', pad.left - 6, pad.top + plotH);
+  const t = stress.thickness;
+  ctx.fillText(`t=${(t*1000).toFixed(0)}mm`, pad.left - 6, pad.top + plotH/2 + 4);
+
+  // Stress profile line
+  const xUpper = zeroX + sUpper * scale;
+  const xLower = zeroX + sLower * scale;
+  const yTop = pad.top;
+  const yBot = pad.top + plotH;
+
+  // Fill tension/compression zones
+  // Find zero crossing
+  const hasZeroCross = (sUpper * sLower < 0);
+  if (hasZeroCross) {
+    const ratio = Math.abs(sUpper) / (Math.abs(sUpper) + Math.abs(sLower));
+    const yZero = yTop + ratio * plotH;
+
+    // Upper zone
+    ctx.fillStyle = sUpper < 0 ? 'rgba(60,140,255,0.25)' : 'rgba(255,80,60,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(zeroX, yTop); ctx.lineTo(xUpper, yTop);
+    ctx.lineTo(zeroX, yZero); ctx.closePath(); ctx.fill();
+
+    // Lower zone
+    ctx.fillStyle = sLower < 0 ? 'rgba(60,140,255,0.25)' : 'rgba(255,80,60,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(zeroX, yZero); ctx.lineTo(xLower, yBot);
+    ctx.lineTo(zeroX, yBot); ctx.closePath(); ctx.fill();
+  } else {
+    ctx.fillStyle = sUpper <= 0 ? 'rgba(60,140,255,0.25)' : 'rgba(255,80,60,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(zeroX, yTop); ctx.lineTo(xUpper, yTop);
+    ctx.lineTo(xLower, yBot); ctx.lineTo(zeroX, yBot);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Stress profile line
+  ctx.strokeStyle = '#7eb8ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(xUpper, yTop);
+  ctx.lineTo(xLower, yBot);
+  ctx.stroke();
+
+  // Value labels
+  ctx.fillStyle = sUpper < 0 ? '#6ab4ff' : '#ff6644';
+  ctx.font = '11px Segoe UI';
+  ctx.textAlign = sUpper >= 0 ? 'left' : 'right';
+  ctx.fillText(`${sUpper.toFixed(2)} MPa`, xUpper + (sUpper >= 0 ? 4 : -4), yTop + 12);
+
+  ctx.fillStyle = sLower < 0 ? '#6ab4ff' : '#ff6644';
+  ctx.textAlign = sLower >= 0 ? 'left' : 'right';
+  ctx.fillText(`${sLower.toFixed(2)} MPa`, xLower + (sLower >= 0 ? 4 : -4), yBot - 4);
+
+  // Component label
+  ctx.fillStyle = '#7eb8ff';
+  ctx.font = 'bold 12px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, zeroX, pad.top - 6);
+
+  // Druck/Zug legend
+  ctx.font = '9px Segoe UI';
+  ctx.fillStyle = '#6ab4ff';
+  ctx.textAlign = 'left';
+  ctx.fillText('Druck (\u2212)', pad.left, H - 2);
+  ctx.fillStyle = '#ff6644';
+  ctx.textAlign = 'right';
+  ctx.fillText('Zug (+)', W - pad.right, H - 2);
+}
+
+function highlightQuad(quadNr) {
+  clearHighlight();
+  const quad = quads.find(q => q.nr === quadNr);
+  if (!quad) return;
+  const qNodes = quad.nodes.filter(nr => nr !== 0);
+  const pts = qNodes.map(nr => {
+    const n = nodes[nodeMap[nr]];
+    if (!n) return null;
+    const p = toView(n);
+    const dm = dispCache[currentLC];
+    if (dm && dm[nr] && deformScale) {
+      const dv = toViewD(dm[nr]);
+      p.x += dv.x * deformScale;
+      p.y += dv.y * deformScale;
+      p.z += dv.z * deformScale;
+    }
+    return p;
+  }).filter(Boolean);
+  if (pts.length < 3) return;
+
+  highlightMesh = new THREE.Group();
+
+  // Filled overlay
+  const fillGeo = new THREE.BufferGeometry();
+  const verts = [];
+  for (let i = 1; i < pts.length - 1; i++) {
+    verts.push(pts[0].x, pts[0].y, pts[0].z);
+    verts.push(pts[i].x, pts[i].y, pts[i].z);
+    verts.push(pts[i+1].x, pts[i+1].y, pts[i+1].z);
+  }
+  fillGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  const fillMat = new THREE.MeshBasicMaterial({
+    color: 0xffcc00, transparent: true, opacity: 0.35,
+    side: THREE.DoubleSide, depthTest: false,
+  });
+  const fill = new THREE.Mesh(fillGeo, fillMat);
+  fill.renderOrder = 998;
+  highlightMesh.add(fill);
+
+  // Thick outline using tubes along edges
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    const dir = new THREE.Vector3().subVectors(b, a);
+    const len = dir.length();
+    if (len < 1e-6) continue;
+    const tube = new THREE.CylinderGeometry(0.025, 0.025, len, 6);
+    const mesh = new THREE.Mesh(tube, new THREE.MeshBasicMaterial({
+      color: 0xffdd00, depthTest: false,
+    }));
+    const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+    mesh.position.copy(mid);
+    mesh.lookAt(b);
+    mesh.rotateX(Math.PI / 2);
+    mesh.renderOrder = 999;
+    highlightMesh.add(mesh);
+  }
+
+  scene.add(highlightMesh);
+}
+
+function clearHighlight() {
+  if (highlightMesh) {
+    scene.remove(highlightMesh);
+    highlightMesh.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+    highlightMesh = null;
+  }
+}
+
+async function showStressPanel(quadNr) {
+  if (!currentLC) return;
+
+  // Find quad element data
+  const quad = quads.find(q => q.nr === quadNr);
+  if (!quad) return;
+
+  try {
+    const resp = await api(`/results/quad-stresses?lc=${currentLC}&elem=${quadNr}`);
+    if (!resp.data || resp.data.length === 0) return;
+    cachedStress = resp.data[0];
+
+    const panel = document.getElementById('stress-panel');
+    const qNodes = quad.nodes.filter(nr => nr !== 0);
+    let html =
+      `<div class="info-row"><span class="label">Element</span><span class="value">${quad.nr}</span></div>` +
+      `<div class="info-row"><span class="label">Lastfall</span><span class="value">${currentLC}</span></div>` +
+      `<div class="info-row"><span class="label">Dicke</span><span class="value">${(cachedStress.thickness*1000).toFixed(0)} mm</span></div>` +
+      `<div class="info-row"><span class="label">Gruppe</span><span class="value">${quad.group}</span></div>` +
+      `<div class="info-row"><span class="label">Material</span><span class="value">${quad.material}</span></div>` +
+      `<div class="info-row"><span class="label">Knoten</span><span class="value">${qNodes.join(', ')}</span></div>`;
+
+    // Show current result value at this element if available
+    if (resultData && resultData.data && currentResult) {
+      const meta = RESULT_META[currentResult] || {};
+      let elemVal = null;
+      if (currentResult.startsWith('quad_')) {
+        const comp = currentResult.replace('quad_', '');
+        const row = resultData.data.find(r => r.elem_nr === quadNr);
+        if (row) elemVal = row[comp];
+      } else if (currentResult.startsWith('stress_')) {
+        const comp = currentResult.replace('stress_', '');
+        elemVal = cachedStress[comp];
+      }
+      if (elemVal !== null && elemVal !== undefined) {
+        html += `<div class="info-row" style="margin-top:4px;border-top:1px solid #334;padding-top:4px">` +
+          `<span class="label">${meta.label || currentResult}</span>` +
+          `<span class="value" style="color:#7eb8ff">${formatValue(elemVal)} ${meta.unit || ''}</span></div>`;
+      }
+    }
+
+    document.getElementById('stress-info').innerHTML = html;
+
+    const comp = document.getElementById('stress-comp').value;
+    drawStressDiagram(cachedStress, comp);
+    panel.style.display = 'block';
+  } catch (e) {
+    // No stress data available — show element info only
+    const panel = document.getElementById('stress-panel');
+    const qNodes = quad.nodes.filter(nr => nr !== 0);
+    document.getElementById('stress-info').innerHTML =
+      `<div class="info-row"><span class="label">Element</span><span class="value">${quad.nr}</span></div>` +
+      `<div class="info-row"><span class="label">Gruppe</span><span class="value">${quad.group}</span></div>` +
+      `<div class="info-row"><span class="label">Material</span><span class="value">${quad.material}</span></div>` +
+      `<div class="info-row"><span class="label">Knoten</span><span class="value">${qNodes.join(', ')}</span></div>` +
+      `<div style="color:#886;margin-top:8px;font-size:11px">Keine Spannungsdaten verfuegbar</div>`;
+    document.getElementById('stress-canvas').getContext('2d').clearRect(0, 0, 300, 200);
+    panel.style.display = 'block';
+  }
+}
+
+// ── Construction Phase Animation ─────────────────────────────────────────
+function applyConstructionPhase(phase) {
+  constructionPhase = phase;
+
+  // Collect visible groups from API-provided active_groups
+  const visibleGroups = new Set();
+  const visibleBeamNrs = new Set();
+
+  if (phase < 0 || CONSTRUCTION_PHASES.length === 0) {
+    // All visible
+    for (const gnr in groups) visibleGroups.add(Number(gnr));
+    for (const b of beams) visibleBeamNrs.add(b.nr);
+  } else {
+    const stageData = CONSTRUCTION_PHASES[phase];
+    for (const g of stageData.active_groups) visibleGroups.add(g);
+    // All beams in visible groups
+    for (const b of beams) {
+      if (visibleGroups.has(b.group)) visibleBeamNrs.add(b.nr);
+    }
+  }
+
+  const isBuilding = phase >= 0 && CONSTRUCTION_PHASES.length > 0;
+
+  // Beam line meshes
+  if (beamMeshes) {
+    for (const mesh of beamMeshes.children) {
+      mesh.visible = visibleBeamNrs.has(mesh.userData.beamNr);
+    }
+  }
+  // Beam section meshes
+  if (beamSectionGroup) {
+    for (const mesh of beamSectionGroup.children) {
+      mesh.visible = visibleBeamNrs.has(mesh.userData.beamNr);
+    }
+  }
+
+  // Quad mesh + wireframe — show only if any quad group visible
+  if (quadMesh || quadWireMesh || thicknessMesh) {
+    let showQuads = !isBuilding;
+    if (isBuilding) {
+      for (const q of quads) {
+        if (visibleGroups.has(q.group)) { showQuads = true; break; }
+      }
+    }
+    if (quadMesh) quadMesh.visible = showQuads;
+    if (quadWireMesh) quadWireMesh.visible = showQuads;
+    if (thicknessMesh) {
+      thicknessMesh.visible = showQuads && document.getElementById('toggle-quad-thickness').checked;
+    }
+  }
+
+  // Tendons — show if their beam groups are visible
+  if (tendonGroup) {
+    if (!isBuilding) {
+      tendonGroup.visible = document.getElementById('toggle-tendons').checked;
+    } else {
+      const showTendons = document.getElementById('toggle-tendons').checked;
+      for (const child of tendonGroup.children) {
+        if (!showTendons) { child.visible = false; continue; }
+        // Show tendon segment if both endpoint groups are visible
+        const tnr = child.userData?.tendonNr;
+        child.visible = showTendons; // show all tendons in visible beam range
+      }
+      tendonGroup.visible = showTendons;
+    }
+  }
+
+  // Coupling symbols (springs + constraints) — show based on connected node visibility
+  if (couplingGroup) {
+    if (!isBuilding) {
+      couplingGroup.visible = true;
+    } else {
+      couplingGroup.visible = true;
+      // Show/hide individual spring/constraint objects based on group visibility
+      for (const child of couplingGroup.children) {
+        const grp = child.userData?.group;
+        if (grp !== undefined) {
+          child.visible = visibleGroups.has(grp);
+        } else {
+          // For springs without group data, check if connected nodes' beams are visible
+          const n0 = child.userData?.nodeStart;
+          const n1 = child.userData?.nodeEnd;
+          if (n0 !== undefined || n1 !== undefined) {
+            let vis = false;
+            for (const b of beams) {
+              if ((b.node_start === n0 || b.node_end === n0 ||
+                   b.node_start === n1 || b.node_end === n1) &&
+                  visibleBeamNrs.has(b.nr)) { vis = true; break; }
+            }
+            child.visible = vis;
+          } else {
+            child.visible = true; // default show
+          }
+        }
+      }
+    }
+  }
+
+  // Support symbols
+  if (supportGroup) {
+    for (const child of supportGroup.children) {
+      const nr = child.userData.nodeNr;
+      if (!isBuilding) { child.visible = true; continue; }
+      // Show if any connected beam is visible
+      let vis = false;
+      for (const b of beams) {
+        if ((b.node_start === nr || b.node_end === nr) && visibleBeamNrs.has(b.nr)) { vis = true; break; }
+      }
+      child.visible = vis;
+    }
+  }
+
+  // Coupling symbols
+  if (couplingGroup) couplingGroup.visible = !isBuilding;
+
+  // Update UI
+  const stg = CONSTRUCTION_PHASES[phase];
+  const label = phase < 0 || !stg
+    ? 'Alle Phasen'
+    : `BA ${stg.stage_nr}: ${stg.name} (${phase + 1}/${CONSTRUCTION_PHASES.length})`;
+  document.getElementById('phase-label').textContent = label;
+  document.getElementById('phase-slider').value = phase;
+}
+
+function playConstruction() {
+  if (constructionPlaying) {
+    clearInterval(constructionTimer);
+    constructionPlaying = false;
+    document.getElementById('btn-phase-play').innerHTML = '&#9654;';
+    return;
+  }
+  constructionPlaying = true;
+  document.getElementById('btn-phase-play').innerHTML = '&#9646;&#9646;';
+
+  // Start from beginning if at end or in "all" mode
+  if (constructionPhase >= CONSTRUCTION_PHASES.length - 1 || constructionPhase < 0) {
+    constructionPhase = -1;
+  }
+
+  const interval = parseInt(document.getElementById('phase-speed').value) || 800;
+  constructionTimer = setInterval(() => {
+    constructionPhase++;
+    if (constructionPhase >= CONSTRUCTION_PHASES.length) {
+      clearInterval(constructionTimer);
+      constructionPlaying = false;
+      document.getElementById('btn-phase-play').innerHTML = '&#9654;';
+      return;
+    }
+    applyConstructionPhase(constructionPhase);
+  }, interval);
+
+  // Trigger first step immediately (Phase 0 = leer)
+  constructionPhase++;
+  applyConstructionPhase(constructionPhase);
+}
+
+// ── GLB Export ───────────────────────────────────────────────────────────
+function exportGLB() {
+  const btn = document.getElementById('btn-export-glb');
+  btn.textContent = 'Exportiere...';
+  btn.disabled = true;
+
+  const exportScene = new THREE.Scene();
+  const phaseDuration = (parseInt(document.getElementById('phase-speed').value) || 800) / 1000;
+  const totalDuration = CONSTRUCTION_PHASES.length * phaseDuration;
+
+  // Determine which phase a group first appears in (new_groups)
+  function getPhaseForGroup(grp) {
+    for (let i = 0; i < CONSTRUCTION_PHASES.length; i++) {
+      const p = CONSTRUCTION_PHASES[i];
+      if (p.new_groups && p.new_groups.includes(grp)) return i;
+      // Also check active_groups for groups present from stage 0
+      if (i === 0 && p.active_groups && p.active_groups.includes(grp)) return i;
+    }
+    return -1;
+  }
+
+  // Build beam nr → phase map
+  const beamPhaseMap = {};
+  for (const b of beams) {
+    beamPhaseMap[b.nr] = getPhaseForGroup(b.group);
+  }
+
+  const clips = [];  // AnimationClips
+  const meshPhaseMap = []; // {mesh, phase}
+
+  // Helper: clone mesh for export
+  function cloneMeshForExport(obj, phase) {
+    const clone = obj.clone();
+    obj.getWorldPosition(clone.position);
+    obj.getWorldQuaternion(clone.quaternion);
+    obj.getWorldScale(clone.scale);
+    if (clone.material) {
+      const oldMat = clone.material;
+      clone.material = new THREE.MeshStandardMaterial({
+        color: oldMat.color,
+        transparent: oldMat.transparent,
+        opacity: oldMat.opacity,
+        side: oldMat.side,
+        metalness: 0.1,
+        roughness: 0.7,
+      });
+    }
+    if (clone.geometry) clone.geometry.computeVertexNormals();
+    clone.name = 'phase_' + phase + '_' + meshPhaseMap.length;
+    exportScene.add(clone);
+    meshPhaseMap.push({ mesh: clone, phase });
+    return clone;
+  }
+
+  // Collect all meshes from scene
+  // Beams (line meshes and section meshes)
+  const collectBeamMeshes = (group) => {
+    if (!group) return;
+    for (const obj of group.children) {
+      if (!obj.isMesh) continue;
+      const bnr = obj.userData.beamNr;
+      const ph = beamPhaseMap[bnr] ?? -1;
+      if (ph >= 0) cloneMeshForExport(obj, ph);
+    }
+  };
+  collectBeamMeshes(beamMeshes);
+  collectBeamMeshes(beamSectionGroup);
+
+  // Quad mesh — assign to earliest quad group phase
+  if (quadMesh && quadMesh.visible) {
+    let ph = -1;
+    for (const q of quads) { const p = getPhaseForGroup(q.group); if (p >= 0 && (ph < 0 || p < ph)) ph = p; }
+    if (ph >= 0) cloneMeshForExport(quadMesh, ph);
+  }
+
+  // Thickness mesh
+  if (thicknessMesh && thicknessMesh.visible) {
+    let ph = -1;
+    for (const q of quads) { const p = getPhaseForGroup(q.group); if (p >= 0 && (ph < 0 || p < ph)) ph = p; }
+    if (ph >= 0) cloneMeshForExport(thicknessMesh, ph);
+  }
+
+  // Support symbols
+  if (supportGroup) {
+    for (const child of supportGroup.children) {
+      if (!child.isMesh && child.children) {
+        // Support groups contain sub-meshes
+        child.traverse(sub => {
+          if (!sub.isMesh) return;
+          // Find phase from connected beams
+          const nr = child.userData.nodeNr;
+          let ph = -1;
+          for (const b of beams) {
+            if (b.node_start === nr || b.node_end === nr) {
+              ph = beamPhaseMap[b.nr] ?? -1;
+              if (ph >= 0) break;
+            }
+          }
+          if (ph >= 0) cloneMeshForExport(sub, ph);
+        });
+      }
+    }
+  }
+
+  // Tendon tubes
+  if (tendonGroup) {
+    for (const obj of tendonGroup.children) {
+      if (obj.isMesh) {
+        // Tendons appear after all structure
+        cloneMeshForExport(obj, CONSTRUCTION_PHASES.length - 1);
+      }
+    }
+  }
+
+  // Build scale animation tracks for each mesh
+  // Phase N mesh: scale 0 before phase start, scale 1 from phase start onwards
+  const tracks = [];
+  for (const { mesh, phase } of meshPhaseMap) {
+    const appearTime = phase * phaseDuration;
+    // Keyframes: scale=0 before appear, scale=1 at appear (with short transition)
+    const times = new Float32Array([
+      0,
+      Math.max(0, appearTime - 0.01),
+      appearTime,
+      totalDuration,
+    ]);
+    const values = new Float32Array([
+      0, 0, 0,  // t=0: invisible
+      0, 0, 0,  // just before appear: invisible
+      1, 1, 1,  // at appear: visible
+      1, 1, 1,  // stay visible
+    ]);
+    tracks.push(new THREE.VectorKeyframeTrack(
+      mesh.name + '.scale', times, values
+    ));
+  }
+
+  if (tracks.length > 0) {
+    const clip = new THREE.AnimationClip('Bauablauf', totalDuration, tracks);
+    exportScene.animations = [clip];
+  }
+
+  const exporter = new GLTFExporter();
+  exporter.parse(exportScene, (result) => {
+    const blob = new Blob([result], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (document.getElementById('project-name').textContent || 'model') + '_bauablauf.glb';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    btn.textContent = 'GLB exportieren';
+    btn.disabled = false;
+
+    exportScene.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+    });
+  }, (error) => {
+    console.error('GLB export error:', error);
+    btn.textContent = 'Export fehlgeschlagen';
+    setTimeout(() => { btn.textContent = 'GLB exportieren'; btn.disabled = false; }, 2000);
+  }, { binary: true, animations: exportScene.animations || [] });
+}
+
+async function loadDatabaseList() {
+  const dbData = await api('/databases').catch(() => null);
+  const sel = document.getElementById('sel-db');
+  sel.innerHTML = '';
+  if (!dbData || !dbData.files.length) return;
+  for (const f of dbData.files) {
+    const opt = document.createElement('option');
+    opt.value = f.name;
+    opt.textContent = `${f.name.replace('.sqlite', '')} (${f.size_kb} KB)`;
+    if (f.name === dbData.current) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', async () => {
+    document.getElementById('status').textContent = 'Wechsle Datenbank...';
+    await fetch(API + '/databases/switch?name=' + encodeURIComponent(sel.value), { method: 'POST' });
+    window.location.reload();
+  });
+}
+
+async function init() {
+  initThree();
+
+  document.getElementById('status').textContent = 'Lade Modell...';
+  await loadDatabaseList();
+
+  // Fetch model data in parallel
+  const [infoData, nodeData, elemData, lcData, secData, grpData, tndData, csmData] = await Promise.all([
+    api('/info'),
+    api('/model/nodes'),
+    api('/model/elements'),
+    api('/model/loadcases'),
+    api('/model/sections').catch(() => []),
+    api('/model/groups').catch(() => []),
+    api('/model/tendons').catch(() => []),
+    api('/model/construction-stages').catch(() => []),
+  ]);
+
+  setupCoordinates(infoData.system);
+  nodes = nodeData;
+  nodeMap = {};
+  nodes.forEach((n, i) => nodeMap[n.nr] = i);
+  beams = elemData.beams;
+  quads = elemData.quads;
+  springs = elemData.springs || [];
+  constraints = elemData.constraints || [];
+  loadcases = lcData;
+  sections = {};
+  for (const s of secData) sections[s.nr] = s;
+  tendons = tndData;
+
+  // Build group map with colors
+  groups = {};
+  let gIdx = 0;
+  for (const g of grpData) {
+    groups[g.nr] = { name: g.name, color: GROUP_COLORS[gIdx % GROUP_COLORS.length], visible: true };
+    gIdx++;
+  }
+
+  // Construction stages from CSM
+  CONSTRUCTION_PHASES = csmData || [];
+  if (CONSTRUCTION_PHASES.length > 0) {
+    // Filter out stages that don't add new groups (prestress-only stages)
+    // to keep animation concise — but keep them accessible via slider
+    const phaseSlider = document.getElementById('phase-slider');
+    phaseSlider.min = -1;
+    phaseSlider.max = CONSTRUCTION_PHASES.length - 1;
+    phaseSlider.value = -1;
+    document.getElementById('phase-label').textContent =
+      `Alle Phasen (${CONSTRUCTION_PHASES.length} Bauphasen)`;
+  }
+
+  // Info panel
+  document.getElementById('project-name').textContent =
+    infoData.system.name || 'infraFEM Viewer';
+  document.getElementById('v-nodes').textContent = nodes.length;
+  document.getElementById('v-beams').textContent = beams.length;
+  document.getElementById('v-quads').textContent = quads.length;
+
+  // Loadcase selector
+  const sel = document.getElementById('sel-lc');
+  sel.innerHTML = '';
+  for (const lc of loadcases) {
+    const opt = document.createElement('option');
+    opt.value = lc.nr;
+    opt.textContent = `LF ${lc.nr}: ${lc.name}`;
+    sel.appendChild(opt);
+  }
+  if (loadcases.length > 0) currentLC = loadcases[0].nr;
+  document.getElementById('v-lc').textContent = currentLC || '-';
+
+  // Build 3D objects
+  buildQuadMesh();
+  buildNodeMeshes();
+  buildBeamMeshes();
+  buildBeamSectionMeshes();
+  fitCamera();            // sets modelExtent
+  buildSupportSymbols();  // needs modelExtent for sizing
+  buildCouplingSymbols(); // needs modelExtent for sizing
+  buildTendonPaths();
+
+  // Event handlers
+  sel.addEventListener('change', loadResult);
+  document.getElementById('sel-result').addEventListener('change', loadResult);
+
+  const slider = document.getElementById('scale-slider');
+  slider.addEventListener('input', () => {
+    deformScale = parseFloat(slider.value);
+    document.getElementById('scale-val').textContent = deformScale + 'x';
+    if (!animating) applyDeformation(deformScale);
+  });
+
+  document.getElementById('anim-toggle').addEventListener('change', (e) => {
+    animating = e.target.checked;
+    if (!animating) applyDeformation(deformScale);
+  });
+
+  document.getElementById('diagram-slider').addEventListener('input', (e) => {
+    diagramScale = parseFloat(e.target.value);
+    document.getElementById('diagram-scale-val').textContent = diagramScale;
+    if (lastBeamComp && lastBeamData) buildBeamDiagrams(lastBeamComp, lastBeamData);
+  });
+
+  document.getElementById('support-slider').addEventListener('input', (e) => {
+    document.getElementById('support-scale-val').textContent = e.target.value;
+    buildSupportSymbols();
+  });
+
+  document.getElementById('toggle-beam-section').addEventListener('change', (e) => {
+    if (beamSectionGroup) beamSectionGroup.visible = e.target.checked;
+    if (beamMeshes) beamMeshes.visible = !e.target.checked;
+    // Rebuild tendons as tubes or lines
+    buildTendonPaths();
+  });
+
+  document.getElementById('toggle-quad-thickness').addEventListener('change', (e) => {
+    if (thicknessMesh) thicknessMesh.visible = e.target.checked;
+  });
+
+  document.getElementById('toggle-tendons').addEventListener('change', (e) => {
+    if (tendonGroup) tendonGroup.visible = e.target.checked;
+  });
+
+  document.getElementById('btn-export-glb').addEventListener('click', exportGLB);
+
+  // Construction phase controls
+  document.getElementById('btn-phase-play').addEventListener('click', playConstruction);
+  document.getElementById('btn-phase-next').addEventListener('click', () => {
+    if (constructionPlaying) { playConstruction(); } // stop
+    const next = Math.min(constructionPhase + 1, CONSTRUCTION_PHASES.length - 1);
+    applyConstructionPhase(next);
+  });
+  document.getElementById('btn-phase-prev').addEventListener('click', () => {
+    if (constructionPlaying) { playConstruction(); } // stop
+    const prev = Math.max(constructionPhase - 1, -1);
+    applyConstructionPhase(prev);
+  });
+  document.getElementById('btn-phase-reset').addEventListener('click', () => {
+    if (constructionPlaying) { playConstruction(); } // stop
+    applyConstructionPhase(-1);
+  });
+  document.getElementById('phase-slider').addEventListener('input', (e) => {
+    if (constructionPlaying) { playConstruction(); } // stop
+    applyConstructionPhase(parseInt(e.target.value));
+  });
+  document.getElementById('phase-speed').addEventListener('input', (e) => {
+    const ms = parseInt(e.target.value);
+    document.getElementById('phase-speed-val').textContent = (ms / 1000).toFixed(1) + 's';
+    // Restart timer with new speed if playing
+    if (constructionPlaying) {
+      clearInterval(constructionTimer);
+      constructionTimer = setInterval(() => {
+        constructionPhase++;
+        if (constructionPhase >= CONSTRUCTION_PHASES.length) {
+          clearInterval(constructionTimer);
+          constructionPlaying = false;
+          document.getElementById('btn-phase-play').innerHTML = '&#9654;';
+          return;
+        }
+        applyConstructionPhase(constructionPhase);
+      }, ms);
+    }
+  });
+
+  // Build group toggle checkboxes
+  const grpPanel = document.getElementById('group-panel');
+  const grpContainer = document.getElementById('group-toggles');
+  const grpNrs = Object.keys(groups).map(Number).sort((a, b) => a - b);
+  if (grpNrs.length > 0) {
+    grpPanel.style.display = 'block';
+    for (const gnr of grpNrs) {
+      const g = groups[gnr];
+      const colorHex = '#' + g.color.toString(16).padStart(6, '0');
+      const label = document.createElement('label');
+      label.style.cssText = 'cursor:pointer;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;margin:3px 0;font-size:11px';
+      label.innerHTML =
+        `<input type="checkbox" checked data-group="${gnr}" style="width:auto;accent-color:${colorHex}">` +
+        `<span style="width:10px;height:10px;border-radius:2px;background:${colorHex};flex-shrink:0"></span>` +
+        `<span style="color:#bcd">${gnr}: ${g.name || 'Gruppe ' + gnr}</span>`;
+      label.querySelector('input').addEventListener('change', (e) => {
+        groups[gnr].visible = e.target.checked;
+        applyGroupVisibility();
+      });
+      grpContainer.appendChild(label);
+    }
+  }
+
+  // Click on quad to show stress panel
+  const clickRay = new THREE.Raycaster();
+  const clickMouse = new THREE.Vector2();
+  let clickTimer = null;
+  renderer.domElement.addEventListener('click', (e) => {
+    // Delay to distinguish from dblclick
+    if (clickTimer) clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => {
+      if (!document.getElementById('toggle-stress-click').checked) return;
+      if (!quadMesh || faceToQuad.length === 0) return;
+      clickMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      clickMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      clickRay.setFromCamera(clickMouse, camera);
+      const hits = clickRay.intersectObject(quadMesh);
+      if (hits.length > 0) {
+        const quadNr = faceToQuad[hits[0].faceIndex];
+        if (quadNr !== undefined) {
+          highlightQuad(quadNr);
+          showStressPanel(quadNr);
+        }
+      }
+    }, 250);
+  });
+  renderer.domElement.addEventListener('dblclick', () => {
+    if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+  });
+
+  // Stress component selector
+  document.getElementById('stress-comp').addEventListener('change', (e) => {
+    if (cachedStress) drawStressDiagram(cachedStress, e.target.value);
+  });
+  document.getElementById('stress-close').addEventListener('click', () => {
+    document.getElementById('stress-panel').style.display = 'none';
+    clearHighlight();
+  });
+
+  // Drag stress panel by its header
+  {
+    const panel = document.getElementById('stress-panel');
+    const header = panel.querySelector('h3');
+    let dragging = false, dx = 0, dy = 0;
+    header.addEventListener('mousedown', (e) => {
+      dragging = true;
+      dx = e.clientX - panel.offsetLeft;
+      dy = e.clientY - panel.offsetTop;
+      header.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      panel.style.left = (e.clientX - dx) + 'px';
+      panel.style.top = (e.clientY - dy) + 'px';
+      panel.style.right = 'auto';
+    });
+    window.addEventListener('mouseup', () => {
+      dragging = false;
+      header.style.cursor = 'grab';
+    });
+  }
+
+  document.getElementById('status').textContent =
+    `infraFEM v0.1 | ${nodes.length} Knoten | ${quads.length} QUAD | ${beams.length} Balken`;
+
+  // Render loop
+  function animate(time) {
+    requestAnimationFrame(animate);
+    if (animating && deformScale > 0 && dispCache[currentLC]) {
+      const t = Math.sin(time * 0.003); // ~2s period
+      applyDeformation(deformScale * t);
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate(0);
+}
+
+init().catch(e => {
+  console.error(e);
+  document.getElementById('status').textContent = 'Fehler: ' + e.message;
+});
+</script>
+</body>
+</html>

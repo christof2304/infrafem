@@ -1,0 +1,1243 @@
++PROG SOFILOAD urs:csmtemp
+KOPF Temperatur auf PLEX Plattenbalkensystem
+LF 90 TYP T BEZ "T summer posdt TN+wm*dT"
+STAB von 1001 bis 2016 TYP DT PA   26.9961
+                                 STAB von 1001 bis 2016 TYP DTZ PA  -9.22500
+STAB von 5001 bis 5028 TYP DT PA   25.4142
+                                 STAB von 5001 bis 5028 TYP DTZ PA  -10.2500
+STAB von 6001 bis 6014 TYP DT PA   25.5136
+                                 STAB von 6001 bis 6014 TYP DTZ PA  -10.2500
+$ *************************************************************
+QUAD von 3001 TYP DTXY P   29.7214
+                                 QUAD von 3001 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P   29.5933
+                                 QUAD von 3002 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P   29.3370
+                                 QUAD von 3003 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P   29.2089
+                                 QUAD von 3004 bis 3005 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P   29.3370
+                                 QUAD von 3006 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P   29.5933
+                                 QUAD von 3007 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P   29.7214
+                                 QUAD von 3008 bis 3009 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P   29.5933
+                                 QUAD von 3010 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P   29.3370
+                                 QUAD von 3011 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P   29.2089
+                                 QUAD von 3012 bis 3013 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P   29.3370
+                                 QUAD von 3014 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P   29.5933
+                                 QUAD von 3015 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P   29.7214
+                                 QUAD von 3016 bis 3028 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P   29.5933
+                                 QUAD von 3029 bis 3040 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P   29.3370
+                                 QUAD von 3041 bis 3052 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P   29.2089
+                                 QUAD von 3053 bis 3076 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P   29.3370
+                                 QUAD von 3077 bis 3088 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P   29.5933
+                                 QUAD von 3089 bis 3100 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P   29.7214
+                                 QUAD von 3101 bis 3124 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P   29.5933
+                                 QUAD von 3125 bis 3136 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P   29.3370
+                                 QUAD von 3137 bis 3148 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P   29.2089
+                                 QUAD von 3149 bis 3172 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P   29.3370
+                                 QUAD von 3173 bis 3184 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P   29.5933
+                                 QUAD von 3185 bis 3196 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P   29.7214
+                                 QUAD von 3197 bis 3212 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P   29.5933
+                                 QUAD von 3213 bis 3216 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P   29.3370
+                                 QUAD von 3217 bis 3220 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P   29.2089
+                                 QUAD von 3221 bis 3228 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P   29.3370
+                                 QUAD von 3229 bis 3232 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P   29.5933
+                                 QUAD von 3233 bis 3236 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P   29.7214
+                                 QUAD von 3237 bis 3244 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P   29.5933
+                                 QUAD von 3245 bis 3248 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P   29.3370
+                                 QUAD von 3249 bis 3252 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P   29.2089
+                                 QUAD von 3253 bis 3260 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P   29.3370
+                                 QUAD von 3261 bis 3264 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P   29.5933
+                                 QUAD von 3265 bis 3268 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P   29.7214
+                                 QUAD von 3269 bis 3276 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P   29.5933
+                                 QUAD von 3277 bis 3280 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P   29.3370
+                                 QUAD von 3281 bis 3284 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P   29.2089
+                                 QUAD von 3285 bis 3292 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P   29.3370
+                                 QUAD von 3293 bis 3296 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P   29.5933
+                                 QUAD von 3297 bis 3300 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P   29.7214
+                                 QUAD von 3301 bis 3308 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P   29.5933
+                                 QUAD von 3309 bis 3312 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P   29.3370
+                                 QUAD von 3313 bis 3316 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P   29.2089
+                                 QUAD von 3317 bis 3324 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P   29.3370
+                                 QUAD von 3325 bis 3328 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P   29.5933
+                                 QUAD von 3329 bis 3332 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P   29.7214
+                                 QUAD von 3333 bis 3348 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P   29.5933
+                                 QUAD von 3349 bis 3360 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P   29.3370
+                                 QUAD von 3361 bis 3372 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P   29.2089
+                                 QUAD von 3373 bis 3396 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P   29.3370
+                                 QUAD von 3397 bis 3408 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P   29.5933
+                                 QUAD von 3409 bis 3420 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P   29.7214
+                                 QUAD von 3421 bis 3444 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P   29.5933
+                                 QUAD von 3445 bis 3456 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P   29.3370
+                                 QUAD von 3457 bis 3468 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P   29.2089
+                                 QUAD von 3469 bis 3492 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P   29.3370
+                                 QUAD von 3493 bis 3504 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P   29.5933
+                                 QUAD von 3505 bis 3516 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P   29.7214
+                                 QUAD von 3517 bis 3529 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P   29.5933
+                                 QUAD von 3530 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P   29.3370
+                                 QUAD von 3531 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P   29.2089
+                                 QUAD von 3532 bis 3533 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P   29.3370
+                                 QUAD von 3534 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P   29.5933
+                                 QUAD von 3535 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P   29.7214
+                                 QUAD von 3536 bis 3537 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P   29.5933
+                                 QUAD von 3538 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P   29.3370
+                                 QUAD von 3539 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P   29.2089
+                                 QUAD von 3540 bis 3541 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P   29.3370
+                                 QUAD von 3542 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P   29.5933
+                                 QUAD von 3543 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P   29.7214
+                                 QUAD von 3544 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+$
+LF 91 TYP T BEZ "T summer negdt TN+wm*dT"
+STAB von 1001 bis 2016 TYP DT PA   27.0025
+                                 STAB von 1001 bis 2016 TYP DTZ PA   6.00000
+STAB von 5001 bis 5028 TYP DT PA   28.0314
+                                 STAB von 5001 bis 5028 TYP DTZ PA   6.66667
+STAB von 6001 bis 6014 TYP DT PA   27.9668
+                                 STAB von 6001 bis 6014 TYP DTZ PA   6.66667
+$ *************************************************************
+QUAD von 3001 TYP DTXY P   25.2300
+                                 QUAD von 3001 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P   25.3133
+                                 QUAD von 3002 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P   25.4800
+                                 QUAD von 3003 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P   25.5633
+                                 QUAD von 3004 bis 3005 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P   25.4800
+                                 QUAD von 3006 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P   25.3133
+                                 QUAD von 3007 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P   25.2300
+                                 QUAD von 3008 bis 3009 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P   25.3133
+                                 QUAD von 3010 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P   25.4800
+                                 QUAD von 3011 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P   25.5633
+                                 QUAD von 3012 bis 3013 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P   25.4800
+                                 QUAD von 3014 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P   25.3133
+                                 QUAD von 3015 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P   25.2300
+                                 QUAD von 3016 bis 3028 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P   25.3133
+                                 QUAD von 3029 bis 3040 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P   25.4800
+                                 QUAD von 3041 bis 3052 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P   25.5633
+                                 QUAD von 3053 bis 3076 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P   25.4800
+                                 QUAD von 3077 bis 3088 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P   25.3133
+                                 QUAD von 3089 bis 3100 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P   25.2300
+                                 QUAD von 3101 bis 3124 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P   25.3133
+                                 QUAD von 3125 bis 3136 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P   25.4800
+                                 QUAD von 3137 bis 3148 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P   25.5633
+                                 QUAD von 3149 bis 3172 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P   25.4800
+                                 QUAD von 3173 bis 3184 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P   25.3133
+                                 QUAD von 3185 bis 3196 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P   25.2300
+                                 QUAD von 3197 bis 3212 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P   25.3133
+                                 QUAD von 3213 bis 3216 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P   25.4800
+                                 QUAD von 3217 bis 3220 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P   25.5633
+                                 QUAD von 3221 bis 3228 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P   25.4800
+                                 QUAD von 3229 bis 3232 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P   25.3133
+                                 QUAD von 3233 bis 3236 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P   25.2300
+                                 QUAD von 3237 bis 3244 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P   25.3133
+                                 QUAD von 3245 bis 3248 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P   25.4800
+                                 QUAD von 3249 bis 3252 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P   25.5633
+                                 QUAD von 3253 bis 3260 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P   25.4800
+                                 QUAD von 3261 bis 3264 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P   25.3133
+                                 QUAD von 3265 bis 3268 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P   25.2300
+                                 QUAD von 3269 bis 3276 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P   25.3133
+                                 QUAD von 3277 bis 3280 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P   25.4800
+                                 QUAD von 3281 bis 3284 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P   25.5633
+                                 QUAD von 3285 bis 3292 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P   25.4800
+                                 QUAD von 3293 bis 3296 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P   25.3133
+                                 QUAD von 3297 bis 3300 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P   25.2300
+                                 QUAD von 3301 bis 3308 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P   25.3133
+                                 QUAD von 3309 bis 3312 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P   25.4800
+                                 QUAD von 3313 bis 3316 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P   25.5633
+                                 QUAD von 3317 bis 3324 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P   25.4800
+                                 QUAD von 3325 bis 3328 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P   25.3133
+                                 QUAD von 3329 bis 3332 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P   25.2300
+                                 QUAD von 3333 bis 3348 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P   25.3133
+                                 QUAD von 3349 bis 3360 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P   25.4800
+                                 QUAD von 3361 bis 3372 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P   25.5633
+                                 QUAD von 3373 bis 3396 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P   25.4800
+                                 QUAD von 3397 bis 3408 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P   25.3133
+                                 QUAD von 3409 bis 3420 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P   25.2300
+                                 QUAD von 3421 bis 3444 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P   25.3133
+                                 QUAD von 3445 bis 3456 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P   25.4800
+                                 QUAD von 3457 bis 3468 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P   25.5633
+                                 QUAD von 3469 bis 3492 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P   25.4800
+                                 QUAD von 3493 bis 3504 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P   25.3133
+                                 QUAD von 3505 bis 3516 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P   25.2300
+                                 QUAD von 3517 bis 3529 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P   25.3133
+                                 QUAD von 3530 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P   25.4800
+                                 QUAD von 3531 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P   25.5633
+                                 QUAD von 3532 bis 3533 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P   25.4800
+                                 QUAD von 3534 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P   25.3133
+                                 QUAD von 3535 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P   25.2300
+                                 QUAD von 3536 bis 3537 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P   25.3133
+                                 QUAD von 3538 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P   25.4800
+                                 QUAD von 3539 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P   25.5633
+                                 QUAD von 3540 bis 3541 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P   25.4800
+                                 QUAD von 3542 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P   25.3133
+                                 QUAD von 3543 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P   25.2300
+                                 QUAD von 3544 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+$
+LF 92 TYP T BEZ "T winter posdt TN+wm*dT"
+STAB von 1001 bis 2016 TYP DT PA  -27.0039
+                                 STAB von 1001 bis 2016 TYP DTZ PA  -9.22500
+STAB von 5001 bis 5028 TYP DT PA  -28.5858
+                                 STAB von 5001 bis 5028 TYP DTZ PA  -10.2500
+STAB von 6001 bis 6014 TYP DT PA  -28.4864
+                                 STAB von 6001 bis 6014 TYP DTZ PA  -10.2500
+$ *************************************************************
+QUAD von 3001 TYP DTXY P  -24.2786
+                                 QUAD von 3001 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P  -24.4067
+                                 QUAD von 3002 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P  -24.6630
+                                 QUAD von 3003 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P  -24.7911
+                                 QUAD von 3004 bis 3005 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P  -24.6630
+                                 QUAD von 3006 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P  -24.4067
+                                 QUAD von 3007 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P  -24.2786
+                                 QUAD von 3008 bis 3009 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P  -24.4067
+                                 QUAD von 3010 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P  -24.6630
+                                 QUAD von 3011 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P  -24.7911
+                                 QUAD von 3012 bis 3013 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P  -24.6630
+                                 QUAD von 3014 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P  -24.4067
+                                 QUAD von 3015 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P  -24.2786
+                                 QUAD von 3016 bis 3028 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P  -24.4067
+                                 QUAD von 3029 bis 3040 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P  -24.6630
+                                 QUAD von 3041 bis 3052 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P  -24.7911
+                                 QUAD von 3053 bis 3076 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P  -24.6630
+                                 QUAD von 3077 bis 3088 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P  -24.4067
+                                 QUAD von 3089 bis 3100 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P  -24.2786
+                                 QUAD von 3101 bis 3124 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P  -24.4067
+                                 QUAD von 3125 bis 3136 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P  -24.6630
+                                 QUAD von 3137 bis 3148 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P  -24.7911
+                                 QUAD von 3149 bis 3172 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P  -24.6630
+                                 QUAD von 3173 bis 3184 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P  -24.4067
+                                 QUAD von 3185 bis 3196 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P  -24.2786
+                                 QUAD von 3197 bis 3212 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P  -24.4067
+                                 QUAD von 3213 bis 3216 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P  -24.6630
+                                 QUAD von 3217 bis 3220 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P  -24.7911
+                                 QUAD von 3221 bis 3228 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P  -24.6630
+                                 QUAD von 3229 bis 3232 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P  -24.4067
+                                 QUAD von 3233 bis 3236 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P  -24.2786
+                                 QUAD von 3237 bis 3244 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P  -24.4067
+                                 QUAD von 3245 bis 3248 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P  -24.6630
+                                 QUAD von 3249 bis 3252 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P  -24.7911
+                                 QUAD von 3253 bis 3260 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P  -24.6630
+                                 QUAD von 3261 bis 3264 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P  -24.4067
+                                 QUAD von 3265 bis 3268 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P  -24.2786
+                                 QUAD von 3269 bis 3276 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P  -24.4067
+                                 QUAD von 3277 bis 3280 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P  -24.6630
+                                 QUAD von 3281 bis 3284 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P  -24.7911
+                                 QUAD von 3285 bis 3292 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P  -24.6630
+                                 QUAD von 3293 bis 3296 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P  -24.4067
+                                 QUAD von 3297 bis 3300 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P  -24.2786
+                                 QUAD von 3301 bis 3308 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P  -24.4067
+                                 QUAD von 3309 bis 3312 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P  -24.6630
+                                 QUAD von 3313 bis 3316 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P  -24.7911
+                                 QUAD von 3317 bis 3324 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P  -24.6630
+                                 QUAD von 3325 bis 3328 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P  -24.4067
+                                 QUAD von 3329 bis 3332 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P  -24.2786
+                                 QUAD von 3333 bis 3348 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P  -24.4067
+                                 QUAD von 3349 bis 3360 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P  -24.6630
+                                 QUAD von 3361 bis 3372 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P  -24.7911
+                                 QUAD von 3373 bis 3396 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P  -24.6630
+                                 QUAD von 3397 bis 3408 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P  -24.4067
+                                 QUAD von 3409 bis 3420 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P  -24.2786
+                                 QUAD von 3421 bis 3444 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P  -24.4067
+                                 QUAD von 3445 bis 3456 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P  -24.6630
+                                 QUAD von 3457 bis 3468 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P  -24.7911
+                                 QUAD von 3469 bis 3492 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P  -24.6630
+                                 QUAD von 3493 bis 3504 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P  -24.4067
+                                 QUAD von 3505 bis 3516 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P  -24.2786
+                                 QUAD von 3517 bis 3529 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P  -24.4067
+                                 QUAD von 3530 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P  -24.6630
+                                 QUAD von 3531 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P  -24.7911
+                                 QUAD von 3532 bis 3533 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P  -24.6630
+                                 QUAD von 3534 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P  -24.4067
+                                 QUAD von 3535 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P  -24.2786
+                                 QUAD von 3536 bis 3537 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P  -24.4067
+                                 QUAD von 3538 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P  -24.6630
+                                 QUAD von 3539 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P  -24.7911
+                                 QUAD von 3540 bis 3541 TYP DTZ P  -2.30625    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P  -24.6630
+                                 QUAD von 3542 TYP DTZ P  -2.05000    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P  -24.4067
+                                 QUAD von 3543 TYP DTZ P  -1.53750    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P  -24.2786
+                                 QUAD von 3544 TYP DTZ P  -1.28125    $ t=   250.000 [mm]
+$
+LF 93 TYP T BEZ "T winter negdt TN+wm*dT"
+STAB von 1001 bis 2016 TYP DT PA  -26.9975
+                                 STAB von 1001 bis 2016 TYP DTZ PA   6.00000
+STAB von 5001 bis 5028 TYP DT PA  -25.9686
+                                 STAB von 5001 bis 5028 TYP DTZ PA   6.66667
+STAB von 6001 bis 6014 TYP DT PA  -26.0332
+                                 STAB von 6001 bis 6014 TYP DTZ PA   6.66667
+$ *************************************************************
+QUAD von 3001 TYP DTXY P  -28.7700
+                                 QUAD von 3001 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P  -28.6867
+                                 QUAD von 3002 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P  -28.5200
+                                 QUAD von 3003 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P  -28.4367
+                                 QUAD von 3004 bis 3005 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P  -28.5200
+                                 QUAD von 3006 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P  -28.6867
+                                 QUAD von 3007 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P  -28.7700
+                                 QUAD von 3008 bis 3009 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P  -28.6867
+                                 QUAD von 3010 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P  -28.5200
+                                 QUAD von 3011 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P  -28.4367
+                                 QUAD von 3012 bis 3013 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P  -28.5200
+                                 QUAD von 3014 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P  -28.6867
+                                 QUAD von 3015 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P  -28.7700
+                                 QUAD von 3016 bis 3028 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P  -28.6867
+                                 QUAD von 3029 bis 3040 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P  -28.5200
+                                 QUAD von 3041 bis 3052 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P  -28.4367
+                                 QUAD von 3053 bis 3076 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P  -28.5200
+                                 QUAD von 3077 bis 3088 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P  -28.6867
+                                 QUAD von 3089 bis 3100 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P  -28.7700
+                                 QUAD von 3101 bis 3124 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P  -28.6867
+                                 QUAD von 3125 bis 3136 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P  -28.5200
+                                 QUAD von 3137 bis 3148 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P  -28.4367
+                                 QUAD von 3149 bis 3172 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P  -28.5200
+                                 QUAD von 3173 bis 3184 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P  -28.6867
+                                 QUAD von 3185 bis 3196 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P  -28.7700
+                                 QUAD von 3197 bis 3212 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P  -28.6867
+                                 QUAD von 3213 bis 3216 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P  -28.5200
+                                 QUAD von 3217 bis 3220 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P  -28.4367
+                                 QUAD von 3221 bis 3228 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P  -28.5200
+                                 QUAD von 3229 bis 3232 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P  -28.6867
+                                 QUAD von 3233 bis 3236 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P  -28.7700
+                                 QUAD von 3237 bis 3244 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P  -28.6867
+                                 QUAD von 3245 bis 3248 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P  -28.5200
+                                 QUAD von 3249 bis 3252 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P  -28.4367
+                                 QUAD von 3253 bis 3260 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P  -28.5200
+                                 QUAD von 3261 bis 3264 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P  -28.6867
+                                 QUAD von 3265 bis 3268 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P  -28.7700
+                                 QUAD von 3269 bis 3276 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P  -28.6867
+                                 QUAD von 3277 bis 3280 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P  -28.5200
+                                 QUAD von 3281 bis 3284 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P  -28.4367
+                                 QUAD von 3285 bis 3292 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P  -28.5200
+                                 QUAD von 3293 bis 3296 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P  -28.6867
+                                 QUAD von 3297 bis 3300 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P  -28.7700
+                                 QUAD von 3301 bis 3308 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P  -28.6867
+                                 QUAD von 3309 bis 3312 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P  -28.5200
+                                 QUAD von 3313 bis 3316 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P  -28.4367
+                                 QUAD von 3317 bis 3324 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P  -28.5200
+                                 QUAD von 3325 bis 3328 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P  -28.6867
+                                 QUAD von 3329 bis 3332 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P  -28.7700
+                                 QUAD von 3333 bis 3348 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P  -28.6867
+                                 QUAD von 3349 bis 3360 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P  -28.5200
+                                 QUAD von 3361 bis 3372 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P  -28.4367
+                                 QUAD von 3373 bis 3396 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P  -28.5200
+                                 QUAD von 3397 bis 3408 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P  -28.6867
+                                 QUAD von 3409 bis 3420 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P  -28.7700
+                                 QUAD von 3421 bis 3444 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P  -28.6867
+                                 QUAD von 3445 bis 3456 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P  -28.5200
+                                 QUAD von 3457 bis 3468 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P  -28.4367
+                                 QUAD von 3469 bis 3492 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P  -28.5200
+                                 QUAD von 3493 bis 3504 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P  -28.6867
+                                 QUAD von 3505 bis 3516 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P  -28.7700
+                                 QUAD von 3517 bis 3529 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P  -28.6867
+                                 QUAD von 3530 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P  -28.5200
+                                 QUAD von 3531 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P  -28.4367
+                                 QUAD von 3532 bis 3533 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P  -28.5200
+                                 QUAD von 3534 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P  -28.6867
+                                 QUAD von 3535 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P  -28.7700
+                                 QUAD von 3536 bis 3537 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P  -28.6867
+                                 QUAD von 3538 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P  -28.5200
+                                 QUAD von 3539 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P  -28.4367
+                                 QUAD von 3540 bis 3541 TYP DTZ P   1.50000    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P  -28.5200
+                                 QUAD von 3542 TYP DTZ P   1.33333    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P  -28.6867
+                                 QUAD von 3543 TYP DTZ P   1.00000    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P  -28.7700
+                                 QUAD von 3544 TYP DTZ P  0.833333    $ t=   250.000 [mm]
+$
+LF 94 TYP T BEZ "T summer posdt wn*TN+dT"
+STAB von 1001 bis 2016 TYP DT PA   9.44486
+                                 STAB von 1001 bis 2016 TYP DTZ PA  -12.3000
+STAB von 5001 bis 5028 TYP DT PA   7.33564
+                                 STAB von 5001 bis 5028 TYP DTZ PA  -13.6667
+STAB von 6001 bis 6014 TYP DT PA   7.46814
+                                 STAB von 6001 bis 6014 TYP DTZ PA  -13.6667
+$ *************************************************************
+QUAD von 3001 TYP DTXY P   13.0785
+                                 QUAD von 3001 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P   12.9077
+                                 QUAD von 3002 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P   12.5660
+                                 QUAD von 3003 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P   12.3952
+                                 QUAD von 3004 bis 3005 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P   12.5660
+                                 QUAD von 3006 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P   12.9077
+                                 QUAD von 3007 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P   13.0785
+                                 QUAD von 3008 bis 3009 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P   12.9077
+                                 QUAD von 3010 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P   12.5660
+                                 QUAD von 3011 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P   12.3952
+                                 QUAD von 3012 bis 3013 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P   12.5660
+                                 QUAD von 3014 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P   12.9077
+                                 QUAD von 3015 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P   13.0785
+                                 QUAD von 3016 bis 3028 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P   12.9077
+                                 QUAD von 3029 bis 3040 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P   12.5660
+                                 QUAD von 3041 bis 3052 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P   12.3952
+                                 QUAD von 3053 bis 3076 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P   12.5660
+                                 QUAD von 3077 bis 3088 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P   12.9077
+                                 QUAD von 3089 bis 3100 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P   13.0785
+                                 QUAD von 3101 bis 3124 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P   12.9077
+                                 QUAD von 3125 bis 3136 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P   12.5660
+                                 QUAD von 3137 bis 3148 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P   12.3952
+                                 QUAD von 3149 bis 3172 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P   12.5660
+                                 QUAD von 3173 bis 3184 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P   12.9077
+                                 QUAD von 3185 bis 3196 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P   13.0785
+                                 QUAD von 3197 bis 3212 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P   12.9077
+                                 QUAD von 3213 bis 3216 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P   12.5660
+                                 QUAD von 3217 bis 3220 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P   12.3952
+                                 QUAD von 3221 bis 3228 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P   12.5660
+                                 QUAD von 3229 bis 3232 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P   12.9077
+                                 QUAD von 3233 bis 3236 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P   13.0785
+                                 QUAD von 3237 bis 3244 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P   12.9077
+                                 QUAD von 3245 bis 3248 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P   12.5660
+                                 QUAD von 3249 bis 3252 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P   12.3952
+                                 QUAD von 3253 bis 3260 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P   12.5660
+                                 QUAD von 3261 bis 3264 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P   12.9077
+                                 QUAD von 3265 bis 3268 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P   13.0785
+                                 QUAD von 3269 bis 3276 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P   12.9077
+                                 QUAD von 3277 bis 3280 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P   12.5660
+                                 QUAD von 3281 bis 3284 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P   12.3952
+                                 QUAD von 3285 bis 3292 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P   12.5660
+                                 QUAD von 3293 bis 3296 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P   12.9077
+                                 QUAD von 3297 bis 3300 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P   13.0785
+                                 QUAD von 3301 bis 3308 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P   12.9077
+                                 QUAD von 3309 bis 3312 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P   12.5660
+                                 QUAD von 3313 bis 3316 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P   12.3952
+                                 QUAD von 3317 bis 3324 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P   12.5660
+                                 QUAD von 3325 bis 3328 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P   12.9077
+                                 QUAD von 3329 bis 3332 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P   13.0785
+                                 QUAD von 3333 bis 3348 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P   12.9077
+                                 QUAD von 3349 bis 3360 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P   12.5660
+                                 QUAD von 3361 bis 3372 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P   12.3952
+                                 QUAD von 3373 bis 3396 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P   12.5660
+                                 QUAD von 3397 bis 3408 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P   12.9077
+                                 QUAD von 3409 bis 3420 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P   13.0785
+                                 QUAD von 3421 bis 3444 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P   12.9077
+                                 QUAD von 3445 bis 3456 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P   12.5660
+                                 QUAD von 3457 bis 3468 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P   12.3952
+                                 QUAD von 3469 bis 3492 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P   12.5660
+                                 QUAD von 3493 bis 3504 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P   12.9077
+                                 QUAD von 3505 bis 3516 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P   13.0785
+                                 QUAD von 3517 bis 3529 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P   12.9077
+                                 QUAD von 3530 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P   12.5660
+                                 QUAD von 3531 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P   12.3952
+                                 QUAD von 3532 bis 3533 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P   12.5660
+                                 QUAD von 3534 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P   12.9077
+                                 QUAD von 3535 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P   13.0785
+                                 QUAD von 3536 bis 3537 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P   12.9077
+                                 QUAD von 3538 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P   12.5660
+                                 QUAD von 3539 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P   12.3952
+                                 QUAD von 3540 bis 3541 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P   12.5660
+                                 QUAD von 3542 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P   12.9077
+                                 QUAD von 3543 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P   13.0785
+                                 QUAD von 3544 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+$
+LF 95 TYP T BEZ "T summer negdt wn*TN+dT"
+STAB von 1001 bis 2016 TYP DT PA   9.45334
+                                 STAB von 1001 bis 2016 TYP DTZ PA   8.00000
+STAB von 5001 bis 5028 TYP DT PA   10.8252
+                                 STAB von 5001 bis 5028 TYP DTZ PA   8.88889
+STAB von 6001 bis 6014 TYP DT PA   10.7390
+                                 STAB von 6001 bis 6014 TYP DTZ PA   8.88889
+$ *************************************************************
+QUAD von 3001 TYP DTXY P   7.09000
+                                 QUAD von 3001 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P   7.20111
+                                 QUAD von 3002 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P   7.42333
+                                 QUAD von 3003 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P   7.53444
+                                 QUAD von 3004 bis 3005 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P   7.42333
+                                 QUAD von 3006 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P   7.20111
+                                 QUAD von 3007 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P   7.09000
+                                 QUAD von 3008 bis 3009 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P   7.20111
+                                 QUAD von 3010 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P   7.42333
+                                 QUAD von 3011 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P   7.53444
+                                 QUAD von 3012 bis 3013 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P   7.42333
+                                 QUAD von 3014 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P   7.20111
+                                 QUAD von 3015 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P   7.09000
+                                 QUAD von 3016 bis 3028 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P   7.20111
+                                 QUAD von 3029 bis 3040 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P   7.42333
+                                 QUAD von 3041 bis 3052 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P   7.53444
+                                 QUAD von 3053 bis 3076 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P   7.42333
+                                 QUAD von 3077 bis 3088 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P   7.20111
+                                 QUAD von 3089 bis 3100 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P   7.09000
+                                 QUAD von 3101 bis 3124 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P   7.20111
+                                 QUAD von 3125 bis 3136 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P   7.42333
+                                 QUAD von 3137 bis 3148 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P   7.53444
+                                 QUAD von 3149 bis 3172 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P   7.42333
+                                 QUAD von 3173 bis 3184 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P   7.20111
+                                 QUAD von 3185 bis 3196 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P   7.09000
+                                 QUAD von 3197 bis 3212 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P   7.20111
+                                 QUAD von 3213 bis 3216 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P   7.42333
+                                 QUAD von 3217 bis 3220 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P   7.53444
+                                 QUAD von 3221 bis 3228 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P   7.42333
+                                 QUAD von 3229 bis 3232 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P   7.20111
+                                 QUAD von 3233 bis 3236 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P   7.09000
+                                 QUAD von 3237 bis 3244 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P   7.20111
+                                 QUAD von 3245 bis 3248 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P   7.42333
+                                 QUAD von 3249 bis 3252 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P   7.53444
+                                 QUAD von 3253 bis 3260 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P   7.42333
+                                 QUAD von 3261 bis 3264 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P   7.20111
+                                 QUAD von 3265 bis 3268 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P   7.09000
+                                 QUAD von 3269 bis 3276 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P   7.20111
+                                 QUAD von 3277 bis 3280 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P   7.42333
+                                 QUAD von 3281 bis 3284 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P   7.53444
+                                 QUAD von 3285 bis 3292 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P   7.42333
+                                 QUAD von 3293 bis 3296 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P   7.20111
+                                 QUAD von 3297 bis 3300 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P   7.09000
+                                 QUAD von 3301 bis 3308 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P   7.20111
+                                 QUAD von 3309 bis 3312 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P   7.42333
+                                 QUAD von 3313 bis 3316 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P   7.53444
+                                 QUAD von 3317 bis 3324 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P   7.42333
+                                 QUAD von 3325 bis 3328 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P   7.20111
+                                 QUAD von 3329 bis 3332 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P   7.09000
+                                 QUAD von 3333 bis 3348 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P   7.20111
+                                 QUAD von 3349 bis 3360 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P   7.42333
+                                 QUAD von 3361 bis 3372 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P   7.53444
+                                 QUAD von 3373 bis 3396 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P   7.42333
+                                 QUAD von 3397 bis 3408 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P   7.20111
+                                 QUAD von 3409 bis 3420 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P   7.09000
+                                 QUAD von 3421 bis 3444 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P   7.20111
+                                 QUAD von 3445 bis 3456 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P   7.42333
+                                 QUAD von 3457 bis 3468 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P   7.53444
+                                 QUAD von 3469 bis 3492 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P   7.42333
+                                 QUAD von 3493 bis 3504 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P   7.20111
+                                 QUAD von 3505 bis 3516 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P   7.09000
+                                 QUAD von 3517 bis 3529 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P   7.20111
+                                 QUAD von 3530 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P   7.42333
+                                 QUAD von 3531 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P   7.53444
+                                 QUAD von 3532 bis 3533 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P   7.42333
+                                 QUAD von 3534 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P   7.20111
+                                 QUAD von 3535 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P   7.09000
+                                 QUAD von 3536 bis 3537 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P   7.20111
+                                 QUAD von 3538 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P   7.42333
+                                 QUAD von 3539 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P   7.53444
+                                 QUAD von 3540 bis 3541 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P   7.42333
+                                 QUAD von 3542 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P   7.20111
+                                 QUAD von 3543 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P   7.09000
+                                 QUAD von 3544 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+$
+LF 96 TYP T BEZ "T winter posdt wn*TN+dT"
+STAB von 1001 bis 2016 TYP DT PA  -9.45514
+                                 STAB von 1001 bis 2016 TYP DTZ PA  -12.3000
+STAB von 5001 bis 5028 TYP DT PA  -11.5644
+                                 STAB von 5001 bis 5028 TYP DTZ PA  -13.6667
+STAB von 6001 bis 6014 TYP DT PA  -11.4319
+                                 STAB von 6001 bis 6014 TYP DTZ PA  -13.6667
+$ *************************************************************
+QUAD von 3001 TYP DTXY P  -5.82150
+                                 QUAD von 3001 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P  -5.99233
+                                 QUAD von 3002 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P  -6.33400
+                                 QUAD von 3003 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P  -6.50483
+                                 QUAD von 3004 bis 3005 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P  -6.33400
+                                 QUAD von 3006 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P  -5.99233
+                                 QUAD von 3007 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P  -5.82150
+                                 QUAD von 3008 bis 3009 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P  -5.99233
+                                 QUAD von 3010 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P  -6.33400
+                                 QUAD von 3011 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P  -6.50483
+                                 QUAD von 3012 bis 3013 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P  -6.33400
+                                 QUAD von 3014 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P  -5.99233
+                                 QUAD von 3015 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P  -5.82150
+                                 QUAD von 3016 bis 3028 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P  -5.99233
+                                 QUAD von 3029 bis 3040 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P  -6.33400
+                                 QUAD von 3041 bis 3052 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P  -6.50483
+                                 QUAD von 3053 bis 3076 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P  -6.33400
+                                 QUAD von 3077 bis 3088 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P  -5.99233
+                                 QUAD von 3089 bis 3100 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P  -5.82150
+                                 QUAD von 3101 bis 3124 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P  -5.99233
+                                 QUAD von 3125 bis 3136 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P  -6.33400
+                                 QUAD von 3137 bis 3148 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P  -6.50483
+                                 QUAD von 3149 bis 3172 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P  -6.33400
+                                 QUAD von 3173 bis 3184 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P  -5.99233
+                                 QUAD von 3185 bis 3196 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P  -5.82150
+                                 QUAD von 3197 bis 3212 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P  -5.99233
+                                 QUAD von 3213 bis 3216 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P  -6.33400
+                                 QUAD von 3217 bis 3220 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P  -6.50483
+                                 QUAD von 3221 bis 3228 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P  -6.33400
+                                 QUAD von 3229 bis 3232 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P  -5.99233
+                                 QUAD von 3233 bis 3236 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P  -5.82150
+                                 QUAD von 3237 bis 3244 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P  -5.99233
+                                 QUAD von 3245 bis 3248 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P  -6.33400
+                                 QUAD von 3249 bis 3252 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P  -6.50483
+                                 QUAD von 3253 bis 3260 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P  -6.33400
+                                 QUAD von 3261 bis 3264 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P  -5.99233
+                                 QUAD von 3265 bis 3268 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P  -5.82150
+                                 QUAD von 3269 bis 3276 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P  -5.99233
+                                 QUAD von 3277 bis 3280 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P  -6.33400
+                                 QUAD von 3281 bis 3284 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P  -6.50483
+                                 QUAD von 3285 bis 3292 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P  -6.33400
+                                 QUAD von 3293 bis 3296 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P  -5.99233
+                                 QUAD von 3297 bis 3300 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P  -5.82150
+                                 QUAD von 3301 bis 3308 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P  -5.99233
+                                 QUAD von 3309 bis 3312 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P  -6.33400
+                                 QUAD von 3313 bis 3316 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P  -6.50483
+                                 QUAD von 3317 bis 3324 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P  -6.33400
+                                 QUAD von 3325 bis 3328 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P  -5.99233
+                                 QUAD von 3329 bis 3332 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P  -5.82150
+                                 QUAD von 3333 bis 3348 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P  -5.99233
+                                 QUAD von 3349 bis 3360 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P  -6.33400
+                                 QUAD von 3361 bis 3372 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P  -6.50483
+                                 QUAD von 3373 bis 3396 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P  -6.33400
+                                 QUAD von 3397 bis 3408 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P  -5.99233
+                                 QUAD von 3409 bis 3420 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P  -5.82150
+                                 QUAD von 3421 bis 3444 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P  -5.99233
+                                 QUAD von 3445 bis 3456 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P  -6.33400
+                                 QUAD von 3457 bis 3468 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P  -6.50483
+                                 QUAD von 3469 bis 3492 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P  -6.33400
+                                 QUAD von 3493 bis 3504 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P  -5.99233
+                                 QUAD von 3505 bis 3516 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P  -5.82150
+                                 QUAD von 3517 bis 3529 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P  -5.99233
+                                 QUAD von 3530 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P  -6.33400
+                                 QUAD von 3531 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P  -6.50483
+                                 QUAD von 3532 bis 3533 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P  -6.33400
+                                 QUAD von 3534 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P  -5.99233
+                                 QUAD von 3535 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P  -5.82150
+                                 QUAD von 3536 bis 3537 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P  -5.99233
+                                 QUAD von 3538 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P  -6.33400
+                                 QUAD von 3539 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P  -6.50483
+                                 QUAD von 3540 bis 3541 TYP DTZ P  -3.07500    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P  -6.33400
+                                 QUAD von 3542 TYP DTZ P  -2.73333    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P  -5.99233
+                                 QUAD von 3543 TYP DTZ P  -2.05000    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P  -5.82150
+                                 QUAD von 3544 TYP DTZ P  -1.70833    $ t=   250.000 [mm]
+$
+LF 97 TYP T BEZ "T winter negdt wn*TN+dT"
+STAB von 1001 bis 2016 TYP DT PA  -9.44666
+                                 STAB von 1001 bis 2016 TYP DTZ PA   8.00000
+STAB von 5001 bis 5028 TYP DT PA  -8.07480
+                                 STAB von 5001 bis 5028 TYP DTZ PA   8.88889
+STAB von 6001 bis 6014 TYP DT PA  -8.16099
+                                 STAB von 6001 bis 6014 TYP DTZ PA   8.88889
+$ *************************************************************
+QUAD von 3001 TYP DTXY P  -11.8100
+                                 QUAD von 3001 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3002 TYP DTXY P  -11.6989
+                                 QUAD von 3002 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3003 TYP DTXY P  -11.4767
+                                 QUAD von 3003 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3004 bis 3005 TYP DTXY P  -11.3656
+                                 QUAD von 3004 bis 3005 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3006 TYP DTXY P  -11.4767
+                                 QUAD von 3006 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3007 TYP DTXY P  -11.6989
+                                 QUAD von 3007 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3008 bis 3009 TYP DTXY P  -11.8100
+                                 QUAD von 3008 bis 3009 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3010 TYP DTXY P  -11.6989
+                                 QUAD von 3010 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3011 TYP DTXY P  -11.4767
+                                 QUAD von 3011 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3012 bis 3013 TYP DTXY P  -11.3656
+                                 QUAD von 3012 bis 3013 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3014 TYP DTXY P  -11.4767
+                                 QUAD von 3014 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3015 TYP DTXY P  -11.6989
+                                 QUAD von 3015 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3016 bis 3028 TYP DTXY P  -11.8100
+                                 QUAD von 3016 bis 3028 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3029 bis 3040 TYP DTXY P  -11.6989
+                                 QUAD von 3029 bis 3040 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3041 bis 3052 TYP DTXY P  -11.4767
+                                 QUAD von 3041 bis 3052 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3053 bis 3076 TYP DTXY P  -11.3656
+                                 QUAD von 3053 bis 3076 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3077 bis 3088 TYP DTXY P  -11.4767
+                                 QUAD von 3077 bis 3088 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3089 bis 3100 TYP DTXY P  -11.6989
+                                 QUAD von 3089 bis 3100 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3101 bis 3124 TYP DTXY P  -11.8100
+                                 QUAD von 3101 bis 3124 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3125 bis 3136 TYP DTXY P  -11.6989
+                                 QUAD von 3125 bis 3136 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3137 bis 3148 TYP DTXY P  -11.4767
+                                 QUAD von 3137 bis 3148 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3149 bis 3172 TYP DTXY P  -11.3656
+                                 QUAD von 3149 bis 3172 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3173 bis 3184 TYP DTXY P  -11.4767
+                                 QUAD von 3173 bis 3184 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3185 bis 3196 TYP DTXY P  -11.6989
+                                 QUAD von 3185 bis 3196 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3197 bis 3212 TYP DTXY P  -11.8100
+                                 QUAD von 3197 bis 3212 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3213 bis 3216 TYP DTXY P  -11.6989
+                                 QUAD von 3213 bis 3216 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3217 bis 3220 TYP DTXY P  -11.4767
+                                 QUAD von 3217 bis 3220 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3221 bis 3228 TYP DTXY P  -11.3656
+                                 QUAD von 3221 bis 3228 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3229 bis 3232 TYP DTXY P  -11.4767
+                                 QUAD von 3229 bis 3232 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3233 bis 3236 TYP DTXY P  -11.6989
+                                 QUAD von 3233 bis 3236 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3237 bis 3244 TYP DTXY P  -11.8100
+                                 QUAD von 3237 bis 3244 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3245 bis 3248 TYP DTXY P  -11.6989
+                                 QUAD von 3245 bis 3248 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3249 bis 3252 TYP DTXY P  -11.4767
+                                 QUAD von 3249 bis 3252 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3253 bis 3260 TYP DTXY P  -11.3656
+                                 QUAD von 3253 bis 3260 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3261 bis 3264 TYP DTXY P  -11.4767
+                                 QUAD von 3261 bis 3264 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3265 bis 3268 TYP DTXY P  -11.6989
+                                 QUAD von 3265 bis 3268 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3269 bis 3276 TYP DTXY P  -11.8100
+                                 QUAD von 3269 bis 3276 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3277 bis 3280 TYP DTXY P  -11.6989
+                                 QUAD von 3277 bis 3280 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3281 bis 3284 TYP DTXY P  -11.4767
+                                 QUAD von 3281 bis 3284 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3285 bis 3292 TYP DTXY P  -11.3656
+                                 QUAD von 3285 bis 3292 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3293 bis 3296 TYP DTXY P  -11.4767
+                                 QUAD von 3293 bis 3296 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3297 bis 3300 TYP DTXY P  -11.6989
+                                 QUAD von 3297 bis 3300 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3301 bis 3308 TYP DTXY P  -11.8100
+                                 QUAD von 3301 bis 3308 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3309 bis 3312 TYP DTXY P  -11.6989
+                                 QUAD von 3309 bis 3312 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3313 bis 3316 TYP DTXY P  -11.4767
+                                 QUAD von 3313 bis 3316 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3317 bis 3324 TYP DTXY P  -11.3656
+                                 QUAD von 3317 bis 3324 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3325 bis 3328 TYP DTXY P  -11.4767
+                                 QUAD von 3325 bis 3328 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3329 bis 3332 TYP DTXY P  -11.6989
+                                 QUAD von 3329 bis 3332 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3333 bis 3348 TYP DTXY P  -11.8100
+                                 QUAD von 3333 bis 3348 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3349 bis 3360 TYP DTXY P  -11.6989
+                                 QUAD von 3349 bis 3360 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3361 bis 3372 TYP DTXY P  -11.4767
+                                 QUAD von 3361 bis 3372 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3373 bis 3396 TYP DTXY P  -11.3656
+                                 QUAD von 3373 bis 3396 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3397 bis 3408 TYP DTXY P  -11.4767
+                                 QUAD von 3397 bis 3408 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3409 bis 3420 TYP DTXY P  -11.6989
+                                 QUAD von 3409 bis 3420 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3421 bis 3444 TYP DTXY P  -11.8100
+                                 QUAD von 3421 bis 3444 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3445 bis 3456 TYP DTXY P  -11.6989
+                                 QUAD von 3445 bis 3456 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3457 bis 3468 TYP DTXY P  -11.4767
+                                 QUAD von 3457 bis 3468 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3469 bis 3492 TYP DTXY P  -11.3656
+                                 QUAD von 3469 bis 3492 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3493 bis 3504 TYP DTXY P  -11.4767
+                                 QUAD von 3493 bis 3504 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3505 bis 3516 TYP DTXY P  -11.6989
+                                 QUAD von 3505 bis 3516 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3517 bis 3529 TYP DTXY P  -11.8100
+                                 QUAD von 3517 bis 3529 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3530 TYP DTXY P  -11.6989
+                                 QUAD von 3530 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3531 TYP DTXY P  -11.4767
+                                 QUAD von 3531 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3532 bis 3533 TYP DTXY P  -11.3656
+                                 QUAD von 3532 bis 3533 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3534 TYP DTXY P  -11.4767
+                                 QUAD von 3534 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3535 TYP DTXY P  -11.6989
+                                 QUAD von 3535 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3536 bis 3537 TYP DTXY P  -11.8100
+                                 QUAD von 3536 bis 3537 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+QUAD von 3538 TYP DTXY P  -11.6989
+                                 QUAD von 3538 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3539 TYP DTXY P  -11.4767
+                                 QUAD von 3539 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3540 bis 3541 TYP DTXY P  -11.3656
+                                 QUAD von 3540 bis 3541 TYP DTZ P   2.00000    $ t=   450.000 [mm]
+QUAD von 3542 TYP DTXY P  -11.4767
+                                 QUAD von 3542 TYP DTZ P   1.77778    $ t=   400.000 [mm]
+QUAD von 3543 TYP DTXY P  -11.6989
+                                 QUAD von 3543 TYP DTZ P   1.33333    $ t=   300.000 [mm]
+QUAD von 3544 TYP DTXY P  -11.8100
+                                 QUAD von 3544 TYP DTZ P   1.11111    $ t=   250.000 [mm]
+$
+ENDE

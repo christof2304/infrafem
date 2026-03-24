@@ -1,0 +1,209 @@
+!#!Info  Beispiel:      Taktschieben Rotation der Bogenhälften
+!#!Info  Schlagwort:    Taktschieben; Bogenbrücke
+!#!Info  Program:       CSM
+
+!#!Kapitel Material und Querschnitte
+PROG AQUA urs:1
+KOPF
+UNIT 5
+NORM  'DIN' 'en199X-200X-BRIDGE'     CAT 'B'
+BETO 1    C '25' TYPR    B
+STAH 2    B '500B'
+STAH 3    S '355'
+STAH 11   YC '1570O'
+QC   1 D 2000 T 20 MNR 3 BEZ "D 2000  / 20 mm"
+QC   2 D 2600 T 20 MNR 3  BEZ "D 2600  / 20 mm"
+QB   5 H 400 B 4000 MNR 1 MBW 2 BEZ "B/H = 4000 / 400 mm"
+SEIL 11 D 40 TYP '1X7' MNR 11 F 967.6105[mm2]
+SEIL 12 D 40 TYP '1X7' MNR 11 F 967.6105[mm2]
+ENDE
+
+!#!Kapitel Meshing : made in SOFiPLUS : here the export
+PROG SOFIMSHC urs:2
+KOPF Arch bridge erection
+UNIT 5
+SYST RAUM GDIV 10000 GDIR POSZ
+STEU TOPO 0
+STEU TOLG WERT 0.010000[m]
+STEU DELN 1
+STEU MESH 1
+STEU EDRL 1
+STEU HMIN WERT 3.503243[m]
+STEU FEIN WERT -0.325000
+STEU PROG WERT 1.238000
+STEU EFAK WERT 1.398600
+SPT       1 X  -40.0332 -0.000000  -29.9448 FIX PPYM NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       2 X  -10.0000 -0.000000  -48.9789 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       3 X  -0.10000 -0.000000  -49.9890 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       4 X  0.000000 -0.000000  -49.9891 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       5 X   39.8332  0.000000  -29.9448 FIX PPYM NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       6 X   9.80000 -0.000000  -48.9789 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       7 X  -0.10000 -0.000000  -49.9890 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       8 X  -0.20000 -0.000000  -49.9891 NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT       9 X  -48.3694 -0.000000  -29.9448 FIX PPMM NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      10 X   48.1694  0.000000  -29.9448 FIX PPMM NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      11 X   48.1694  -20.0000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      12 X   48.1694   20.0000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      13 X  -48.3694  -20.0000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      14 X  -48.3694   20.0000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      15 X  -83.8815 -0.000000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SPT      16 X   83.6815  0.000000  -29.9448 FIX PP NX 0  1.22465E-16 1 SX -1.83697E-16 1 -1.22465E-16 BEZ "Punkt"
+SLN       1 GRP 11 STYP 'N' QNR 1 DRX 0.535315  1.68997E-16 0.844652
+SLNB X1  -10.0000000 -0.000000000  -48.9789429 X2  -40.0332229 -0.000000000  -29.9447999 NX -1.22465E-16 1 -1.22465E-16 XM -0.000000000 -0.000000000   0.01085240
+SLN       2 GRP 12 STYP 'N' QNR 1 DRX 0.102499  1.34372E-16 0.994733
+SLNB X1  -0.19999839 -0.000000000  -49.9887466 X2  -9.99999973 -0.000000000  -48.9789415 NX -1.22465E-16 1 -1.22465E-16 XM -0.000000000 -0.000000000   0.01085240
+SLN       3 GRP 23 STYP 'N' QNR 1 DRX  1.00000E-03  1.22587E-16 1
+SLNB X1  0.000000000 -0.000000000  -49.9891472 X2  -0.10000000 -0.000000000  -49.9890472
+SLN       4 GRP 1 STYP 'N' QNR 2 DRX 1  1.83697E-16  1.77636E-16
+SLNB X1  -48.3693898          0.0  -29.9448000 X2  -48.3693898          0.0  -69.9448000
+SLN       5 GRP 2 STYP 'CZ' QNR 11 DRX -1.64304E-16 0.894427 0.447214
+SLNB X1  -48.3693898          0.0  -69.9448000 X2  -48.3693898  -20.0000000  -29.9448000
+SLN       6 GRP 2 STYP 'CZ' QNR 11 DRX  7.99832E-16 -0.894427 0.447214
+SLNB X1  -48.3693898   20.0000000  -29.9448000 X2  -48.3693898          0.0  -69.9448000
+SLN       7 GRP 3 STYP 'CZ' QNR 11 DRX 0.747813  1.72886E-16 0.663910
+SLNB X1  -48.3693898          0.0  -69.9448000 X2  -83.8814800          0.0  -29.9448000
+SLN       8 GRP 9 STYP 'CZ' QNR 11 DRX -0.479506  5.63972E-17 0.877539
+SLNB X1  -48.3693898          0.0  -69.9448000 X2 -10.00000000          0.0  -48.9789425
+SLN       9 GRP 21 STYP 'N' QNR 1 DRX -0.535315 -2.76743E-17 0.844652
+SLNB X1   9.80000019 -0.000000000  -48.9789429 X2   39.8332226  0.000000000  -29.9448003 NX  2.44929E-16 -1  1.22465E-16 XM  -0.20000000 -0.000000000   0.01085240
+SLN      10 GRP 22 STYP 'N' QNR 1 DRX -0.102499  9.67148E-17 0.994733
+SLNB X1   9.80000019 -0.000000000  -48.9789429 X2  0.000000006 -0.000000000  -49.9887480 NX -2.44929E-16 1 -1.22465E-16 XM  -0.20000000 -0.000000000   0.01085240
+SLN      11 GRP 13 STYP 'N' QNR 1 DRX -1.00000E-03  1.22220E-16 1
+SLNB X1  -0.20000000 -0.000000000  -49.9891472 X2  -0.10000000 -0.000000000  -49.9890472
+SLN      12 GRP 1 STYP 'N' QNR 2 DRX -1 -1.83697E-16  1.77636E-16
+SLNB X1   48.1693898          0.0  -29.9448000 X2   48.1693898          0.0  -69.9448000
+SLN      13 GRP 2 STYP 'CZ' QNR 11 DRX -1.64304E-16 0.894427 0.447214
+SLNB X1   48.1693898          0.0  -69.9448000 X2   48.1693898  -20.0000000  -29.9448000
+SLN      14 GRP 2 STYP 'CZ' QNR 11 DRX -4.71225E-16 -0.894427 0.447214
+SLNB X1   48.1693898   20.0000000  -29.9448000 X2   48.1693898          0.0  -69.9448000
+SLN      15 GRP 3 STYP 'CZ' QNR 11 DRX -0.747813 -1.01856E-16 0.663910
+SLNB X1   48.1693898          0.0  -69.9448000 X2   83.6814800          0.0  -29.9448000
+SLN      16 GRP 9 STYP 'CZ' QNR 11 DRX 0.479506  2.32565E-16 0.877539
+SLNB X1   48.1693898          0.0  -69.9448000 X2   9.80000000          0.0  -48.9789425
+SLN      17 GRP 101 STYP 'N' QNR 5 DRX 0  1.22465E-16 1
+SLNB X1  -40.0332223          0.0  -29.9448000 X2  -30.0332223          0.0  -29.9448000
+SLN      18 GRP 102 STYP 'N' QNR 5 DRX 0  1.22465E-16 1
+SLNB X1  -30.0332223          0.0  -29.9448000 X2  -20.0332223          0.0  -29.9448000
+SLN      19 GRP 103 STYP 'N' QNR 5 DRX -3.54095E-16  1.22465E-16 1
+SLNB X1  -20.0332223          0.0  -29.9448000 X2 -10.00000000          0.0  -29.9448000
+SLN      20 GRP 104 STYP 'N' QNR 5 DRX -3.58860E-16  1.22465E-16 1
+SLNB X1 -10.00000000          0.0  -29.9448000 X2  -0.10000000          0.0  -29.9448000
+SLN      21 GRP 204 STYP 'CZ' QNR 12 DRX -5.86463E-30 -1  2.44455E-16
+SLNB X1  -0.10000000          0.0  -29.9448000 X2  -0.10000000          0.0  -49.9890476
+SLN      22 GRP 202 STYP 'CZ' QNR 12 DRX 0 -1  1.22465E-16
+SLNB X1  -20.0332223          0.0  -29.9448000 X2  -20.0332223          0.0  -45.8003908
+SLN      23 GRP 201 STYP 'CZ' QNR 12 DRX 0 -1  1.22465E-16
+SLNB X1  -30.0332223          0.0  -29.9448000 X2  -30.0332223          0.0  -39.9642093
+SLN      24 GRP 203 STYP 'CZ' QNR 12 DRX -7.45172E-31 -1  2.51251E-16
+SLNB X1 -10.00000000          0.0  -29.9448000 X2 -10.00000000          0.0  -48.9789425
+SLN      25 GRP 101 STYP 'N' QNR 5 DRX 0  1.22465E-16 1
+SLNB X1   39.8332223          0.0  -29.9448000 X2   29.8332223          0.0  -29.9448000
+SLN      26 GRP 102 STYP 'N' QNR 5 DRX 0  1.22465E-16 1
+SLNB X1   29.8332223          0.0  -29.9448000 X2   19.8332223          0.0  -29.9448000
+SLN      27 GRP 103 STYP 'N' QNR 5 DRX  3.54095E-16  1.22465E-16 1
+SLNB X1   19.8332223          0.0  -29.9448000 X2   9.80000000          0.0  -29.9448000
+SLN      28 GRP 104 STYP 'N' QNR 5 DRX  3.58860E-16  1.22465E-16 1
+SLNB X1   9.80000000          0.0  -29.9448000 X2  -0.10000000          0.0  -29.9448000
+SLN      29 GRP 202 STYP 'CZ' QNR 12 DRX  1.21172E-16 -1  1.22465E-16
+SLNB X1   19.8332223          0.0  -29.9448000 X2   19.8332223          0.0  -45.8003908
+SLN      30 GRP 201 STYP 'CZ' QNR 12 DRX  1.21172E-16 -1  1.22465E-16
+SLNB X1   29.8332223          0.0  -29.9448000 X2   29.8332223          0.0  -39.9642093
+SLN      31 GRP 203 STYP 'CZ' QNR 12 DRX  1.21172E-16 -1  2.51251E-16
+SLNB X1   9.80000000          0.0  -29.9448000 X2   9.80000000          0.0  -48.9789425
+ENDE
+
++prog sofimsha urs:30.1
+KOPF Group title for WINGRAF:
+SYST REST ; STEU REST 2
+GRUP   1    BEZ 'Pylon'
+GRUP   2    BEZ 'Pylon cable transverse'
+GRUP   3    BEZ 'Pylon cable backstay'
+GRUP   9    BEZ 'Main lowering cable'
+GRUP  11,21 BEZ 'Arch part 1'
+GRUP  12,22 BEZ 'Arch part 2'
+GRUP  13,23 BEZ 'Arch closing segment'
+GRUP 101,102,103,104 BEZ 'Superstructure'
+GRUP 201,202,203,204 BEZ 'Hanger'
+ENDE
+
++prog sofiload urs:3
+KOPF
+LF 901 TYP none BEZ 'adjust backstay cable'
+  SEIL GRP 3 TYP WX PA -110 $ mm shortening
+LF 902 TYP none BEZ 'adjust cable in between'
+  SEIL GRP 9 TYP WX PA -90 $ mm shortening
+LF 903 TYP none BEZ 'adjust cable for welding'
+  SEIL GRP 9 TYP WX PA  +3 $ mm lengthening
+
+LF 201 TYP none BEZ 'hanger shortening'
+  SEIL GRP 201 TYP WX PA -10 $ mm shortening
+LF 202 TYP none BEZ 'hanger shortening'
+  SEIL GRP 202 TYP WX PA -10 $ mm shortening
+LF 203 TYP none BEZ 'hanger shortening'
+  SEIL GRP 203 TYP WX PA -10 $ mm shortening
+LF 204 TYP none BEZ 'hanger shortening'
+  SEIL GRP 204 TYP WX PA -10 $ mm shortening
+
+ENDE
+
+!#!Kapitel CSM
++PROG CSM URS:4
+KOPF Arch rotation
+$ CTRL TEST ANI $ Then ASE only sto{res the lauching data for the animator without really analyzing something
+TAKT GRP 11,12 XM -40.033[m] ZM -29.945[m] PHI +1 NR_T 1
+TAKT GRP 21,22 XM +40.033[m] ZM -29.945[m] PHI +1 NR_T 2
+$
+BA      10            TYP G_1 BEZ 'Pylon'                    ; GRUP  1 IBA1 10
+BA      20            TYP G_1 BEZ 'Cable transverse'         ; GRUP  2 IBA1 20
+BA      30            TYP G_1 BEZ 'Cable bach stay'          ; GRUP  3 IBA1 30
+
+let#phi 50 $ degree
+let#cs 111 ; BA #cs   TYP G_1 BEZ 'Arch part 1 without dead load' TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+                                                                GRUP 11,21 IBA1 #cs IBAG #cs+1
+                                                                GRUP 9     IBA1 #cs IBAG #cs+1 WBIS 249
+             BA #cs+1 TYP G_1 BEZ 'Arch part 1 dead load'         TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+let#cs 121 ; BA #cs   TYP G_1 BEZ 'Arch part 2 without dead load' TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+                                                                GRUP 12,22 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Arch part 2 dead load'         TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+let#phi 40 ; BA   201 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+let#phi 30 ; BA   202 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+let#phi 20 ; BA   203 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+
+let#cs 210 ; BA #cs   TYP G_1 BEZ 'adjust backstay cable'         TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+
+let#phi 10 ; BA   211 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+                                                                 LF 901 IBA1 #cs
+let#cs 212 ; BA #cs   TYP G_1 BEZ 'adjust main cable'             TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+                                                                 LF 902 IBA1 #cs
+
+let#phi  5 ; BA   212 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+let#phi  0 ; BA   213 TYP G_1 BEZ 'Arch lowering'                 TAKT #phi*3.1416/180 TAK2 -#phi*3.1416/180
+
+let#cs 220 ; BA #cs   TYP G_1 BEZ 'adjust cable for welding'  ; LF 903 IBA1 #cs
+
+let#cs 221 ; BA #cs   TYP G_1 BEZ 'Closure segment =welding'  ; GRUP 13,23 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Closure segment dead load'
+
+let#cs 250 ; BA #cs   TYP G_1 BEZ 'remove main cable'
+
+let#cs 300 ; BA #cs   TYP G_1 BEZ 'Segment+hanger without dl' ; GRUP 101,201 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Segment+hanger dead load'
+             BA #cs+2 TYP G_1 BEZ 'Stress hanger dead load'   ; LF 201 IBA1 #cs+2
+let#cs 310 ; BA #cs   TYP G_1 BEZ 'Segment+hanger without dl' ; GRUP 102,202 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Segment+hanger dead load'
+             BA #cs+2 TYP G_1 BEZ 'Stress hanger dead load'   ; LF 202 IBA1 #cs+2
+let#cs 320 ; BA #cs   TYP G_1 BEZ 'Segment+hanger without dl' ; GRUP 103,203 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Segment+hanger dead load'
+             BA #cs+2 TYP G_1 BEZ 'Stress hanger dead load'   ; LF 203 IBA1 #cs+2
+let#cs 330 ; BA #cs   TYP G_1 BEZ 'Segment+hanger without dl' ; GRUP 104,204 IBA1 #cs IBAG #cs+1
+             BA #cs+1 TYP G_1 BEZ 'Segment+hanger dead load'
+             BA #cs+2 TYP G_1 BEZ 'Stress hanger dead load'   ; LF 204 IBA1 #cs+2
+
+STEU SPEI 0 ; SCAL AQ_S 0 $ no AQB check print = quicker
+ENDE
++apply $(NAME)_csm.dat
+
+
+$ Dateiordner aufräumen:
++sys del $(project).$d?
+

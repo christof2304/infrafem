@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "ASE1",
+    "systemType": "RAHM",
+    "gravityDirection": "NEGZ"
+  },
+  "materials": [
+    {
+      "id": 1,
+      "type": "BETO",
+      "grade": "C 30",
+      "label": "Beton C30"
+    }
+  ],
+  "sections": [
+    {
+      "id": 1,
+      "type": "SREC",
+      "materialId": 1,
+      "params": {
+        "H": 0.5,
+        "B": 0.3
+      },
+      "label": "30/50"
+    }
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "x": 0,
+      "z": 0,
+      "support": "FIXED"
+    },
+    {
+      "id": 2,
+      "x": -10,
+      "z": 0,
+      "support": "NONE"
+    },
+    {
+      "id": 3,
+      "x": -12,
+      "z": -3,
+      "support": "ROLLER_X"
+    }
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "name": "Gruppe 1",
+      "color": "#5599dd"
+    }
+  ],
+  "beams": [
+    {
+      "id": 1,
+      "nodeStart": 1,
+      "nodeEnd": 2,
+      "sectionId": 1,
+      "groupId": 1
+    },
+    {
+      "id": 2,
+      "nodeStart": 2,
+      "nodeEnd": 3,
+      "sectionId": 1,
+      "groupId": 1
+    }
+  ],
+  "loadcases": [
+    {
+      "id": 1,
+      "name": "Lastfall 1",
+      "type": "NONE",
+      "loads": [
+        {
+          "id": 1,
+          "type": "NODE_FORCE",
+          "nodeId": 2,
+          "direction": "PZ",
+          "value": -50
+        }
+      ]
+    }
+  ],
+  "analysisSettings": {
+    "type": "LINE"
+  }
+}

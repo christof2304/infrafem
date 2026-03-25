@@ -93,21 +93,28 @@ export class Toolbar {
     async _calculateStabileo() {
         const statusEl = document.getElementById('status-msg');
         try {
-            statusEl.textContent = 'Stabileo: Berechnung im Browser...';
-            // Check if Stabileo WASM is loaded
-            if (!window._stabileo?.solve2D) {
-                statusEl.textContent = 'Stabileo WASM nicht verfügbar — bitte SOFiSTiK verwenden';
-                alert('Stabileo WASM-Solver ist noch nicht integriert.\n\nBitte wähle SOFiSTiK als Solver (im Properties-Panel unter System) oder warte auf die Stabileo-Integration.');
+            // Dynamically import the bridge
+            const { initStabileo, isStabileoAvailable, solveWithStabileo } = await import('./stabileo-bridge.js');
+
+            statusEl.textContent = 'Stabileo: Initialisiere WASM...';
+            const ok = await initStabileo();
+            if (!ok || !isStabileoAvailable()) {
+                statusEl.textContent = 'Stabileo WASM nicht verfügbar';
+                alert('Stabileo WASM-Solver konnte nicht geladen werden.\nBitte SOFiSTiK als Solver verwenden.');
                 return;
             }
-            // TODO: Convert editor model → Stabileo input JSON → solve → convert results
-            const results = window._stabileo.solve2D(this.model.data);
-            if (results) {
-                this.model.setResults(results, null);
-                statusEl.textContent = `Stabileo OK — ${results.nodes?.length || 0} Knoten`;
-            }
+
+            statusEl.textContent = 'Stabileo: Berechnung im Browser...';
+            const t0 = performance.now();
+            const resultData = solveWithStabileo(this.model.data);
+            const dt = (performance.now() - t0).toFixed(0);
+
+            this.model.setResults(resultData, null);
+            const nForces = resultData.beams.length;
+            statusEl.textContent = `Stabileo OK (${dt}ms) — ${resultData.nodes.length} Knoten, ${nForces} Schnittgrößen`;
         } catch (err) {
             statusEl.textContent = `Stabileo-Fehler: ${err.message}`;
+            console.error('Stabileo error:', err);
         }
     }
 

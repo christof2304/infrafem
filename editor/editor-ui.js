@@ -94,7 +94,7 @@ export class Toolbar {
         const statusEl = document.getElementById('status-msg');
         try {
             // Dynamically import the bridge
-            const { initStabileo, isStabileoAvailable, solveWithStabileo } = await import('./stabileo-bridge.js');
+            const { initStabileo, isStabileoAvailable, solveWithStabileo, solveWithStabileo3D } = await import('./stabileo-bridge.js');
 
             statusEl.textContent = 'Stabileo: Initialisiere WASM...';
             const ok = await initStabileo();
@@ -104,9 +104,14 @@ export class Toolbar {
                 return;
             }
 
-            statusEl.textContent = 'Stabileo: Berechnung im Browser...';
+            const hasAreas = (this.model.data.areas || []).length > 0;
+            statusEl.textContent = hasAreas
+                ? 'Stabileo 3D: Platte vernetzt + berechnet...'
+                : 'Stabileo 2D: Berechnung im Browser...';
             const t0 = performance.now();
-            const resultData = solveWithStabileo(this.model.data);
+            const resultData = hasAreas
+                ? solveWithStabileo3D(this.model.data)
+                : solveWithStabileo(this.model.data);
             const dt = (performance.now() - t0).toFixed(0);
 
             this.model.setResults(resultData, null);

@@ -63,6 +63,10 @@ export class EditorCanvas {
         this.areaGroup = new THREE.Group();
         this.quadResultGroup = new THREE.Group();
         this.snapGroup = new THREE.Group();
+        this.dxfGroup = new THREE.Group();
+        this.dxfGroup.renderOrder = -1; // render behind everything
+        this._dxfSegments = []; // DXF line segments for snapping
+        this._dxfPoints = [];   // DXF endpoints for snapping
 
         // Diagram display state
         this._diagramData = null;
@@ -166,6 +170,7 @@ export class EditorCanvas {
         this.scene.add(this.areaGroup);
         this.scene.add(this.quadResultGroup);
         this.scene.add(this.snapGroup);
+        this.scene.add(this.dxfGroup);
 
         // Resize handler
         this._onResize = () => {
@@ -1086,6 +1091,68 @@ export class EditorCanvas {
                 }
             }
             if (best) return best;
+        }
+
+        // DXF SNAPS — endpoints, midpoints, nearest on DXF geometry
+        if (this._dxfPoints && this._dxfPoints.length > 0) {
+            // DXF ENDPOINT
+            if ((flags & SNAP.ENDPOINT) && !best) {
+                let closestDist = SNAP_RADIUS_PX;
+                for (const pt of this._dxfPoints) {
+                    const d = this._screenDist(worldX, worldZ, pt.x, pt.y);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        best = { x: pt.x, z: pt.y, type: SNAP.ENDPOINT, snappedNodeId: null };
+                    }
+                }
+                if (best) return best;
+            }
+            // DXF MIDPOINT
+            if ((flags & SNAP.MIDPOINT) && !best) {
+                let closestDist = 20;
+                for (const s of this._dxfSegments) {
+                    const mx = (s.x1 + s.x2) / 2;
+                    const my = (s.y1 + s.y2) / 2;
+                    const d = this._screenDist(worldX, worldZ, mx, my);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        best = { x: mx, z: my, type: SNAP.MIDPOINT, snappedNodeId: null };
+                    }
+                }
+                if (best) return best;
+            }
+            // DXF NEAREST
+            if ((flags & SNAP.NEAREST) && !best) {
+                let closestDist = 15;
+                for (const s of this._dxfSegments) {
+                    const cp = this._closestPointOnSegment(worldX, worldZ, s.x1, s.y1, s.x2, s.y2);
+                    const d = this._screenDist(worldX, worldZ, cp.x, cp.z);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        best = { x: cp.x, z: cp.z, type: SNAP.NEAREST, snappedNodeId: null };
+                    }
+                }
+                if (best) return best;
+            }
+            // DXF INTERSECTION
+            if ((flags & SNAP.INTERSECTION) && !best) {
+                let closestDist = 20;
+                for (let i = 0; i < this._dxfSegments.length; i++) {
+                    const s1 = this._dxfSegments[i];
+                    for (let j = i + 1; j < this._dxfSegments.length; j++) {
+                        const s2 = this._dxfSegments[j];
+                        const ip = this._lineLineIntersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
+                        if (ip) {
+                            const d = this._screenDist(worldX, worldZ, ip.x, ip.y);
+                            if (d < closestDist) {
+                                closestDist = d;
+                                best = { x: ip.x, z: ip.y, type: SNAP.INTERSECTION, snappedNodeId: null };
+                            }
+                        }
+                    }
+                }
+                if (best) return best;
+            }
         }
 
         // 6. CENTER — centroid of areas (screen distance < 20px)
@@ -3061,6 +3128,120 @@ export class EditorCanvas {
             if (isNaN(x) || isNaN(z)) return null;
             return { x, z };
         }
+    }
+
+    // ── DXF Background ─────────────────────────────────────
+    loadDxfBackground(dxfData) {
+        this.clearDxfBackground();
+        // Store DXF segments for snapping
+        this._dxfSegments = []; // [{x1,y1,x2,y2}]
+        if (dxfData.lines) {
+            for (const l of dxfData.lines) {
+                this._dxfSegments.push({ x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2 });
+            }
+        }
+        // Store DXF points (endpoints of all segments) for endpoint snap
+        this._dxfPoints = []; // [{x, y}]
+        const ptSet = new Set();
+        for (const s of this._dxfSegments) {
+            const k1 = `${s.x1.toFixed(4)},${s.y1.toFixed(4)}`;
+            const k2 = `${s.x2.toFixed(4)},${s.y2.toFixed(4)}`;
+            if (!ptSet.has(k1)) { ptSet.add(k1); this._dxfPoints.push({ x: s.x1, y: s.y1 }); }
+            if (!ptSet.has(k2)) { ptSet.add(k2); this._dxfPoints.push({ x: s.x2, y: s.y2 }); }
+        }
+        const DXF_COLOR = 0x556677;
+        const DXF_Z = -0.01; // slightly behind grid
+        const mat = new THREE.LineBasicMaterial({
+            color: DXF_COLOR,
+            transparent: true,
+            opacity: 0.5,
+            depthTest: false,
+        });
+
+        // Helper: add a polyline from an array of [x,y] pairs
+        const addPolyline = (pts) => {
+            if (pts.length < 2) return;
+            const positions = new Float32Array(pts.length * 3);
+            for (let i = 0; i < pts.length; i++) {
+                positions[i * 3] = pts[i][0];
+                positions[i * 3 + 1] = pts[i][1];
+                positions[i * 3 + 2] = DXF_Z;
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const line = new THREE.Line(geo, mat);
+            line.raycast = () => {}; // not interactive
+            this.dxfGroup.add(line);
+        };
+
+        // Lines — batch into segments using LineSegments for performance
+        if (dxfData.lines && dxfData.lines.length > 0) {
+            const positions = new Float32Array(dxfData.lines.length * 6);
+            for (let i = 0; i < dxfData.lines.length; i++) {
+                const l = dxfData.lines[i];
+                const off = i * 6;
+                positions[off]     = l.x1;
+                positions[off + 1] = l.y1;
+                positions[off + 2] = DXF_Z;
+                positions[off + 3] = l.x2;
+                positions[off + 4] = l.y2;
+                positions[off + 5] = DXF_Z;
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const segs = new THREE.LineSegments(geo, mat);
+            segs.raycast = () => {};
+            this.dxfGroup.add(segs);
+        }
+
+        // Arcs
+        if (dxfData.arcs) {
+            for (const arc of dxfData.arcs) {
+                let sa = arc.startAngle;
+                let ea = arc.endAngle;
+                // Ensure endAngle > startAngle for correct arc direction
+                if (ea <= sa) ea += Math.PI * 2;
+                const curve = new THREE.EllipseCurve(
+                    arc.cx, arc.cy,
+                    arc.r, arc.r,
+                    sa, ea,
+                    false, 0
+                );
+                const nPts = Math.max(16, Math.ceil((ea - sa) / (Math.PI / 32)));
+                const pts2d = curve.getPoints(nPts);
+                addPolyline(pts2d.map(p => [p.x, p.y]));
+            }
+        }
+
+        // Circles
+        if (dxfData.circles) {
+            for (const circ of dxfData.circles) {
+                const curve = new THREE.EllipseCurve(
+                    circ.cx, circ.cy,
+                    circ.r, circ.r,
+                    0, Math.PI * 2,
+                    false, 0
+                );
+                const pts2d = curve.getPoints(64);
+                addPolyline(pts2d.map(p => [p.x, p.y]));
+            }
+        }
+
+        this._dxfVisible = true;
+    }
+
+    clearDxfBackground() {
+        this._clearGroup(this.dxfGroup);
+        this._dxfSegments = [];
+        this._dxfPoints = [];
+        this._dxfVisible = false;
+    }
+
+    toggleDxfBackground() {
+        if (!this.dxfGroup.children.length) return false;
+        this._dxfVisible = !this._dxfVisible;
+        this.dxfGroup.visible = this._dxfVisible;
+        return this._dxfVisible;
     }
 
     // ── Cleanup ────────────────────────────────────────────

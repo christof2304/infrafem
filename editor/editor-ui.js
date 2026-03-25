@@ -51,6 +51,7 @@ export class Toolbar {
             { icon: '⬇', label: '.dat Export', action: () => downloadDat(this.model.data) },
             { icon: '💾', label: 'Speichern', action: () => this._save() },
             { icon: '📂', label: 'Laden', action: () => this._load() },
+            { icon: '📐', label: 'DXF Import', action: () => this._importDxf() },
             { icon: '🗑', label: 'Neu', action: () => { if (confirm('Modell zurücksetzen?')) this.model.reset(); } },
         ];
 
@@ -137,6 +138,30 @@ export class Toolbar {
         } catch (err) {
             alert('Laden fehlgeschlagen: ' + err.message);
         }
+    }
+
+    _importDxf() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.dxf';
+        input.style.display = 'none';
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+            const statusEl = document.getElementById('status-msg');
+            statusEl.textContent = `DXF wird importiert: ${file.name}...`;
+            try {
+                const result = await this.api.importDxf(file);
+                this.canvas.loadDxfBackground(result);
+                statusEl.textContent = `DXF geladen: ${result.entityCount} Elemente (${file.name})`;
+            } catch (err) {
+                statusEl.textContent = `DXF-Fehler: ${err.message}`;
+                alert('DXF Import fehlgeschlagen:\n' + err.message);
+            }
+            input.remove();
+        };
+        document.body.appendChild(input);
+        input.click();
     }
 }
 

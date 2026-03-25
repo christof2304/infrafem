@@ -929,6 +929,120 @@ async def import_cdb(file: UploadFile = File(...)):
         return {"success": False, "error": str(e)}
 
 
+# ── DXF Import endpoint ──────────────────────────────────────────────────
+
+@app.post("/api/import/dxf")
+async def import_dxf(file: UploadFile = File(...)):
+    """Parse a DXF file and return geometry as JSON (lines, arcs, circles)."""
+    import tempfile
+    import math
+
+    try:
+        import ezdxf
+    except ImportError:
+        raise HTTPException(status_code=500, detail="ezdxf not installed. Run: pip install ezdxf")
+
+    # Save uploaded file to a temp location
+    suffix = ".dxf"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    try:
+        doc = ezdxf.readfile(tmp_path)
+    except Exception as e:
+        os.unlink(tmp_path)
+        raise HTTPException(status_code=400, detail=f"Cannot parse DXF: {e}")
+
+    msp = doc.modelspace()
+
+    lines = []
+    arcs = []
+    circles = []
+
+    x_min, y_min = float('inf'), float('inf')
+    x_max, y_max = float('-inf'), float('-inf')
+
+    def track_bounds(x, y):
+        nonlocal x_min, y_min, x_max, y_max
+        if x < x_min: x_min = x
+        if y < y_min: y_min = y
+        if x > x_max: x_max = x
+        if y > y_max: y_max = y
+
+    for entity in msp:
+        dxf_type = entity.dxftype()
+
+        if dxf_type == 'LINE':
+            s = entity.dxf.start
+            e = entity.dxf.end
+            lines.append({"x1": s.x, "y1": s.y, "x2": e.x, "y2": e.y})
+            track_bounds(s.x, s.y)
+            track_bounds(e.x, e.y)
+
+        elif dxf_type == 'LWPOLYLINE':
+            pts = list(entity.get_points('xy'))
+            if entity.closed and len(pts) > 1:
+                pts.append(pts[0])
+            for i in range(len(pts) - 1):
+                p1, p2 = pts[i], pts[i + 1]
+                lines.append({"x1": p1[0], "y1": p1[1], "x2": p2[0], "y2": p2[1]})
+                track_bounds(p1[0], p1[1])
+                track_bounds(p2[0], p2[1])
+
+        elif dxf_type == 'POLYLINE':
+            try:
+                pts = [(v.dxf.location.x, v.dxf.location.y) for v in entity.vertices]
+                if entity.is_closed and len(pts) > 1:
+                    pts.append(pts[0])
+                for i in range(len(pts) - 1):
+                    p1, p2 = pts[i], pts[i + 1]
+                    lines.append({"x1": p1[0], "y1": p1[1], "x2": p2[0], "y2": p2[1]})
+                    track_bounds(p1[0], p1[1])
+                    track_bounds(p2[0], p2[1])
+            except Exception:
+                pass
+
+        elif dxf_type == 'ARC':
+            c = entity.dxf.center
+            r = entity.dxf.radius
+            sa = math.radians(entity.dxf.start_angle)
+            ea = math.radians(entity.dxf.end_angle)
+            arcs.append({
+                "cx": c.x, "cy": c.y, "r": r,
+                "startAngle": sa, "endAngle": ea,
+            })
+            track_bounds(c.x - r, c.y - r)
+            track_bounds(c.x + r, c.y + r)
+
+        elif dxf_type == 'CIRCLE':
+            c = entity.dxf.center
+            r = entity.dxf.radius
+            circles.append({"cx": c.x, "cy": c.y, "r": r})
+            track_bounds(c.x - r, c.y - r)
+            track_bounds(c.x + r, c.y + r)
+
+    os.unlink(tmp_path)
+
+    # If no entities found, set default bounds
+    if x_min == float('inf'):
+        x_min = y_min = 0
+        x_max = y_max = 10
+
+    return {
+        "lines": lines,
+        "arcs": arcs,
+        "circles": circles,
+        "bounds": {
+            "xMin": x_min, "yMin": y_min,
+            "xMax": x_max, "yMax": y_max,
+            "width": x_max - x_min,
+            "height": y_max - y_min,
+        },
+        "entityCount": len(lines) + len(arcs) + len(circles),
+    }
+
+
 # ── CLI entry point ─────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

@@ -74,6 +74,21 @@ export class EditorAPI {
         });
     }
 
+    // ── DXF Import ──────────────────────────────────────────
+    async importDxf(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${this.baseUrl}/api/import/dxf`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`DXF import failed (${res.status}): ${text}`);
+        }
+        return res.json();
+    }
+
     // ── Fetch results for deformation display ────────────
     async fetchResults(sqliteName) {
         // Switch DB first

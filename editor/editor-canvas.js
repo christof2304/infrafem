@@ -24,6 +24,18 @@ const GHOST_OPACITY = 0.4;
 const LOAD_COLOR = 0x44dd44;
 const SNAP_RADIUS_PX = 25; // pixel radius for node snapping
 
+// ─── Snap Types (bitwise flags) ─────────────────────────────
+const SNAP = {
+    GRID:          1,
+    ENDPOINT:      2,
+    MIDPOINT:      4,
+    PERPENDICULAR: 8,
+    INTERSECTION: 16,
+    CENTER:       32,
+    NEAREST:      64,
+};
+const SNAP_COLOR = 0x44ff44; // bright green for snap indicators
+
 export class EditorCanvas {
     constructor(container, model) {
         this.container = container;
@@ -50,6 +62,7 @@ export class EditorCanvas {
         this.hingeGroup = new THREE.Group();
         this.areaGroup = new THREE.Group();
         this.quadResultGroup = new THREE.Group();
+        this.snapGroup = new THREE.Group();
 
         // Diagram display state
         this._diagramData = null;
@@ -71,6 +84,10 @@ export class EditorCanvas {
         this._dragNode = null;
         this._dragOffset = new THREE.Vector3();
         this._isDragging = false;
+
+        // Snap state
+        this._activeSnap = SNAP.ENDPOINT | SNAP.MIDPOINT | SNAP.INTERSECTION | SNAP.PERPENDICULAR | SNAP.NEAREST | SNAP.GRID;
+        this._lastPoint = null; // {x, z} for relative coords / perpendicular snap
 
         // Area mode state
         this._areaNodes = []; // accumulated node IDs for polygon boundary
@@ -148,6 +165,7 @@ export class EditorCanvas {
         this.scene.add(this.hingeGroup);
         this.scene.add(this.areaGroup);
         this.scene.add(this.quadResultGroup);
+        this.scene.add(this.snapGroup);
 
         // Resize handler
         this._onResize = () => {
@@ -205,12 +223,27 @@ export class EditorCanvas {
     _buildGrid() {
         const ext = this.gridExtent;
         const step = this.gridSize;
-        const gridHelper = new THREE.GridHelper(ext * 2, (ext * 2) / step, GRID_CENTER_COLOR, GRID_COLOR);
-        // Rotate grid from XZ to XY plane
-        gridHelper.rotation.x = Math.PI / 2;
-        gridHelper.material.transparent = true;
-        gridHelper.material.opacity = 0.3;
-        this.scene.add(gridHelper);
+        // Build grid directly on XY plane (Z=0) using line segments
+        const points = [];
+        const mat = new THREE.LineBasicMaterial({ color: GRID_COLOR, transparent: true, opacity: 0.3 });
+        for (let x = -ext; x <= ext; x += step) {
+            points.push(new THREE.Vector3(x, -ext, 0), new THREE.Vector3(x, ext, 0));
+        }
+        for (let y = -ext; y <= ext; y += step) {
+            points.push(new THREE.Vector3(-ext, y, 0), new THREE.Vector3(ext, y, 0));
+        }
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const grid = new THREE.LineSegments(geo, mat);
+        this.scene.add(grid);
+
+        // Center axes (slightly brighter)
+        const axisPoints = [
+            new THREE.Vector3(-ext, 0, 0), new THREE.Vector3(ext, 0, 0),
+            new THREE.Vector3(0, -ext, 0), new THREE.Vector3(0, ext, 0),
+        ];
+        const axisGeo = new THREE.BufferGeometry().setFromPoints(axisPoints);
+        const axisMat = new THREE.LineBasicMaterial({ color: GRID_CENTER_COLOR, transparent: true, opacity: 0.4 });
+        this.scene.add(new THREE.LineSegments(axisGeo, axisMat));
     }
 
     // ── Rebuild all meshes from model ──────────────────────
@@ -885,6 +918,7 @@ export class EditorCanvas {
 
     clearGhost() {
         this._clearGroup(this.ghostGroup);
+        this._clearSnapIndicator();
     }
 
     // ── Raycasting / Picking ───────────────────────────────
@@ -930,6 +964,294 @@ export class EditorCanvas {
         return null;
     }
 
+    // ── Screen-space distance helper ─────────────────────────
+    _screenDist(x1, z1, x2, z2) {
+        const a = new THREE.Vector3(x1, z1, 0).project(this.camera);
+        const b = new THREE.Vector3(x2, z2, 0).project(this.camera);
+        const dx = (a.x - b.x) * this.container.clientWidth / 2;
+        const dy = (a.y - b.y) * this.container.clientHeight / 2;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // ── Advanced Snap System ─────────────────────────────────
+    /**
+     * Unified snap: returns {x, z, type, snappedNodeId} where type is a SNAP.* flag.
+     * Priority: ENDPOINT > MIDPOINT > INTERSECTION > PERPENDICULAR > NEAREST > GRID
+     */
+    _findSnap(worldX, worldZ) {
+        const flags = this._activeSnap;
+        let best = null;
+
+        // 1. ENDPOINT — existing nodes (screen distance < 25px)
+        if (flags & SNAP.ENDPOINT) {
+            const testPos = new THREE.Vector3(worldX, worldZ, 0).project(this.camera);
+            let closestDist = SNAP_RADIUS_PX;
+            for (const node of this.model.data.nodes) {
+                const nPos = new THREE.Vector3(node.x, node.z, 0).project(this.camera);
+                const dx = (testPos.x - nPos.x) * this.container.clientWidth / 2;
+                const dy = (testPos.y - nPos.y) * this.container.clientHeight / 2;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if (d < closestDist) {
+                    closestDist = d;
+                    best = { x: node.x, z: node.z, type: SNAP.ENDPOINT, snappedNodeId: node.id };
+                }
+            }
+            if (best) return best;
+        }
+
+        // 2. MIDPOINT — midpoints of beams (screen distance < 20px)
+        if (flags & SNAP.MIDPOINT) {
+            let closestDist = 20;
+            for (const beam of this.model.data.beams) {
+                const n1 = this.model.getNode(beam.nodeStart);
+                const n2 = this.model.getNode(beam.nodeEnd);
+                if (!n1 || !n2) continue;
+                const mx = (n1.x + n2.x) / 2;
+                const mz = (n1.z + n2.z) / 2;
+                const d = this._screenDist(worldX, worldZ, mx, mz);
+                if (d < closestDist) {
+                    closestDist = d;
+                    best = { x: mx, z: mz, type: SNAP.MIDPOINT, snappedNodeId: null };
+                }
+            }
+            if (best) return best;
+        }
+
+        // 3. INTERSECTION — beam-beam intersections (screen distance < 20px)
+        if (flags & SNAP.INTERSECTION) {
+            let closestDist = 20;
+            const beams = this.model.data.beams;
+            for (let i = 0; i < beams.length; i++) {
+                const b1 = beams[i];
+                const a1 = this.model.getNode(b1.nodeStart);
+                const a2 = this.model.getNode(b1.nodeEnd);
+                if (!a1 || !a2) continue;
+                for (let j = i + 1; j < beams.length; j++) {
+                    const b2 = beams[j];
+                    const b1n = this.model.getNode(b2.nodeStart);
+                    const b2n = this.model.getNode(b2.nodeEnd);
+                    if (!b1n || !b2n) continue;
+                    // Skip beams that share an endpoint — that intersection is already an ENDPOINT
+                    if (b1.nodeStart === b2.nodeStart || b1.nodeStart === b2.nodeEnd ||
+                        b1.nodeEnd === b2.nodeStart || b1.nodeEnd === b2.nodeEnd) continue;
+                    const ix = this._lineLineIntersect(a1.x, a1.z, a2.x, a2.z, b1n.x, b1n.z, b2n.x, b2n.z);
+                    if (ix) {
+                        const d = this._screenDist(worldX, worldZ, ix.x, ix.z);
+                        if (d < closestDist) {
+                            closestDist = d;
+                            best = { x: ix.x, z: ix.z, type: SNAP.INTERSECTION, snappedNodeId: null };
+                        }
+                    }
+                }
+            }
+            if (best) return best;
+        }
+
+        // 4. PERPENDICULAR — foot of perpendicular from cursor to nearest beam
+        //    Only active when drawing from a known start point
+        if (flags & SNAP.PERPENDICULAR) {
+            const hasStart = this._beamStartNode !== null || this._areaNodes.length > 0 ||
+                             this._polyNodes.length > 0 || this._rectStart !== null;
+            if (hasStart) {
+                let closestDist = 20;
+                for (const beam of this.model.data.beams) {
+                    const n1 = this.model.getNode(beam.nodeStart);
+                    const n2 = this.model.getNode(beam.nodeEnd);
+                    if (!n1 || !n2) continue;
+                    const foot = this._perpFoot(worldX, worldZ, n1.x, n1.z, n2.x, n2.z);
+                    if (foot) {
+                        const d = this._screenDist(worldX, worldZ, foot.x, foot.z);
+                        if (d < closestDist) {
+                            closestDist = d;
+                            best = { x: foot.x, z: foot.z, type: SNAP.PERPENDICULAR, snappedNodeId: null };
+                        }
+                    }
+                }
+                if (best) return best;
+            }
+        }
+
+        // 5. NEAREST — closest point on any beam (screen distance < 15px)
+        if (flags & SNAP.NEAREST) {
+            let closestDist = 15;
+            for (const beam of this.model.data.beams) {
+                const n1 = this.model.getNode(beam.nodeStart);
+                const n2 = this.model.getNode(beam.nodeEnd);
+                if (!n1 || !n2) continue;
+                const cp = this._closestPointOnSegment(worldX, worldZ, n1.x, n1.z, n2.x, n2.z);
+                const d = this._screenDist(worldX, worldZ, cp.x, cp.z);
+                if (d < closestDist) {
+                    closestDist = d;
+                    best = { x: cp.x, z: cp.z, type: SNAP.NEAREST, snappedNodeId: null };
+                }
+            }
+            if (best) return best;
+        }
+
+        // 6. CENTER — centroid of areas (screen distance < 20px)
+        if ((flags & SNAP.CENTER) && this.model.data.areas) {
+            let closestDist = 20;
+            for (const area of this.model.data.areas) {
+                const pts = area.nodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+                if (pts.length < 3) continue;
+                let cx = 0, cz = 0;
+                for (const p of pts) { cx += p.x; cz += p.z; }
+                cx /= pts.length;
+                cz /= pts.length;
+                const d = this._screenDist(worldX, worldZ, cx, cz);
+                if (d < closestDist) {
+                    closestDist = d;
+                    best = { x: cx, z: cz, type: SNAP.CENTER, snappedNodeId: null };
+                }
+            }
+            if (best) return best;
+        }
+
+        // 7. GRID — round to grid
+        if (flags & SNAP.GRID) {
+            const g = this.gridSize;
+            return {
+                x: Math.round(worldX / g) * g,
+                z: Math.round(worldZ / g) * g,
+                type: SNAP.GRID,
+                snappedNodeId: null,
+            };
+        }
+
+        return { x: worldX, z: worldZ, type: 0, snappedNodeId: null };
+    }
+
+    // ── Geometry helpers for snap ────────────────────────────
+
+    /** 2D line-line segment intersection. Returns {x, z} or null. */
+    _lineLineIntersect(ax1, az1, ax2, az2, bx1, bz1, bx2, bz2) {
+        const dx1 = ax2 - ax1, dz1 = az2 - az1;
+        const dx2 = bx2 - bx1, dz2 = bz2 - bz1;
+        const denom = dx1 * dz2 - dz1 * dx2;
+        if (Math.abs(denom) < 1e-12) return null; // parallel
+        const t = ((bx1 - ax1) * dz2 - (bz1 - az1) * dx2) / denom;
+        const u = ((bx1 - ax1) * dz1 - (bz1 - az1) * dx1) / denom;
+        if (t < 0 || t > 1 || u < 0 || u > 1) return null; // outside segments
+        return { x: ax1 + t * dx1, z: az1 + t * dz1 };
+    }
+
+    /** Perpendicular foot of point (px, pz) on line segment (ax, az)-(bx, bz). Returns {x, z} or null if outside segment. */
+    _perpFoot(px, pz, ax, az, bx, bz) {
+        const dx = bx - ax, dz = bz - az;
+        const len2 = dx * dx + dz * dz;
+        if (len2 < 1e-12) return null;
+        const t = ((px - ax) * dx + (pz - az) * dz) / len2;
+        if (t < 0 || t > 1) return null;
+        return { x: ax + t * dx, z: az + t * dz };
+    }
+
+    /** Closest point on segment (ax, az)-(bx, bz) to point (px, pz). Always returns a valid point. */
+    _closestPointOnSegment(px, pz, ax, az, bx, bz) {
+        const dx = bx - ax, dz = bz - az;
+        const len2 = dx * dx + dz * dz;
+        if (len2 < 1e-12) return { x: ax, z: az };
+        const t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / len2));
+        return { x: ax + t * dx, z: az + t * dz };
+    }
+
+    // ── Snap indicator visuals ───────────────────────────────
+
+    _clearSnapIndicator() {
+        while (this.snapGroup.children.length > 0) {
+            const child = this.snapGroup.children[0];
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) child.material.dispose();
+            this.snapGroup.remove(child);
+        }
+    }
+
+    _showSnapIndicator(x, z, snapType) {
+        this._clearSnapIndicator();
+        if (snapType === SNAP.GRID) return; // no indicator for grid snap
+
+        const mat = new THREE.MeshBasicMaterial({ color: SNAP_COLOR, depthTest: false, transparent: true, opacity: 0.9 });
+        const s = 0.15; // size of indicator
+
+        let mesh;
+        switch (snapType) {
+            case SNAP.ENDPOINT: {
+                // Small square
+                const geo = new THREE.PlaneGeometry(s, s);
+                mesh = new THREE.Mesh(geo, mat);
+                break;
+            }
+            case SNAP.MIDPOINT: {
+                // Small triangle
+                const shape = new THREE.Shape();
+                shape.moveTo(0, s * 0.6);
+                shape.lineTo(-s * 0.5, -s * 0.3);
+                shape.lineTo(s * 0.5, -s * 0.3);
+                shape.closePath();
+                const geo = new THREE.ShapeGeometry(shape);
+                mesh = new THREE.Mesh(geo, mat);
+                break;
+            }
+            case SNAP.INTERSECTION: {
+                // Small X (two crossing lines)
+                const points = [
+                    new THREE.Vector3(-s * 0.4, -s * 0.4, 0), new THREE.Vector3(s * 0.4, s * 0.4, 0),
+                    new THREE.Vector3(-s * 0.4, s * 0.4, 0), new THREE.Vector3(s * 0.4, -s * 0.4, 0),
+                ];
+                const lineMat = new THREE.LineBasicMaterial({ color: SNAP_COLOR, depthTest: false, linewidth: 2 });
+                const geo1 = new THREE.BufferGeometry().setFromPoints([points[0], points[1]]);
+                const geo2 = new THREE.BufferGeometry().setFromPoints([points[2], points[3]]);
+                const line1 = new THREE.Line(geo1, lineMat);
+                const line2 = new THREE.Line(geo2, lineMat);
+                const group = new THREE.Group();
+                group.add(line1);
+                group.add(line2);
+                group.position.set(x, z, 0.02);
+                group.renderOrder = 999;
+                this.snapGroup.add(group);
+                return;
+            }
+            case SNAP.PERPENDICULAR: {
+                // Small perpendicular symbol (L-shape rotated)
+                const points = [
+                    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, s * 0.6, 0),
+                    new THREE.Vector3(0, 0, 0), new THREE.Vector3(s * 0.4, 0, 0),
+                    new THREE.Vector3(s * 0.15, 0, 0), new THREE.Vector3(s * 0.15, s * 0.15, 0),
+                    new THREE.Vector3(s * 0.15, s * 0.15, 0), new THREE.Vector3(0, s * 0.15, 0),
+                ];
+                const lineMat = new THREE.LineBasicMaterial({ color: SNAP_COLOR, depthTest: false, linewidth: 2 });
+                const group = new THREE.Group();
+                for (let i = 0; i < points.length; i += 2) {
+                    const geo = new THREE.BufferGeometry().setFromPoints([points[i], points[i + 1]]);
+                    group.add(new THREE.Line(geo, lineMat));
+                }
+                group.position.set(x - s * 0.15, z - s * 0.1, 0.02);
+                group.renderOrder = 999;
+                this.snapGroup.add(group);
+                return;
+            }
+            case SNAP.NEAREST: {
+                // Small circle
+                const geo = new THREE.RingGeometry(s * 0.25, s * 0.35, 16);
+                mesh = new THREE.Mesh(geo, mat);
+                break;
+            }
+            case SNAP.CENTER: {
+                // Crosshair circle
+                const geo = new THREE.RingGeometry(s * 0.2, s * 0.3, 16);
+                mesh = new THREE.Mesh(geo, mat);
+                break;
+            }
+            default:
+                return;
+        }
+
+        if (mesh) {
+            mesh.position.set(x, z, 0.02);
+            mesh.renderOrder = 999;
+            this.snapGroup.add(mesh);
+        }
+    }
+
     getSnappedPos(event) {
         const world = this._getWorldPos(event);
         if (!world) return null;
@@ -938,13 +1260,9 @@ export class EditorCanvas {
         const ex = world.x;
         const ez = world.y;
 
-        // Try node snap first
-        const nodeSnap = this._snapToNode(ex, ez);
-        if (nodeSnap) return nodeSnap;
-
-        // Grid snap
-        const gridSnap = this._snapToGrid(ex, ez);
-        return { ...gridSnap, snappedNodeId: null };
+        const snap = this._findSnap(ex, ez);
+        this._showSnapIndicator(snap.x, snap.z, snap.type);
+        return snap;
     }
 
     pickObject(event) {
@@ -1015,6 +1333,7 @@ export class EditorCanvas {
             const pos = this.getSnappedPos(event);
             if (pos) {
                 this.model.addNode(pos.x, pos.z);
+                this._lastPoint = { x: pos.x, z: pos.z };
             }
         } else if (mode === 'BEAM') {
             this._handleBeamClick(event);
@@ -1061,6 +1380,8 @@ export class EditorCanvas {
             const node = this.model.addNode(pos.x, pos.z);
             nodeId = node.id;
         }
+
+        this._lastPoint = { x: pos.x, z: pos.z };
 
         if (this._beamStartNode === null) {
             // First click: set start node
@@ -1109,6 +1430,7 @@ export class EditorCanvas {
 
             // Reset for next rectangle
             this._rectStart = null;
+            this._lastPoint = { x: pos.x, z: pos.z };
             this.clearGhost();
         }
     }
@@ -1133,6 +1455,8 @@ export class EditorCanvas {
             const node = this.model.addNode(pos.x, pos.z);
             nodeId = node.id;
         }
+
+        this._lastPoint = { x: pos.x, z: pos.z };
 
         // If we have a previous node, create a beam to this one
         if (this._polyNodes.length > 0) {
@@ -1499,8 +1823,12 @@ export class EditorCanvas {
             this.clearGhost();
         }
 
-        // Emit cursor position for status bar
-        this.model.bus.emit('cursor:moved', { x: pos.x, z: pos.z });
+        // Emit cursor position + snap type for status bar
+        const snapLabels = {
+            1: '', 2: 'Endpunkt', 4: 'Mittelpunkt', 8: 'Lot',
+            16: 'Schnittpunkt', 32: 'Zentrum', 64: 'Naechster',
+        };
+        this.model.bus.emit('cursor:moved', { x: pos.x, z: pos.z, snapType: pos.type, snapLabel: snapLabels[pos.type] || '' });
     }
 
     _onPointerUp(event) {
@@ -1519,6 +1847,8 @@ export class EditorCanvas {
     }
 
     _onKeyDown(event) {
+        // Don't interfere when typing in input fields (coord input, etc.)
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') return;
         if (event.key === 'Escape') {
             this._beamStartNode = null;
             this._areaNodes = [];
@@ -1896,6 +2226,9 @@ export class EditorCanvas {
      */
     showQuadResults(resultData, type, scale) {
         this.hideQuadResults();
+        // Hide original areas and supports when showing colored results
+        this.areaGroup.visible = false;
+        this.supportGroup.visible = false;
         if (!resultData?.allNodes?.length) return;
 
         const quadElems = resultData.quadElements || [];
@@ -2060,6 +2393,9 @@ export class EditorCanvas {
     hideQuadResults() {
         this._clearGroup(this.quadResultGroup);
         this._hideColorLegend();
+        // Restore original areas and supports
+        this.areaGroup.visible = true;
+        this.supportGroup.visible = true;
     }
 
     // ── Color Legend ─────────────────────────────────────────
@@ -2580,6 +2916,150 @@ export class EditorCanvas {
             sprite.position.set(ox + nx * 0.3, oy + ny * 0.3, 0.02);
             sprite.scale.set(2.5, 0.5, 1);
             this.diagramGroup.add(sprite);
+        }
+    }
+
+    // ── Command Line Coordinate Input ────────────────────────
+
+    /**
+     * Parse coordinate text and execute the appropriate action.
+     * Formats: "5,3" (absolute), "@3,4" (relative), "@5<45" (polar).
+     * Returns the resolved point {x, z} or null on error.
+     */
+    handleCoordInput(text) {
+        const parsed = this._parseCoord(text);
+        if (!parsed) return null;
+
+        const { x, z } = parsed;
+        const mode = this.model.mode;
+
+        if (mode === 'NODE') {
+            this.model.addNode(x, z);
+            this._lastPoint = { x, z };
+        } else if (mode === 'BEAM') {
+            // Find or create node at this position
+            let nodeId = this._findNodeAt(x, z);
+            if (!nodeId) {
+                const node = this.model.addNode(x, z);
+                nodeId = node.id;
+            }
+            this._lastPoint = { x, z };
+            if (this._beamStartNode === null) {
+                this._beamStartNode = nodeId;
+                this.model.select('node', nodeId);
+            } else {
+                if (nodeId !== this._beamStartNode) {
+                    this.model.addBeam(this._beamStartNode, nodeId);
+                }
+                this._beamStartNode = nodeId;
+                this.model.select('node', nodeId);
+            }
+        } else if (mode === 'RECT') {
+            if (this._rectStart === null) {
+                this._rectStart = { x, z };
+                this._lastPoint = { x, z };
+            } else {
+                const x1 = this._rectStart.x, z1 = this._rectStart.z;
+                if (Math.abs(x - x1) >= 0.001 && Math.abs(z - z1) >= 0.001) {
+                    const n1 = this.model.addNode(x1, z1);
+                    const n2 = this.model.addNode(x, z1);
+                    const n3 = this.model.addNode(x, z);
+                    const n4 = this.model.addNode(x1, z);
+                    this.model.addBeam(n1.id, n2.id);
+                    this.model.addBeam(n2.id, n3.id);
+                    this.model.addBeam(n3.id, n4.id);
+                    this.model.addBeam(n4.id, n1.id);
+                }
+                this._rectStart = null;
+                this._lastPoint = { x, z };
+                this.clearGhost();
+            }
+        } else if (mode === 'POLY') {
+            let nodeId = this._findNodeAt(x, z);
+            if (!nodeId) {
+                const node = this.model.addNode(x, z);
+                nodeId = node.id;
+            }
+            this._lastPoint = { x, z };
+            if (this._polyNodes.length > 0) {
+                const prevId = this._polyNodes[this._polyNodes.length - 1];
+                if (nodeId !== prevId) {
+                    this.model.addBeam(prevId, nodeId);
+                }
+            }
+            this._polyNodes.push(nodeId);
+            this.model.select('node', nodeId);
+        } else if (mode === 'AREA') {
+            let nodeId = this._findNodeAt(x, z);
+            if (!nodeId) {
+                const node = this.model.addNode(x, z);
+                nodeId = node.id;
+            }
+            this._lastPoint = { x, z };
+            if (this._areaNodes.length > 0 && nodeId === this._areaNodes[this._areaNodes.length - 1]) return parsed;
+            this._areaNodes.push(nodeId);
+        } else {
+            // SELECT or other modes — just create a node
+            this.model.addNode(x, z);
+            this._lastPoint = { x, z };
+        }
+
+        return parsed;
+    }
+
+    /** Find an existing node at (x, z) within a small tolerance. */
+    _findNodeAt(x, z, tol = 0.01) {
+        for (const node of this.model.data.nodes) {
+            if (Math.abs(node.x - x) < tol && Math.abs(node.z - z) < tol) {
+                return node.id;
+            }
+        }
+        return null;
+    }
+
+    /** Parse coordinate text into {x, z}. */
+    _parseCoord(text) {
+        text = text.trim();
+        if (!text) return null;
+
+        if (text.startsWith('@')) {
+            // Relative coordinate — requires _lastPoint
+            if (!this._lastPoint) {
+                // Default to origin if no last point
+                this._lastPoint = { x: 0, z: 0 };
+            }
+            const rest = text.slice(1);
+            if (rest.includes('<')) {
+                // Polar: @distance<angle
+                const parts = rest.split('<');
+                const dist = parseFloat(parts[0]);
+                const ang = parseFloat(parts[1]);
+                if (isNaN(dist) || isNaN(ang)) return null;
+                const rad = ang * Math.PI / 180;
+                return {
+                    x: this._lastPoint.x + dist * Math.cos(rad),
+                    z: this._lastPoint.z + dist * Math.sin(rad),
+                };
+            } else {
+                // Cartesian: @dx,dy
+                const parts = rest.split(',');
+                if (parts.length < 2) return null;
+                const dx = parseFloat(parts[0]);
+                const dz = parseFloat(parts[1]);
+                if (isNaN(dx) || isNaN(dz)) return null;
+                return {
+                    x: this._lastPoint.x + dx,
+                    z: this._lastPoint.z + dz,
+                };
+            }
+        } else {
+            // Absolute: x,y
+            const parts = text.split(',');
+            if (parts.length < 2) return null;
+            const x = parseFloat(parts[0]);
+            const z = parseFloat(parts[1]);
+            if (isNaN(x) || isNaN(z)) return null;
+            return { x, z };
         }
     }
 

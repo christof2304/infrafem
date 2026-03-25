@@ -894,14 +894,16 @@ export class PropertiesPanel {
 
 // ─── Status Bar ─────────────────────────────────────────────
 export class StatusBar {
-    constructor(container, model) {
+    constructor(container, model, canvas) {
         this.model = model;
+        this.canvas = canvas || null;
         this.el = container;
         this.model.bus.on('mode:changed', () => this._render());
         this.model.bus.on('model:changed', () => this._render());
         this.model.bus.on('cursor:moved', (pos) => this._updateCursor(pos));
         this._cursorX = 0;
         this._cursorZ = 0;
+        this._snapLabel = '';
         this._render();
     }
 
@@ -916,13 +918,54 @@ export class StatusBar {
         this.el.innerHTML = `
             <span class="status-mode">${modeLabels[this.model.mode] || this.model.mode}</span>
             <span class="status-sep">|</span>
+            <input type="text" id="coord-input" placeholder="x,z oder @dx,dz" autocomplete="off">
+            <span class="status-sep">|</span>
             <span class="status-coords" id="status-coords">X: ${this._cursorX.toFixed(2)}  Z: ${this._cursorZ.toFixed(2)}</span>
+            <span class="status-snap" id="status-snap"></span>
             <span class="status-sep">|</span>
             <span>${d.nodes.length} Knoten, ${d.beams.length} Stäbe${(d.areas || []).length > 0 ? `, ${d.areas.length} Flächen` : ''}</span>
             <span class="status-sep">|</span>
             <span>LF ${this.model.activeLoadcase}</span>
             <span class="status-right" id="status-msg"></span>
         `;
+        this._bindCoordInput();
+    }
+
+    _bindCoordInput() {
+        const input = document.getElementById('coord-input');
+        if (!input) return;
+
+        // Tab key focuses the input
+        this._tabHandler = (e) => {
+            if (e.key === 'Tab' && document.activeElement !== input &&
+                document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                e.preventDefault();
+                input.focus();
+                input.select();
+            }
+        };
+        // Remove old handler if exists, then add new
+        window.removeEventListener('keydown', this._tabHandlerRef);
+        this._tabHandlerRef = this._tabHandler;
+        window.addEventListener('keydown', this._tabHandler);
+
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation(); // prevent toolbar shortcuts while typing
+            if (e.key === 'Enter') {
+                const text = input.value.trim();
+                if (text && this.canvas) {
+                    const result = this.canvas.handleCoordInput(text);
+                    if (result) {
+                        input.value = '';
+                        // Update status coords to show placed point
+                        this._updateCursor({ x: result.x, z: result.z });
+                    }
+                }
+            }
+            if (e.key === 'Escape') {
+                input.blur();
+            }
+        });
     }
 
     _updateCursor(pos) {
@@ -930,6 +973,18 @@ export class StatusBar {
         this._cursorZ = pos.z;
         const el = document.getElementById('status-coords');
         if (el) el.textContent = `X: ${pos.x.toFixed(2)}  Z: ${pos.z.toFixed(2)}`;
+        // Update snap label if provided
+        if (pos.snapLabel !== undefined) {
+            const snapEl = document.getElementById('status-snap');
+            if (snapEl) snapEl.textContent = pos.snapLabel;
+        }
+    }
+
+    /** Update the snap type indicator in the status bar. */
+    setSnapLabel(label) {
+        this._snapLabel = label;
+        const el = document.getElementById('status-snap');
+        if (el) el.textContent = label;
     }
 }
 

@@ -47,6 +47,7 @@ export class Toolbar {
         // Action buttons
         const actions = [
             { icon: '▶', label: 'Berechnen', action: () => this._calculate() },
+            { icon: '🔍', label: 'Im Viewer öffnen', action: () => this._openViewer() },
             { icon: '⬇', label: '.dat Export', action: () => downloadDat(this.model.data) },
             { icon: '💾', label: 'Speichern', action: () => this._save() },
             { icon: '📂', label: 'Laden', action: () => this._load() },
@@ -101,6 +102,14 @@ export class Toolbar {
             }
         } catch (err) {
             statusEl.textContent = `API-Fehler: ${err.message}`;
+        }
+    }
+
+    _openViewer() {
+        if (this.model._resultSqlite) {
+            this.api.openViewer(this.model._resultSqlite);
+        } else {
+            alert('Erst berechnen — keine Ergebnisse vorhanden.');
         }
     }
 
@@ -166,8 +175,10 @@ export class PropertiesPanel {
                 <label>System</label>
                 <select id="prop-system">
                     <option value="RAHM" ${d.meta.systemType === 'RAHM' ? 'selected' : ''}>2D Rahmen</option>
-                    <option value="ROST" ${d.meta.systemType === 'ROST' ? 'selected' : ''}>Rost</option>
-                    <option value="RAUM" ${d.meta.systemType === 'RAUM' ? 'selected' : ''}>3D</option>
+                    <option value="PLATTE" ${d.meta.systemType === 'PLATTE' ? 'selected' : ''}>2D Platte</option>
+                    <option value="SCHEIBE" ${d.meta.systemType === 'SCHEIBE' ? 'selected' : ''}>2D Scheibe</option>
+                    <option value="ROST" ${d.meta.systemType === 'ROST' ? 'selected' : ''}>2D Rost</option>
+                    <option value="3D" ${d.meta.systemType === '3D' ? 'selected' : ''}>3D</option>
                 </select>
             </div>
 
@@ -211,6 +222,12 @@ export class PropertiesPanel {
                 </select>
             </div>
 
+            <h3>Darstellung</h3>
+            <div class="prop-group">
+                <label>Querschnitte</label>
+                <input type="checkbox" id="prop-show-sections">
+            </div>
+
             <h3>Vernetzung</h3>
             <div class="prop-group">
                 <label>Elem.größe [m]</label>
@@ -241,6 +258,12 @@ export class PropertiesPanel {
                 this.el.querySelector('#prop-hmin-val').textContent = val.toFixed(1);
                 if (!this.model.data.meshSettings) this.model.data.meshSettings = {};
                 this.model.data.meshSettings.hmin = val;
+            };
+        }
+        const showSecCb = this.el.querySelector('#prop-show-sections');
+        if (showSecCb) {
+            showSecCb.onchange = () => {
+                this.model.bus.emit('display:showSections', showSecCb.checked);
             };
         }
 
@@ -447,8 +470,17 @@ export class PropertiesPanel {
             </div>`
         ).join('');
 
+        const isStructLine = beam.isStructLine || false;
+
         this.el.innerHTML = `
-            <h3>Stab ${beam.id}</h3>
+            <h3>${isStructLine ? 'Strukturlinie' : 'Stab'} ${beam.id}</h3>
+            <div class="prop-group">
+                <label>Typ</label>
+                <select id="prop-beam-type">
+                    <option value="beam" ${!isStructLine ? 'selected' : ''}>Biegestab</option>
+                    <option value="structline" ${isStructLine ? 'selected' : ''}>Strukturlinie</option>
+                </select>
+            </div>
             <div class="prop-group">
                 <label>Von Knoten</label>
                 <span class="prop-val">${beam.nodeStart}</span>
@@ -461,6 +493,7 @@ export class PropertiesPanel {
                 <label>Länge [m]</label>
                 <span class="prop-val">${length.toFixed(3)}</span>
             </div>
+            ${!isStructLine ? `
             <div class="prop-group">
                 <label>Querschnitt</label>
                 <select id="prop-sec">${secOpts}</select>
@@ -469,7 +502,8 @@ export class PropertiesPanel {
                 <label>Gruppe</label>
                 <select id="prop-grp">${grpOpts}</select>
             </div>
-            <h3>Gelenke</h3>
+            ` : ''}
+            ${!isStructLine ? '<h3>Gelenke</h3>' : ''}
             <div class="prop-group">
                 <label>Gelenk Anfang</label>
                 <input type="checkbox" id="prop-hinge-start" ${beam.hingeStart ? 'checked' : ''}>
@@ -501,15 +535,18 @@ export class PropertiesPanel {
             <button class="btn-full btn-danger" id="del-beam" style="margin-top:12px">Stab löschen</button>
         `;
 
-        this.el.querySelector('#prop-sec').onchange = (e) => {
+        this.el.querySelector('#prop-beam-type').onchange = (e) => {
+            this.model.updateBeam(beamId, { isStructLine: e.target.value === 'structline' });
+        };
+        this.el.querySelector('#prop-sec')?.addEventListener('change', (e) => {
             this.model.updateBeam(beamId, { sectionId: +e.target.value });
-        };
-        this.el.querySelector('#prop-grp').onchange = (e) => {
+        });
+        this.el.querySelector('#prop-grp')?.addEventListener('change', (e) => {
             this.model.updateBeam(beamId, { groupId: +e.target.value });
-        };
-        this.el.querySelector('#prop-hinge-start').onchange = (e) => {
+        });
+        this.el.querySelector('#prop-hinge-start')?.addEventListener('change', (e) => {
             this.model.updateBeam(beamId, { hingeStart: e.target.checked });
-        };
+        });
         this.el.querySelector('#prop-hinge-end').onchange = (e) => {
             this.model.updateBeam(beamId, { hingeEnd: e.target.checked });
         };
@@ -939,7 +976,7 @@ export class ResultWidget {
     }
 
     _render() {
-        const hasBeams = this.model.data.beams.length > 0;
+        const hasBeams = this.model.data.beams.some(b => !b.isStructLine);
         const hasAreas = (this.model.data.areas || []).length > 0;
         const toggleDefs = [
             { key: 'u',  label: 'Verformung', color: '#ff3333' },
@@ -999,6 +1036,8 @@ export class ResultWidget {
             this._deformScale = parseInt(dSlider.value);
             this.el.querySelector('#rs-deform-val').textContent = this._deformScale;
             if (this._toggles.u) this.canvas.setDeformScale(this._deformScale);
+            // Also update uZ quad results if active
+            if (this._toggles.uZ) this._applyToggles();
         };
 
         const gSlider = this.el.querySelector('#rs-diagram');
@@ -1071,7 +1110,9 @@ export class ResultWidget {
             if (this._toggles[type]) { activeQuadType = type; break; }
         }
         if (activeQuadType) {
-            this.canvas.showQuadResults(rd, activeQuadType, this._diagramScale * 100);
+            // uZ uses deform scale (large), force types use diagram scale (small)
+            const qScale = activeQuadType === 'uZ' ? this._deformScale : this._diagramScale * 100;
+            this.canvas.showQuadResults(rd, activeQuadType, qScale);
         } else {
             this.canvas.hideQuadResults();
         }

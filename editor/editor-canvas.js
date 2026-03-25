@@ -56,6 +56,9 @@ export class EditorCanvas {
         this._diagramTypes = new Set(); // 'My', 'Vz', 'N'
         this._diagramScale = 0.5;
 
+        // Display options
+        this._showSections = false; // show extruded cross-sections on beams
+
         // Deformation display state
         this._deformData = null; // { nodes: {id: {uX, uY}}, scale: 100 }
         this._deformScale = 100;
@@ -97,6 +100,10 @@ export class EditorCanvas {
         this.model.bus.on('selection:changed', () => this._updateSelectionVisuals());
         this.model.bus.on('loadcase:changed', () => this._rebuildLoads());
         this.model.bus.on('mode:changed', (mode) => this._onModeChanged(mode));
+        this.model.bus.on('display:showSections', (show) => {
+            this._showSections = show;
+            this._rebuildBeams();
+        });
     }
 
     // ── Init Three.js ──────────────────────────────────────
@@ -258,17 +265,80 @@ export class EditorCanvas {
             const len = dir.length();
             if (len < 0.001) continue;
 
-            const geo = new THREE.CylinderGeometry(BEAM_RADIUS, BEAM_RADIUS, len, 8);
-            const mat = new THREE.MeshPhongMaterial({ color: BEAM_COLOR });
-            const mesh = new THREE.Mesh(geo, mat);
+            if (beam.isStructLine) {
+                // Structural constraint line — thin dashed line
+                const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+                const lineMat = new THREE.LineDashedMaterial({
+                    color: 0x66aacc, dashSize: 0.2, gapSize: 0.1,
+                });
+                const line = new THREE.Line(lineGeo, lineMat);
+                line.computeLineDistances();
+                line.userData = { type: 'beam', id: beam.id };
+                this.beamGroup.add(line);
+                continue;
+            }
 
-            // Position at midpoint
-            mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
+            // Get section geometry for this beam
+            const section = this.model.data.sections.find(s => s.id === beam.sectionId);
+            let mesh;
 
-            // Rotate cylinder (default Y-axis) to beam direction
-            const axis = new THREE.Vector3(0, 1, 0);
-            const quat = new THREE.Quaternion().setFromUnitVectors(axis, dir.normalize());
-            mesh.quaternion.copy(quat);
+            if (this._showSections && section) {
+                // Extruded cross-section shape along beam axis
+                const shape = new THREE.Shape();
+                if (section.type === 'SREC') {
+                    const hw = (section.params.B || 0.3) / 2;
+                    const hh = (section.params.H || 0.5) / 2;
+                    shape.moveTo(-hw, -hh);
+                    shape.lineTo(hw, -hh);
+                    shape.lineTo(hw, hh);
+                    shape.lineTo(-hw, hh);
+                    shape.closePath();
+                } else if (section.type === 'SCIR' || section.type === 'TUBE') {
+                    const r = (section.params.D || 0.4) / 2;
+                    shape.absarc(0, 0, r, 0, Math.PI * 2, false);
+                    if (section.type === 'TUBE' && section.params.T) {
+                        const ri = r - section.params.T;
+                        if (ri > 0) {
+                            const hole = new THREE.Path();
+                            hole.absarc(0, 0, ri, 0, Math.PI * 2, true);
+                            shape.holes.push(hole);
+                        }
+                    }
+                } else {
+                    // Fallback: small rectangle
+                    shape.moveTo(-0.05, -0.05);
+                    shape.lineTo(0.05, -0.05);
+                    shape.lineTo(0.05, 0.05);
+                    shape.lineTo(-0.05, 0.05);
+                    shape.closePath();
+                }
+
+                const extrudeSettings = { steps: 1, depth: len, bevelEnabled: false };
+                const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                // ExtrudeGeometry extrudes along Z — we need to rotate it to beam direction
+                const mat = new THREE.MeshPhongMaterial({
+                    color: BEAM_COLOR, transparent: true, opacity: 0.7, side: THREE.DoubleSide
+                });
+                mesh = new THREE.Mesh(geo, mat);
+
+                // Position: start at p1, extrude toward p2
+                // ExtrudeGeometry goes from z=0 to z=depth
+                // We need to rotate Z-axis to beam direction
+                const beamDir = dir.clone().normalize();
+                const zAxis = new THREE.Vector3(0, 0, 1);
+                const quat = new THREE.Quaternion().setFromUnitVectors(zAxis, beamDir);
+                mesh.quaternion.copy(quat);
+                mesh.position.copy(p1);
+            } else {
+                // Simple cylinder (line representation)
+                const geo = new THREE.CylinderGeometry(BEAM_RADIUS, BEAM_RADIUS, len, 8);
+                const mat = new THREE.MeshPhongMaterial({ color: BEAM_COLOR });
+                mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
+                const axis = new THREE.Vector3(0, 1, 0);
+                const quat = new THREE.Quaternion().setFromUnitVectors(axis, dir.normalize());
+                mesh.quaternion.copy(quat);
+            }
 
             mesh.userData = { type: 'beam', id: beam.id };
             this.beamGroup.add(mesh);
@@ -352,6 +422,52 @@ export class EditorCanvas {
         this._clearGroup(this.supportGroup);
         const scale = 0.4;
 
+        // Edge supports on area boundaries
+        for (const area of (this.model.data.areas || [])) {
+            const bnd = area.boundaryNodeIds;
+            const edgeSups = area.edgeSupports || [];
+            for (let i = 0; i < bnd.length; i++) {
+                const sup = edgeSups[i] || 'NONE';
+                if (sup === 'NONE') continue;
+                const n1 = this.model.getNode(bnd[i]);
+                const n2 = this.model.getNode(bnd[(i + 1) % bnd.length]);
+                if (!n1 || !n2) continue;
+                const p1 = new THREE.Vector3(n1.x, n1.z, 0);
+                const p2 = new THREE.Vector3(n2.x, n2.z, 0);
+                // Color by support type
+                const supColors = { FIXED: 0xff4444, PINNED: 0xff8844, ROLLER_X: 0x44bb44, ROLLER_Z: 0x4488ff };
+                const color = supColors[sup] || 0xff8844;
+                // Thick line (use tube for visibility)
+                const dir = new THREE.Vector3().subVectors(p2, p1);
+                const len = dir.length();
+                if (len < 0.001) continue;
+                const tubeGeo = new THREE.CylinderGeometry(0.06, 0.06, len, 6);
+                const tubeMat = new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.3 });
+                const tube = new THREE.Mesh(tubeGeo, tubeMat);
+                tube.position.copy(p1).add(p2).multiplyScalar(0.5);
+                const axis = new THREE.Vector3(0, 1, 0);
+                tube.quaternion.setFromUnitVectors(axis, dir.normalize());
+                this.supportGroup.add(tube);
+                // Support symbol markers along edge
+                const nMarkers = Math.max(2, Math.floor(len / 1.0));
+                for (let j = 0; j <= nMarkers; j++) {
+                    const t = j / nMarkers;
+                    const mx = n1.x + t * (n2.x - n1.x);
+                    const my = n1.z + t * (n2.z - n1.z);
+                    // Small triangle marker
+                    const markerGeo = new THREE.ConeGeometry(0.12, 0.2, 4);
+                    const markerMat = new THREE.MeshPhongMaterial({ color });
+                    const marker = new THREE.Mesh(markerGeo, markerMat);
+                    // Orient perpendicular to edge, pointing outward
+                    const perp = new THREE.Vector3(-dir.y, dir.x, 0).normalize();
+                    marker.position.set(mx - perp.x * 0.15, my - perp.y * 0.15, 0);
+                    marker.rotation.z = Math.atan2(perp.y, perp.x) - Math.PI / 2;
+                    this.supportGroup.add(marker);
+                }
+            }
+        }
+
+        // Point supports on nodes
         for (const node of this.model.data.nodes) {
             if (!node.support || node.support === 'NONE') continue;
             const pos = new THREE.Vector3(node.x, node.z, 0);
@@ -1031,72 +1147,54 @@ export class EditorCanvas {
     }
 
     _handleAreaClick(event) {
-        // Try raycaster first (most reliable for clicking on visible nodes)
-        let nodeId = null;
-        const hit = this.pickObject(event);
-        if (hit && hit.type === 'node') {
-            nodeId = hit.id;
+        const world = this._getWorldPos(event);
+        if (!world) return;
+        const cx = world.x;
+        const cy = world.y;
+
+        // If no manual chain started, try auto-detect ("Punkt in Fläche")
+        if (this._areaNodes.length === 0 && this.model.data.beams.length >= 3) {
+            const polygon = this._detectEnclosingPolygon(cx, cy);
+            if (polygon) {
+                const enclosingArea = this._findEnclosingArea(polygon);
+                if (enclosingArea) {
+                    this.model.addOpening(enclosingArea.id, polygon);
+                } else {
+                    this.model.addArea(polygon);
+                }
+                this._areaNodes = [];
+                this.clearGhost();
+                return;
+            }
         }
 
-        // Fallback: snap to nearest node by screen distance
+        // Manual polygon drawing: click to place nodes, Enter/click-first to close
+        // Try to snap to existing node first
+        let nodeId = null;
+        const hit = this.pickObject(event);
+        if (hit && hit.type === 'node') nodeId = hit.id;
         if (!nodeId) {
             const pos = this.getSnappedPos(event);
             nodeId = pos?.snappedNodeId || null;
         }
-
-        // Last resort: find closest node in editor coords (world.x=X, world.y=editorZ)
         if (!nodeId) {
-            const world = this._getWorldPos(event);
-            if (world) {
-                const nearest = this.model.findNodeNear(world.x, world.y, 1.5);
-                if (nearest) nodeId = nearest.id;
-            }
+            const nearest = this.model.findNodeNear(cx, cy, 1.5);
+            if (nearest) nodeId = nearest.id;
         }
 
-        // If no node found, try auto-detect enclosing polygon ("Punkt in Fläche")
+        // No existing node found → create a new one (like NODE/BEAM mode)
         if (!nodeId) {
-            const world = this._getWorldPos(event);
-            if (world && this.model.data.beams.length >= 3) {
-                const cx = world.x;
-                const cy = world.y; // editor Z = screen Y
-                const polygon = this._detectEnclosingPolygon(cx, cy);
-                if (polygon) {
-                    // Check if this polygon is INSIDE an existing area → create opening
-                    const enclosingArea = this._findEnclosingArea(polygon);
-                    if (enclosingArea) {
-                        console.log('AREA: creating opening in area', enclosingArea.id, 'with nodes', polygon);
-                        this.model.addOpening(enclosingArea.id, polygon);
-                    } else {
-                        console.log('AREA: auto-detected polygon', polygon);
-                        this.model.addArea(polygon);
-                    }
-                    this._areaNodes = [];
-                    this.clearGhost();
-                    return;
-                }
+            const pos = this.getSnappedPos(event);
+            if (pos) {
+                const newNode = this.model.addNode(pos.x, pos.z);
+                nodeId = newNode.id;
             }
-            // No polygon found either, log debug info
-            const nodes = this.model.data.nodes;
-            console.log('AREA click: no node or enclosing polygon found.',
-                'world:', world?.x?.toFixed(2), world?.y?.toFixed(2), world?.z?.toFixed(2),
-                'nodes:', nodes.map(n => `${n.id}(${n.x},${n.z})`).join(' '),
-                'nodeGroup children:', this.nodeGroup.children.length);
-            return;
         }
+        if (!nodeId) return;
 
-        // If clicking the first node again → close polygon
+        // If clicking the first node again → close and create area
         if (this._areaNodes.length >= 3 && nodeId === this._areaNodes[0]) {
-            // Check if this polygon is inside an existing area → create opening
-            const enclosingArea = this._findEnclosingArea(this._areaNodes);
-            if (enclosingArea) {
-                console.log('AREA: creating opening in area', enclosingArea.id, 'with nodes', this._areaNodes);
-                this.model.addOpening(enclosingArea.id, this._areaNodes);
-            } else {
-                console.log('AREA: closing polygon with nodes', this._areaNodes);
-                this.model.addArea(this._areaNodes);
-            }
-            this._areaNodes = [];
-            this.clearGhost();
+            this._closeAreaPolygon();
             return;
         }
 
@@ -1104,7 +1202,39 @@ export class EditorCanvas {
         if (this._areaNodes.length > 0 && nodeId === this._areaNodes[this._areaNodes.length - 1]) return;
 
         this._areaNodes.push(nodeId);
-        console.log('AREA: added node', nodeId, 'chain:', this._areaNodes);
+    }
+
+    /**
+     * Close the area polygon: create boundary beams (as struct lines) + area/opening.
+     */
+    _closeAreaPolygon() {
+        const nodeIds = this._areaNodes;
+        if (nodeIds.length < 3) { this._areaNodes = []; return; }
+
+        // Create boundary beams (as structural lines) if they don't exist
+        for (let i = 0; i < nodeIds.length; i++) {
+            const n1 = nodeIds[i];
+            const n2 = nodeIds[(i + 1) % nodeIds.length];
+            // Check if beam already exists
+            const exists = this.model.data.beams.find(b =>
+                (b.nodeStart === n1 && b.nodeEnd === n2) ||
+                (b.nodeStart === n2 && b.nodeEnd === n1));
+            if (!exists) {
+                const beam = this.model.addBeam(n1, n2);
+                if (beam) beam.isStructLine = true; // mark as geometry-only
+            }
+        }
+
+        // Check if inside existing area → opening
+        const enclosingArea = this._findEnclosingArea(nodeIds);
+        if (enclosingArea) {
+            this.model.addOpening(enclosingArea.id, nodeIds);
+        } else {
+            this.model.addArea(nodeIds);
+        }
+
+        this._areaNodes = [];
+        this.clearGhost();
     }
 
     // ── "Punkt in Fläche" — detect smallest enclosing polygon ──
@@ -1407,16 +1537,7 @@ export class EditorCanvas {
             return;
         }
         if (event.key === 'Enter' && this._areaNodes.length >= 3) {
-            const enclosingArea = this._findEnclosingArea(this._areaNodes);
-            if (enclosingArea) {
-                console.log('AREA: creating opening in area', enclosingArea.id, 'with Enter, nodes:', this._areaNodes);
-                this.model.addOpening(enclosingArea.id, this._areaNodes);
-            } else {
-                console.log('AREA: closing polygon with Enter, nodes:', this._areaNodes);
-                this.model.addArea(this._areaNodes);
-            }
-            this._areaNodes = [];
-            this.clearGhost();
+            this._closeAreaPolygon();
             return;
         }
         if (event.ctrlKey && event.key === 'z') {
@@ -2084,81 +2205,111 @@ export class EditorCanvas {
             allNodesMap[node.id] = { x: node.x, y: node.z };
         }
 
-        // For each original beam, find all sub-element force records that lie on it
-        for (const beam of this.model.data.beams) {
+        // Skip if no real beams (only struct lines)
+        const realBeams = this.model.data.beams.filter(b => !b.isStructLine);
+        if (realBeams.length === 0) return;
+
+        // Build FE line connectivity from elements data
+        const feLines = this._diagramData.quadElements ? [] : []; // not available here
+        // Use allNodes to map FE element endpoints to world positions
+        // For each FE beam element, get its 2 node positions from the FE line table
+
+        // Strategy: chain all FE beam elements into continuous lines using node positions.
+        // Each FE element has force records sorted by x (local position).
+        // Build point chain: for each FE element, get start/end positions from allNodes.
+
+        // Get FE beam elements from the API's elements response
+        const feBeamElems = this._diagramData.beamElements || [];
+
+        // If we have FE beam elements, use their connectivity
+        // Otherwise, fall back to matching by position
+
+        // For each real editor beam, find FE elements that lie on it
+        for (const beam of realBeams) {
             const n1 = this.model.getNode(beam.nodeStart);
             const n2 = this.model.getNode(beam.nodeEnd);
             if (!n1 || !n2) continue;
 
-            // Beam direction in screen coords (x→X, z→Y)
             const p1x = n1.x, p1y = n1.z;
             const p2x = n2.x, p2y = n2.z;
-            const dx = p2x - p1x;
-            const dy = p2y - p1y;
-            const L = Math.sqrt(dx * dx + dy * dy);
+            const bx = p2x - p1x, by = p2y - p1y;
+            const L = Math.sqrt(bx * bx + by * by);
             if (L < 0.001) continue;
 
-            // Unit tangent and perpendicular (rotated 90° CCW)
-            const tx = dx / L, ty = dy / L;
+            const tx = bx / L, ty = by / L;
             const nx = -ty, ny = tx;
 
-            // Collect all force records along this beam
-            // Match sub-beam elements by checking if their force records
-            // fall along this beam's axis
-            const beamRecords = [];
+            // Collect force points along this beam using cumulative x positions
+            // FE elements are sub-divisions; chain them by matching node positions
+            const forcePoints = []; // {t, val} where t = fraction along beam [0,1]
 
+            // For each FE element's force records, project onto beam axis
             for (const elemId in forcesByElem) {
                 const records = forcesByElem[elemId];
-                // Check if this element's records lie on our beam
-                // Use the first record's x position relative to beam start
-                // Records have x = position along beam in [m] from beam start
-                // Since sub-beams share the same global coordinates, we check by
-                // looking at connectivity through allNodes
-                // Simpler approach: use all sub-elements that have positions within this beam's span
+                // Get this element's node positions from allNodesMap
+                const feElem = feBeamElems.find(e => e.nr === parseInt(elemId));
+                let elemStartPos = null;
+                if (feElem && feElem.nodeStart !== undefined) {
+                    elemStartPos = allNodesMap[feElem.nodeStart];
+                }
 
                 for (const rec of records) {
-                    // rec.x is position along beam axis in meters from element start
-                    // We need to map sub-element positions back to the original beam
-                    // The API returns beam_forces with elem_nr (sub-element) and x (local position)
-                    // For now, use position matching through the node positions
+                    // Try to find world position of this force record
+                    // rec.x = local position along FE element
+                    let worldX, worldY;
+                    if (elemStartPos && feElem) {
+                        const endPos = allNodesMap[feElem.nodeEnd];
+                        if (endPos) {
+                            const t = rec.x / (feElem.length || 1);
+                            worldX = elemStartPos.x + t * (endPos.x - elemStartPos.x);
+                            worldY = elemStartPos.y + t * (endPos.y - elemStartPos.y);
+                        }
+                    }
+
+                    if (worldX === undefined) {
+                        // Fallback: just skip
+                        continue;
+                    }
+
+                    // Project onto beam axis
+                    const dx = worldX - p1x, dy = worldY - p1y;
+                    const t = (dx * tx + dy * ty) / L;
+                    const perp = Math.abs(dx * nx + dy * ny);
+
+                    // Only include if point lies on this beam
+                    if (t >= -0.01 && t <= 1.01 && perp < 0.1) {
+                        forcePoints.push({ t: Math.max(0, Math.min(1, t)), N: rec.N||0, Vz: rec.Vz||0, My: rec.My||0 });
+                    }
                 }
             }
 
-            // Alternative approach: collect all force values by position along this beam
-            // by matching node positions of sub-elements
-            const forcePoints = []; // {t, N, Vz, My}
-
-            for (const elemId in forcesByElem) {
-                const records = forcesByElem[elemId];
-                for (const rec of records) {
-                    // rec.x is the distance from element start in m
-                    // We need the absolute position — but we don't have element connectivity
-                    // So we reconstruct: each sub-element's forces at x=0 and x=subLength
-                    // lie along the original beam axis
-
-                    // The elem_nr from SOFiSTiK is the sub-element ID.
-                    // We can find the sub-element's start/end nodes from the allNodes data.
-                    // But we don't have explicit connectivity here.
-
-                    // Practical approach: skip direct connectivity and instead
-                    // project rec positions onto the beam using the assumption that
-                    // x-values are cumulative along the original beam.
+            // Also try simple approach: all beam forces sequentially along the beam
+            if (forcePoints.length === 0) {
+                // Assume all FE beam elements belong to this beam (only works for single-beam models)
+                let cumX = 0;
+                const sortedElems = Object.keys(forcesByElem).sort((a, b) => parseInt(a) - parseInt(b));
+                for (const elemId of sortedElems) {
+                    const records = forcesByElem[elemId];
+                    for (const rec of records) {
+                        const absX = cumX + rec.x;
+                        const t = absX / L;
+                        if (t >= -0.01 && t <= 1.01) {
+                            forcePoints.push({ t: Math.max(0, Math.min(1, t)), N: rec.N||0, Vz: rec.Vz||0, My: rec.My||0 });
+                        }
+                    }
+                    // Advance cumX by element length
+                    if (records.length >= 2) {
+                        cumX += records[records.length - 1].x;
+                    } else if (records.length === 1) {
+                        cumX += records[0].x || 0.5;
+                    }
                 }
             }
-
-            // Since we cannot reliably map sub-elements back without connectivity,
-            // use a more robust approach: collect ALL force records from ALL sub-elements
-            // and check which ones have positions lying on this beam.
-            // The beam forces have {id: elem_nr, x: local_position, N, Vz, My}
-            // Each sub-element has a length, and x goes from 0 to that length.
-            // Without knowing which sub-elements belong to which beam, we use
-            // the global node positions approach.
-
-            // Rebuild using elements array if available, or fall back to position matching
-            this._collectBeamForcePoints(beam, n1, n2, L, tx, ty, forcePoints, forcesByElem, allNodesMap);
 
             if (forcePoints.length < 2) continue;
             forcePoints.sort((a, b) => a.t - b.t);
+
+            if (forcePoints.length < 2) continue;
 
             // Draw diagrams for each active type
             for (const type of this._diagramTypes) {
@@ -2172,12 +2323,12 @@ export class EditorCanvas {
                 for (let i = 0; i < forcePoints.length; i++) {
                     const fp = forcePoints[i];
                     const val = fp[type] || 0;
-                    // Position along beam
-                    const bx = p1x + fp.t * dx;
-                    const by = p1y + fp.t * dy;
+                    // Position along beam (bx, by = beam direction vector)
+                    const px = p1x + fp.t * bx;
+                    const py = p1y + fp.t * by;
                     // Offset perpendicular to beam by force value * scale
-                    const ox = bx + nx * val * scale;
-                    const oy = by + ny * val * scale;
+                    const ox = px + nx * val * scale;
+                    const oy = py + ny * val * scale;
 
                     linePoints.push(new THREE.Vector3(ox, oy, 0.01));
                 }
@@ -2190,8 +2341,8 @@ export class EditorCanvas {
                     const val1 = fp1[type] || 0;
 
                     // Baseline points
-                    const ax = p1x + fp0.t * dx, ay = p1y + fp0.t * dy;
-                    const cx = p1x + fp1.t * dx, cy = p1y + fp1.t * dy;
+                    const ax = p1x + fp0.t * bx, ay = p1y + fp0.t * by;
+                    const cx = p1x + fp1.t * bx, cy = p1y + fp1.t * by;
                     // Offset points
                     const bx2 = ax + nx * val0 * scale, by2 = ay + ny * val0 * scale;
                     const dx2 = cx + nx * val1 * scale, dy2 = cy + ny * val1 * scale;
@@ -2233,11 +2384,11 @@ export class EditorCanvas {
                     if (Math.abs(val0) > 1e-10 || Math.abs(valN) > 1e-10) {
                         const closePts = [];
                         // Start closing line
-                        const sx = p1x + fp0.t * dx, sy = p1y + fp0.t * dy;
+                        const sx = p1x + fp0.t * bx, sy = p1y + fp0.t * by;
                         const sox = sx + nx * val0 * scale, soy = sy + ny * val0 * scale;
                         closePts.push(new THREE.Vector3(sx, sy, 0.01), new THREE.Vector3(sox, soy, 0.01));
                         // End closing line
-                        const ex = p1x + fpN.t * dx, ey = p1y + fpN.t * dy;
+                        const ex = p1x + fpN.t * bx, ey = p1y + fpN.t * by;
                         const eox = ex + nx * valN * scale, eoy = ey + ny * valN * scale;
                         closePts.push(new THREE.Vector3(ex, ey, 0.01), new THREE.Vector3(eox, eoy, 0.01));
 
@@ -2248,7 +2399,7 @@ export class EditorCanvas {
                 }
 
                 // Add value labels at max and min
-                this._addDiagramLabels(forcePoints, type, p1x, p1y, dx, dy, nx, ny, scale, colors.line);
+                this._addDiagramLabels(forcePoints, type, p1x, p1y, bx, by, nx, ny, scale, colors.line);
             }
         }
     }

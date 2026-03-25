@@ -141,7 +141,11 @@ function generateSOFIMSHC(model) {
         if (boundaryEdges.has(e)) continue; // skip — already an area/opening boundary
         const slnId = nextSlnId++;
         beamSlnMap[beam.id] = slnId;
-        lines.push(`SLN ${slnId}  ${beam.nodeStart}  ${beam.nodeEnd}  SNO ${beam.sectionId} STYP B`);
+        if (beam.isStructLine) {
+            lines.push(`SLN ${slnId}  ${beam.nodeStart}  ${beam.nodeEnd}`);
+        } else {
+            lines.push(`SLN ${slnId}  ${beam.nodeStart}  ${beam.nodeEnd}  SNO ${beam.sectionId} STYP B`);
+        }
     }
     lines.push('');
 

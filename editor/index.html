@@ -372,6 +372,123 @@ body {
     box-shadow: 0 2px 12px rgba(0,0,0,0.4);
     user-select: none;
 }
+
+/* ─── System Start Dialog ────────────────────────────── */
+#start-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+#start-dialog {
+    background: #1a1a2e;
+    border: 1px solid #445;
+    border-radius: 12px;
+    padding: 24px 32px;
+    min-width: 520px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+#start-dialog h2 {
+    color: #7eb8ff;
+    font-size: 16px;
+    margin: 0 0 16px;
+    font-weight: 600;
+}
+#start-dialog h3 {
+    color: #8899aa;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 8px;
+}
+.system-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.system-type-btn {
+    background: rgba(126, 184, 255, 0.05);
+    border: 2px solid #334;
+    border-radius: 8px;
+    padding: 12px 8px;
+    color: #8899bb;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+}
+.system-type-btn:hover {
+    background: rgba(126, 184, 255, 0.1);
+    border-color: #556;
+    color: #aabbdd;
+}
+.system-type-btn.selected {
+    background: rgba(126, 184, 255, 0.15);
+    border-color: #7eb8ff;
+    color: #7eb8ff;
+}
+.system-type-btn .st-icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 6px;
+}
+.system-type-btn .st-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+.system-type-btn .st-desc {
+    font-size: 9px;
+    color: #667;
+    margin-top: 2px;
+}
+#start-dialog .start-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+#start-dialog .start-row label {
+    min-width: 80px;
+    font-size: 12px;
+    color: #8899aa;
+}
+#start-dialog .start-row input,
+#start-dialog .start-row select {
+    flex: 1;
+    background: #16162b;
+    border: 1px solid #334;
+    border-radius: 4px;
+    color: #c8d0e0;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+#start-dialog .start-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+}
+#start-dialog .start-actions button {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: 1px solid #445;
+    cursor: pointer;
+    font-size: 13px;
+}
+#start-dialog .btn-start {
+    background: rgba(126, 184, 255, 0.2);
+    color: #7eb8ff;
+    font-weight: 600;
+}
+#start-dialog .btn-start:hover { background: rgba(126, 184, 255, 0.35); }
+#start-dialog .btn-cancel {
+    background: transparent;
+    color: #8899aa;
+}
+#start-dialog .btn-cancel:hover { background: rgba(255,255,255,0.05); }
 </style>
 </head>
 <body>
@@ -396,6 +513,78 @@ import { EditorModel } from './editor-core.js';
 import { EditorCanvas } from './editor-canvas.js';
 import { Toolbar, PropertiesPanel, StatusBar, ResultWidget } from './editor-ui.js';
 import { EditorAPI } from './editor-api.js';
+
+// ─── System Type Definitions ──────────────────────────────
+const SYSTEM_TYPES = {
+    'RAHM':  { label: '2D Rahmen',  icon: '┃━┃', desc: 'Stäbe in XZ-Ebene',       plane: 'XZ', elements: 'beams' },
+    'PLATTE':{ label: '2D Platte',  icon: '▦',   desc: 'Flächen in XY, Last in Z', plane: 'XY', elements: 'areas' },
+    'SCHEIBE':{ label: '2D Scheibe', icon: '▥',   desc: 'Flächen in XY, Last in XY', plane: 'XY', elements: 'areas' },
+    'ROST':  { label: '2D Rost',    icon: '╬',   desc: 'Stäbe in XY-Ebene',        plane: 'XY', elements: 'beams' },
+    '3D':    { label: '3D',         icon: '⬟',   desc: 'Stäbe + Flächen im Raum',  plane: 'XYZ', elements: 'both' },
+};
+
+// ─── Start Dialog ─────────────────────────────────────────
+function showStartDialog() {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.id = 'start-dialog-overlay';
+        overlay.innerHTML = `
+        <div id="start-dialog">
+            <h2>Neues Projekt</h2>
+            <div class="start-row">
+                <label>Name</label>
+                <input type="text" id="sd-name" value="Neues Modell">
+            </div>
+            <h3>Systemtyp</h3>
+            <div class="system-types">
+                ${Object.entries(SYSTEM_TYPES).map(([key, st]) => `
+                    <div class="system-type-btn ${key === 'PLATTE' ? 'selected' : ''}" data-type="${key}">
+                        <span class="st-icon">${st.icon}</span>
+                        <span class="st-label">${st.label}</span>
+                        <span class="st-desc">${st.desc}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <h3>Norm</h3>
+            <div class="start-row">
+                <label>Norm</label>
+                <select id="sd-norm">
+                    <option value="EN199X-200X" selected>EN 1992/1993/1994 (Eurocode)</option>
+                    <option value="DIN">DIN</option>
+                </select>
+            </div>
+            <div class="start-actions">
+                <button class="btn-cancel" id="sd-cancel">Abbrechen</button>
+                <button class="btn-start" id="sd-ok">Erstellen</button>
+            </div>
+        </div>`;
+        document.body.appendChild(overlay);
+
+        let selectedType = 'PLATTE';
+
+        // System type selection
+        for (const btn of overlay.querySelectorAll('.system-type-btn')) {
+            btn.onclick = () => {
+                overlay.querySelectorAll('.system-type-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedType = btn.dataset.type;
+            };
+        }
+
+        overlay.querySelector('#sd-ok').onclick = () => {
+            const name = overlay.querySelector('#sd-name').value || 'Neues Modell';
+            overlay.remove();
+            resolve({ name, systemType: selectedType });
+        };
+        overlay.querySelector('#sd-cancel').onclick = () => {
+            overlay.remove();
+            resolve(null); // cancelled — use defaults
+        };
+
+        // Focus name input
+        setTimeout(() => overlay.querySelector('#sd-name').focus(), 100);
+    });
+}
 
 // ─── Init ─────────────────────────────────────────────────
 const model = new EditorModel();
@@ -425,8 +614,43 @@ const status = new StatusBar(
 
 const resultWidget = new ResultWidget(model, canvas);
 
-// ─── Initial hint ─────────────────────────────────────────
-document.getElementById('status-msg').textContent = 'Bereit — N=Knoten, B=Stab, A=Auflager, L=Last';
+// ─── Show start dialog on load ───────────────────────────
+(async () => {
+    const result = await showStartDialog();
+    if (result) {
+        model.data.meta.name = result.name;
+        model.data.meta.systemType = result.systemType;
+        // Configure based on system type
+        const st = SYSTEM_TYPES[result.systemType];
+        if (st) {
+            // Remove default section for plate-only systems
+            if (st.elements === 'areas') {
+                model.data.sections = [];
+            }
+        }
+        model.bus.emit('model:changed');
+    }
+    document.getElementById('status-msg').textContent =
+        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType}`;
+})();
+
+// ─── Also show dialog on "Neu" (reset) ──────────────────
+const origReset = model.reset.bind(model);
+model.reset = async function() {
+    origReset();
+    const result = await showStartDialog();
+    if (result) {
+        model.data.meta.name = result.name;
+        model.data.meta.systemType = result.systemType;
+        const st = SYSTEM_TYPES[result.systemType];
+        if (st && st.elements === 'areas') {
+            model.data.sections = [];
+        }
+        model.bus.emit('model:changed');
+    }
+    document.getElementById('status-msg').textContent =
+        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType}`;
+};
 
 // ─── Expose for debugging ─────────────────────────────────
 window._editor = { model, canvas, api, resultWidget };

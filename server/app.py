@@ -889,6 +889,46 @@ def editor_calculate(model: dict):
     return result
 
 
+# ── CDB Import endpoint ──────────────────────────────────────────────────
+
+from fastapi import UploadFile, File
+
+@app.post("/api/import/cdb")
+async def import_cdb(file: UploadFile = File(...)):
+    """Upload a CDB file, convert to SQLite via cdb_to_sqlite pipeline."""
+    global DB_PATH
+    import tempfile
+    import shutil
+
+    output_dir = str(Path(__file__).resolve().parent.parent / "examples")
+    name = file.filename.replace(".cdb", "").replace(" ", "_")
+    cdb_path = os.path.join(output_dir, f"{name}.cdb")
+
+    # Save uploaded CDB
+    with open(cdb_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # Run cdb_to_sqlite pipeline
+    try:
+        from tools.cdb_to_sqlite import sync_geometry, export_results, parse_erg, inject
+
+        sqlite_path = os.path.join(output_dir, f"{name}.sqlite")
+        ok = sync_geometry(cdb_path, sqlite_path)
+        if not ok:
+            return {"success": False, "error": "sync_cdb_to_db failed"}
+
+        erg_path = export_results(cdb_path, output_dir)
+        if erg_path:
+            node_disps, quad_forces, beam_forces, quad_stresses = parse_erg(erg_path)
+            inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses)
+
+        # Switch to imported DB
+        DB_PATH = str(Path(sqlite_path).resolve())
+        return {"success": True, "sqlite": f"{name}.sqlite", "db_path": DB_PATH}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 # ── CLI entry point ─────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

@@ -108,6 +108,9 @@ export class EditorAPI {
             quadElements: (elemsData.quads || []).map(q => ({
                 nr: q.nr, nodes: q.nodes, thickness: q.thickness?.[0] || 0,
             })),
+            beamElements: (elemsData.beams || []).map(b => ({
+                nr: b.nr, nodeStart: b.node_start, nodeEnd: b.node_end, length: b.length,
+            })),
         };
     }
 }

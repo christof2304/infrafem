@@ -130,7 +130,12 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
         sln_id = next_sln_id
         next_sln_id += 1
         beam_sln_map[beam["id"]] = sln_id
-        lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}  SNO {beam.get('sectionId', 1)} STYP B")
+        if beam.get("isStructLine"):
+            # Pure geometry constraint line (no beam element)
+            lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}")
+        else:
+            # Beam element with section
+            lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}  SNO {beam.get('sectionId', 1)} STYP B")
     lines.append("")
 
     # SAR: structural areas with openings as inner boundaries

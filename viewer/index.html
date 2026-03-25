@@ -92,7 +92,12 @@ canvas { display: block; }
 
 <div id="ui">
   <div id="info-panel">
-    <select id="sel-db" style="width:100%;background:#222;color:#7eb8ff;border:1px solid #445;border-radius:4px;padding:4px 8px;font-size:12px;font-weight:600;margin-bottom:8px;outline:none;cursor:pointer"></select>
+    <select id="sel-db" style="width:100%;background:#222;color:#7eb8ff;border:1px solid #445;border-radius:4px;padding:4px 8px;font-size:12px;font-weight:600;margin-bottom:4px;outline:none;cursor:pointer"></select>
+    <div style="display:flex;gap:4px;margin-bottom:8px">
+      <button id="btn-import-cdb" style="flex:1;background:#1a2a3a;color:#7eb8ff;border:1px solid #445;border-radius:4px;padding:4px;font-size:11px;cursor:pointer" title="CDB-Datei importieren">CDB Import</button>
+      <button id="btn-open-editor" style="flex:1;background:#1a2a3a;color:#7eb8ff;border:1px solid #445;border-radius:4px;padding:4px;font-size:11px;cursor:pointer" title="Editor öffnen">Editor</button>
+    </div>
+    <input type="file" id="cdb-file-input" accept=".cdb" style="display:none">
     <h2 id="project-name">infraFEM Viewer</h2>
     <div><span class="label">Knoten</span><span class="value" id="v-nodes">-</span></div>
     <div><span class="label">Balken</span><span class="value" id="v-beams">-</span></div>
@@ -2326,6 +2331,35 @@ async function loadDatabaseList() {
 
 async function init() {
   initThree();
+
+  // CDB Import button
+  document.getElementById('btn-import-cdb').onclick = () => {
+    document.getElementById('cdb-file-input').click();
+  };
+  document.getElementById('cdb-file-input').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('status').textContent = `Importiere ${file.name}...`;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(API + '/import/cdb', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('status').textContent = `Import OK: ${data.sqlite}`;
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        document.getElementById('status').textContent = `Import Fehler: ${data.error}`;
+      }
+    } catch (err) {
+      document.getElementById('status').textContent = `Import Fehler: ${err.message}`;
+    }
+  };
+
+  // Editor button
+  document.getElementById('btn-open-editor').onclick = () => {
+    window.open('/editor/', '_blank');
+  };
 
   document.getElementById('status').textContent = 'Lade Modell...';
   await loadDatabaseList();

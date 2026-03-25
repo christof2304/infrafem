@@ -322,7 +322,7 @@ export class EditorModel {
         const id = this._nextId(this.data.beams);
         sectionId = sectionId || (this.data.sections[0]?.id || 1);
         groupId = groupId || (this.data.groups[0]?.id || 1);
-        const beam = { id, nodeStart, nodeEnd, sectionId, groupId, hingeStart: false, hingeEnd: false };
+        const beam = { id, nodeStart, nodeEnd, sectionId, groupId, hingeStart: false, hingeEnd: false, isStructLine: false };
         this.data.beams.push(beam);
         this._commit();
         return beam;

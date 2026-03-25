@@ -574,6 +574,19 @@ function showStartDialog() {
                     </div>
                 `).join('')}
             </div>
+            <h3>Solver</h3>
+            <div class="system-types" style="grid-template-columns: repeat(2, 1fr)">
+                <div class="system-type-btn selected" data-solver="sofistik">
+                    <span class="st-icon">⚙</span>
+                    <span class="st-label">SOFiSTiK</span>
+                    <span class="st-desc">Server-basiert, voll-featured</span>
+                </div>
+                <div class="system-type-btn" data-solver="stabileo">
+                    <span class="st-icon">⚡</span>
+                    <span class="st-label">Stabileo (Browser)</span>
+                    <span class="st-desc">WASM, kein Server nötig</span>
+                </div>
+            </div>
             <h3>Norm</h3>
             <div class="start-row">
                 <label>Norm</label>
@@ -590,20 +603,30 @@ function showStartDialog() {
         document.body.appendChild(overlay);
 
         let selectedType = 'PLATTE';
+        let selectedSolver = 'sofistik';
 
         // System type selection
-        for (const btn of overlay.querySelectorAll('.system-type-btn')) {
+        for (const btn of overlay.querySelectorAll('.system-type-btn[data-type]')) {
             btn.onclick = () => {
-                overlay.querySelectorAll('.system-type-btn').forEach(b => b.classList.remove('selected'));
+                overlay.querySelectorAll('.system-type-btn[data-type]').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 selectedType = btn.dataset.type;
+            };
+        }
+
+        // Solver selection
+        for (const btn of overlay.querySelectorAll('.system-type-btn[data-solver]')) {
+            btn.onclick = () => {
+                overlay.querySelectorAll('.system-type-btn[data-solver]').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedSolver = btn.dataset.solver;
             };
         }
 
         overlay.querySelector('#sd-ok').onclick = () => {
             const name = overlay.querySelector('#sd-name').value || 'Neues Modell';
             overlay.remove();
-            resolve({ name, systemType: selectedType });
+            resolve({ name, systemType: selectedType, solver: selectedSolver });
         };
         overlay.querySelector('#sd-cancel').onclick = () => {
             overlay.remove();
@@ -650,18 +673,19 @@ const resultWidget = new ResultWidget(model, canvas);
     if (result) {
         model.data.meta.name = result.name;
         model.data.meta.systemType = result.systemType;
+        model.data.meta.solver = result.solver || 'sofistik';
         // Configure based on system type
         const st = SYSTEM_TYPES[result.systemType];
         if (st) {
-            // Remove default section for plate-only systems
             if (st.elements === 'areas') {
                 model.data.sections = [];
             }
         }
         model.bus.emit('model:changed');
     }
+    const solverLabel = model.data.meta.solver === 'stabileo' ? 'Stabileo' : 'SOFiSTiK';
     document.getElementById('status-msg').textContent =
-        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType}`;
+        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType} — ${solverLabel}`;
 })();
 
 // ─── Also show dialog on "Neu" (reset) ──────────────────

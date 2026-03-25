@@ -70,6 +70,7 @@ function createDefaultModel() {
             name: 'Neues Modell',
             systemType: 'RAHM',
             gravityDirection: 'NEGZ',
+            solver: 'sofistik',  // 'sofistik' or 'stabileo'
         },
         materials: [
             { id: 1, type: 'BETO', grade: 'C 30', label: 'Beton C30' },

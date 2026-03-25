@@ -83,23 +83,52 @@ export class Toolbar {
     }
 
     async _calculate() {
+        const solver = this.model.data.meta.solver || 'sofistik';
+        if (solver === 'stabileo') {
+            return this._calculateStabileo();
+        }
+        return this._calculateSofistik();
+    }
+
+    async _calculateStabileo() {
         const statusEl = document.getElementById('status-msg');
         try {
-            statusEl.textContent = 'Berechnung läuft...';
+            statusEl.textContent = 'Stabileo: Berechnung im Browser...';
+            // Check if Stabileo WASM is loaded
+            if (!window._stabileo?.solve2D) {
+                statusEl.textContent = 'Stabileo WASM nicht verfügbar — bitte SOFiSTiK verwenden';
+                alert('Stabileo WASM-Solver ist noch nicht integriert.\n\nBitte wähle SOFiSTiK als Solver (im Properties-Panel unter System) oder warte auf die Stabileo-Integration.');
+                return;
+            }
+            // TODO: Convert editor model → Stabileo input JSON → solve → convert results
+            const results = window._stabileo.solve2D(this.model.data);
+            if (results) {
+                this.model.setResults(results, null);
+                statusEl.textContent = `Stabileo OK — ${results.nodes?.length || 0} Knoten`;
+            }
+        } catch (err) {
+            statusEl.textContent = `Stabileo-Fehler: ${err.message}`;
+        }
+    }
+
+    async _calculateSofistik() {
+        const statusEl = document.getElementById('status-msg');
+        try {
+            statusEl.textContent = 'SOFiSTiK: Berechnung läuft...';
             const result = await this.api.calculate(this.model.data);
             if (result.success) {
-                statusEl.textContent = `Berechnung OK — lade Ergebnisse...`;
+                statusEl.textContent = `SOFiSTiK OK — lade Ergebnisse...`;
                 try {
                     const resultData = await this.api.fetchResults(result.sqlite);
                     this.model.setResults(resultData, result.sqlite);
                     const nForces = resultData.beams.length + resultData.quads.length;
-                    statusEl.textContent = `Berechnung OK — ${resultData.nodes.length} Knoten, ${nForces} Schnittgrößen`;
+                    statusEl.textContent = `SOFiSTiK OK — ${resultData.nodes.length} Knoten, ${nForces} Schnittgrößen`;
                 } catch (e) {
-                    statusEl.textContent = `Berechnung OK — Ergebnisse nicht ladbar: ${e.message}`;
+                    statusEl.textContent = `SOFiSTiK OK — Ergebnisse nicht ladbar: ${e.message}`;
                 }
             } else {
                 statusEl.textContent = `Fehler: ${result.errors?.join(', ') || 'Unbekannt'}`;
-                alert('Berechnung fehlgeschlagen:\n' + (result.log || result.errors?.join('\n') || 'Unbekannter Fehler'));
+                alert('SOFiSTiK Berechnung fehlgeschlagen:\n' + (result.log || result.errors?.join('\n') || 'Unbekannter Fehler'));
             }
         } catch (err) {
             statusEl.textContent = `API-Fehler: ${err.message}`;
@@ -206,6 +235,13 @@ export class PropertiesPanel {
                     <option value="3D" ${d.meta.systemType === '3D' ? 'selected' : ''}>3D</option>
                 </select>
             </div>
+            <div class="prop-group">
+                <label>Solver</label>
+                <select id="prop-solver">
+                    <option value="sofistik" ${(d.meta.solver || 'sofistik') === 'sofistik' ? 'selected' : ''}>SOFiSTiK (Server)</option>
+                    <option value="stabileo" ${d.meta.solver === 'stabileo' ? 'selected' : ''}>Stabileo (Browser)</option>
+                </select>
+            </div>
 
             <h3>Materialien <button class="btn-sm" id="add-mat">+</button></h3>
             <div id="mat-list">
@@ -273,6 +309,9 @@ export class PropertiesPanel {
         this.el.querySelector('#prop-system').onchange = (e) => {
             this.model.data.meta.systemType = e.target.value;
         };
+        this.el.querySelector('#prop-solver')?.addEventListener('change', (e) => {
+            this.model.data.meta.solver = e.target.value;
+        });
         this.el.querySelector('#prop-analysis').onchange = (e) => {
             this.model.data.analysisSettings.type = e.target.value;
         };

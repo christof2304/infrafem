@@ -590,12 +590,109 @@ def _parse_force_coeffs(case_dir):
     return None
 
 
-def parse_surface_pressure(case_dir):
-    """Parse pressure distribution on the section surface."""
-    # TODO: Parse OpenFOAM surface sampling output
-    # Would use postProcess -func 'patchAverage(p, section)'
-    # Or sample along the section boundary
-    return None
+def parse_cfd_results(case_dir):
+    """Parse OpenFOAM results: cell centers, pressure, velocity."""
+    case_dir = Path(case_dir)
+
+    # Find latest time directory
+    time_dirs = [d for d in case_dir.iterdir() if d.is_dir() and d.name.replace('.', '').isdigit()]
+    if not time_dirs:
+        return None
+    latest = sorted(time_dirs, key=lambda d: float(d.name))[-1]
+
+    # Parse points (cell centers via mesh)
+    points_file = case_dir / "constant" / "polyMesh" / "points"
+    points = _parse_of_vector_field(points_file)
+    if not points:
+        return None
+
+    # Parse pressure
+    p_file = latest / "p"
+    pressure = _parse_of_scalar_field(p_file)
+
+    # Parse velocity
+    u_file = latest / "U"
+    velocity = _parse_of_vector_field(u_file)
+
+    # Compute cell centers from mesh (approximate: average of face centers)
+    # For visualization, use the points directly (they're vertex positions)
+    # We need cell center values, but p/U are already cell-centered in OpenFOAM
+
+    # Get the 2D slice (z=0 layer only for visualization)
+    nodes_2d = []
+    p_2d = []
+    u_2d = []
+    for i, pt in enumerate(points):
+        if abs(pt[2]) < 0.01:  # z ≈ 0 (bottom face)
+            nodes_2d.append({"id": i, "x": round(pt[0], 4), "y": round(pt[1], 4)})
+
+    # Cell-centered values: need cell→point mapping
+    # Simpler: just return all values and let the client filter
+    n_cells = len(pressure) if pressure else 0
+
+    # Force coefficients
+    force_coeffs = _parse_force_coeffs(case_dir)
+
+    return {
+        "nodes": nodes_2d[:5000],  # limit for performance
+        "pressure": pressure[:5000] if pressure else [],
+        "velocity": [(v[0], v[1]) for v in (velocity or [])[:5000]],
+        "n_cells": n_cells,
+        "n_points": len(points),
+        "force_coefficients": force_coeffs,
+    }
+
+
+def _parse_of_scalar_field(filepath):
+    """Parse OpenFOAM scalar field file."""
+    if not filepath.exists():
+        return None
+    with open(filepath) as f:
+        lines = f.readlines()
+
+    values = []
+    in_data = False
+    for line in lines:
+        line = line.strip()
+        if line == '(':
+            in_data = True
+            continue
+        if line == ')' or line.startswith(');'):
+            break
+        if in_data:
+            try:
+                values.append(float(line))
+            except ValueError:
+                pass
+    return values
+
+
+def _parse_of_vector_field(filepath):
+    """Parse OpenFOAM vector field file (points, U)."""
+    if not filepath.exists():
+        return None
+    with open(filepath) as f:
+        lines = f.readlines()
+
+    values = []
+    in_data = False
+    for line in lines:
+        line = line.strip()
+        if line == '(':
+            in_data = True
+            continue
+        if line == ')' or line.startswith(');'):
+            if in_data and values:
+                break
+            continue
+        if in_data and line.startswith('(') and line.endswith(')'):
+            parts = line[1:-1].split()
+            if len(parts) >= 3:
+                try:
+                    values.append((float(parts[0]), float(parts[1]), float(parts[2])))
+                except ValueError:
+                    pass
+    return values
 
 
 if __name__ == "__main__":

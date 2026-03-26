@@ -1126,13 +1126,18 @@ def cfd_solve(body: dict):
 import sys, json
 sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
 from tools.cfd_mesh import generate_cfd_mesh
-from tools.cfd_openfoam import create_openfoam_case, run_openfoam
+from tools.cfd_openfoam import create_openfoam_case, run_openfoam, parse_cfd_results
 
 polygon = {json.dumps(polygon)}
 mesh = generate_cfd_mesh(polygon, mesh_size={mesh_size}, far_field_factor={far_field})
 case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}')
 result = run_openfoam(case, polygon, mesh_size={mesh_size}, far_field_factor={far_field})
 result["stats"] = mesh["stats"]
+result["case_dir"] = r'{case_dir}'
+# Parse field results for visualization
+field_data = parse_cfd_results(r'{case_dir}')
+if field_data:
+    result["field"] = field_data
 print(json.dumps(result))
 """
         r = sp.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=600)

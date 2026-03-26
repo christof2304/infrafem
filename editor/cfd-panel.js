@@ -216,6 +216,10 @@ export class CFDPanel {
 
             if (this._solveResult.success) {
                 if (status) { status.textContent = 'OpenFOAM OK!'; status.style.color = '#44ff44'; }
+                // Visualize pressure field
+                if (this._solveResult.field) {
+                    this._visualizePressureField(this._solveResult.field);
+                }
             } else {
                 if (status) { status.textContent = 'Solver-Fehler (siehe Console)'; status.style.color = '#ff4444'; }
                 console.log('OpenFOAM log:', this._solveResult.log);
@@ -225,6 +229,90 @@ export class CFDPanel {
             if (status) { status.textContent = `Fehler: ${err.message}`; status.style.color = '#ff4444'; }
             console.error('CFD solve error:', err);
         }
+    }
+
+    _visualizePressureField(field) {
+        if (!field.nodes || !field.pressure) return;
+        this._clearMesh();
+
+        const nodes = field.nodes;
+        const pressure = field.pressure;
+        const velocity = field.velocity || [];
+
+        // Compute pressure range for colormap
+        let pMin = Infinity, pMax = -Infinity;
+        for (const p of pressure) {
+            if (p < pMin) pMin = p;
+            if (p > pMax) pMax = p;
+        }
+        const pRange = Math.max(pMax - pMin, 1e-6);
+
+        // Jet colormap
+        const jet = (t) => {
+            t = Math.max(0, Math.min(1, t));
+            const r = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * t - 3)));
+            const g = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * t - 2)));
+            const b = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * t - 1)));
+            return [r, g, b];
+        };
+
+        // Draw pressure as colored points at node positions
+        const positions = new Float32Array(nodes.length * 3);
+        const colors = new Float32Array(nodes.length * 3);
+        let validCount = 0;
+
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            const pVal = i < pressure.length ? pressure[i] : 0;
+            const t = (pVal - pMin) / pRange;
+            const [r, g, b] = jet(t);
+
+            positions[validCount * 3] = n.x;
+            positions[validCount * 3 + 1] = n.y;
+            positions[validCount * 3 + 2] = 0.01;
+            colors[validCount * 3] = r;
+            colors[validCount * 3 + 1] = g;
+            colors[validCount * 3 + 2] = b;
+            validCount++;
+        }
+
+        if (validCount > 0) {
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(positions.slice(0, validCount * 3), 3));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors.slice(0, validCount * 3), 3));
+            const mat = new THREE.PointsMaterial({ size: 0.3, vertexColors: true, sizeAttenuation: true });
+            this.cfdGroup.add(new THREE.Points(geo, mat));
+        }
+
+        // Draw velocity arrows (sampled, not all)
+        if (velocity.length > 0) {
+            const step = Math.max(1, Math.floor(nodes.length / 200)); // max 200 arrows
+            for (let i = 0; i < nodes.length && i < velocity.length; i += step) {
+                const n = nodes[i];
+                const v = velocity[i];
+                if (!v) continue;
+                const speed = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+                if (speed < 0.1) continue;
+                const scale = 0.5; // arrow length scale
+                const dir = new THREE.Vector3(v[0], v[1], 0).normalize();
+                const origin = new THREE.Vector3(n.x, n.y, 0.02);
+                const arrow = new THREE.ArrowHelper(dir, origin, Math.min(speed * scale * 0.05, 2), 0xffffff, 0.3, 0.15);
+                arrow.line.material.transparent = true;
+                arrow.line.material.opacity = 0.4;
+                this.cfdGroup.add(arrow);
+            }
+        }
+
+        // Draw section outline
+        if (this._sectionPolygon) {
+            const pts = this._sectionPolygon.map(p => new THREE.Vector3(p[0], p[1], 0.03));
+            pts.push(pts[0].clone());
+            const secGeo = new THREE.BufferGeometry().setFromPoints(pts);
+            const secMat = new THREE.LineBasicMaterial({ color: 0xff6644, linewidth: 2 });
+            this.cfdGroup.add(new THREE.Line(secGeo, secMat));
+        }
+
+        console.log(`CFD viz: ${validCount} pressure points, ${velocity.length} velocity vectors, p=[${pMin.toFixed(1)}, ${pMax.toFixed(1)}]`);
     }
 
     _visualizeSection(polygon) {

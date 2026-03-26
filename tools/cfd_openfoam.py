@@ -424,25 +424,31 @@ gmsh.model.addPhysicalGroup(1, slines, tag=1, name="section")
 gmsh.model.addPhysicalGroup(1, ff_arcs, tag=2, name="farfield")
 gmsh.model.addPhysicalGroup(2, [surf], tag=1, name="fluid")
 
-# Generate 2D mesh first
+# Generate 2D mesh
 gmsh.model.mesh.generate(2)
 
-# Extrude 2D mesh into thin 3D slab (1 element thick) for OpenFOAM
-# OpenFOAM requires 3D cells even for 2D simulations
-extrude_height = 1.0  # arbitrary thickness
-gmsh.model.geo.extrude([(2, surf)], 0, 0, extrude_height, numElements=[1], recombine=True)
+# Extrude to thin 3D slab for OpenFOAM
+ext = gmsh.model.geo.extrude([(2, surf)], 0, 0, 1.0, numElements=[1], recombine=True)
 gmsh.model.geo.synchronize()
 
-# Re-add physical groups for the 3D volume
-# The extrude creates new surfaces and a volume
-volumes = gmsh.model.getEntities(dim=3)
-if volumes:
-    gmsh.model.addPhysicalGroup(3, [v[1] for v in volumes], tag=10, name="internal")
+# Parse extrude results:
+# ext[0] = (2, top_surface)
+# ext[1] = (3, volume)
+# ext[2..2+n_ff-1] = (2, farfield lateral surfaces) — one per ff_arc
+# ext[2+n_ff..] = (2, section lateral surfaces) — one per section line
+top_surf = ext[0][1]
+vol = ext[1][1]
+n_ff = len(ff_arcs)
+n_sec = len(slines)
+ff_lateral = [ext[2 + i][1] for i in range(n_ff)]
+sec_lateral = [ext[2 + n_ff + i][1] for i in range(n_sec)]
 
-# Get front and back surfaces for "empty" BC
-surfaces = gmsh.model.getEntities(dim=2)
-# The original surface (tag=surf) and the extruded copy are front/back
-gmsh.model.addPhysicalGroup(2, [s[1] for s in surfaces], tag=20, name="frontAndBack")
+# Remove old 2D physical groups and set new 3D ones
+gmsh.model.removePhysicalGroups()
+gmsh.model.addPhysicalGroup(3, [vol], tag=10, name="internal")
+gmsh.model.addPhysicalGroup(2, sec_lateral, tag=1, name="section")
+gmsh.model.addPhysicalGroup(2, ff_lateral, tag=2, name="farfield")
+gmsh.model.addPhysicalGroup(2, [surf, top_surf], tag=3, name="frontAndBack")
 
 gmsh.model.mesh.generate(3)
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
@@ -485,31 +491,27 @@ def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15):
     # Step 2-4: Run in WSL
     print("  [2/4] Converting mesh + running simpleFoam in WSL...")
     of_script = f"""#!/bin/bash
-set -e
-source /usr/lib/openfoam/openfoam2406/etc/bashrc
+source /usr/lib/openfoam/openfoam2406/etc/bashrc 2>/dev/null
 cd "{wsl_case}"
 
 echo "=== gmshToFoam ==="
-gmshToFoam mesh.msh
+gmshToFoam mesh.msh 2>&1 | tail -5
 
 if [ ! -f constant/polyMesh/points ]; then
-    echo "ERROR: gmshToFoam failed - no polyMesh/points"
+    echo "ERROR: gmshToFoam failed"
     exit 1
 fi
-echo "=== Mesh converted OK ==="
 
-# Fix boundary: set defaultFaces to empty for 2D
+# Fix boundary types for 2D CFD
 cd constant/polyMesh
-if [ -f boundary ]; then
-    # Change defaultFaces type to empty
-    python3 -c "
+python3 -c "
 import re
 with open('boundary','r') as f: txt=f.read()
-txt = re.sub(r'(defaultFaces[^{{]*{{[^}}]*type\\s+)\\w+', r'\\1empty', txt)
+txt = re.sub(r'(section[^{{]*{{[^}}]*type\s+)\w+', r'\g<1>wall', txt)
+txt = re.sub(r'(frontAndBack[^{{]*{{[^}}]*type\s+)\w+', r'\g<1>empty', txt)
 with open('boundary','w') as f: f.write(txt)
-print('Boundary patched')
-" 2>&1 || echo "Boundary patch failed"
-fi
+print('Boundary: section=wall, frontAndBack=empty, farfield=patch')
+" 2>&1
 cd "{wsl_case}"
 
 echo "=== Starting simpleFoam ==="
@@ -549,8 +551,24 @@ echo "=== DONE ==="
 
 def _parse_force_coeffs(case_dir):
     """Parse OpenFOAM forceCoeffs output."""
-    coeffs_file = Path(case_dir) / "postProcessing" / "forces" / "0" / "forceCoeffs.dat"
-    if not coeffs_file.exists():
+    case_dir = Path(case_dir)
+    # Try multiple possible file names/paths
+    candidates = [
+        case_dir / "postProcessing" / "forces" / "0" / "forceCoeffs.dat",
+        case_dir / "postProcessing" / "forces" / "0" / "coefficient.dat",
+        case_dir / "postProcessing" / "forceCoeffs" / "0" / "forceCoeffs.dat",
+        case_dir / "postProcessing" / "forceCoeffs" / "0" / "coefficient.dat",
+    ]
+    coeffs_file = None
+    for c in candidates:
+        if c.exists():
+            coeffs_file = c
+            break
+    if not coeffs_file:
+        # List what's in postProcessing for debugging
+        pp = case_dir / "postProcessing"
+        if pp.exists():
+            print(f"  postProcessing contents: {list(pp.rglob('*'))[:10]}")
         return None
 
     try:

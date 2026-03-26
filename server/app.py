@@ -1087,6 +1087,57 @@ print(json.dumps(result))
         raise HTTPException(status_code=500, detail=f"Invalid mesh output: {r.stdout[:200]}")
 
 
+# ── CFD Solve endpoint ───────────────────────────────────────────────────
+
+@app.post("/api/cfd/solve")
+def cfd_solve(body: dict):
+    """Run OpenFOAM CFD analysis on a cross-section. Requires Docker."""
+    import subprocess as sp
+
+    # Check Docker
+    try:
+        sp.run(["docker", "--version"], capture_output=True, timeout=5)
+    except (FileNotFoundError, sp.TimeoutExpired):
+        raise HTTPException(status_code=503, detail="Docker not available. Install Docker Desktop.")
+
+    polygon = body.get("polygon", [])
+    if len(polygon) < 3:
+        raise HTTPException(status_code=400, detail="Need at least 3 polygon points")
+
+    mesh_size = body.get("meshSize", 0.2)
+    far_field = body.get("farFieldFactor", 15)
+    wind_speed = body.get("windSpeed", 20.0)
+    wind_angle = body.get("windAngle", 0)
+
+    try:
+        # Generate mesh + case in subprocess
+        import tempfile
+        case_dir = tempfile.mkdtemp(prefix="cfd_")
+
+        script = f"""
+import sys, json
+sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
+from tools.cfd_mesh import generate_cfd_mesh
+from tools.cfd_openfoam import create_openfoam_case
+mesh = generate_cfd_mesh({json.dumps(polygon)}, mesh_size={mesh_size}, far_field_factor={far_field})
+case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}')
+print(json.dumps({{"case_dir": case, "stats": mesh["stats"]}}))
+"""
+        r = sp.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Case generation failed: {r.stderr[:500]}")
+
+        case_info = json.loads(r.stdout)
+        return {
+            "success": True,
+            "case_dir": case_info["case_dir"],
+            "stats": case_info["stats"],
+            "message": "OpenFOAM case generated. Docker run pending.",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── CLI entry point ─────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

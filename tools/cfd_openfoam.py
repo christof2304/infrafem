@@ -20,6 +20,7 @@ import math
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -299,6 +300,8 @@ solvers
 SIMPLE
 {
     nNonOrthogonalCorrectors 1;
+    pRefCell 0;
+    pRefValue 0;
     residualControl { p 1e-4; U 1e-4; k 1e-4; epsilon 1e-4; }
 }
 relaxationFactors
@@ -348,91 +351,200 @@ def _write_of_file(path, class_name, object_name, content):
             f.write(content)
 
 
-def run_openfoam(case_dir, docker_image="openfoam/openfoam2406-dev"):
-    """
-    Run OpenFOAM simpleFoam in Docker container.
+def generate_gmsh_msh(polygon, msh_path, mesh_size=0.2, far_field_factor=15):
+    """Generate a Gmsh .msh file for OpenFOAM (run in subprocess due to signal issues)."""
+    script = f"""
+import sys, json
+sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
+from tools.cfd_mesh import generate_cfd_mesh
+import gmsh
 
-    Args:
-        case_dir: Path to the OpenFOAM case directory
-        docker_image: Docker image name
+# Generate the mesh (this also initializes gmsh)
+polygon = {json.dumps(polygon)}
+generate_cfd_mesh(polygon, mesh_size={mesh_size}, far_field_factor={far_field_factor})
+
+# Gmsh is finalized in generate_cfd_mesh, re-init to export
+# Actually, let's do it differently: generate mesh and save .msh directly
+
+gmsh.initialize()
+gmsh.option.setNumber("General.Verbosity", 0)
+gmsh.model.add("cfd")
+
+import math
+cx = sum(p[0] for p in polygon) / len(polygon)
+cy = sum(p[1] for p in polygon) / len(polygon)
+xs = [p[0] for p in polygon]
+ys = [p[1] for p in polygon]
+char_dim = max(max(xs)-min(xs), max(ys)-min(ys))
+ff_r = char_dim * {far_field_factor}
+ff_ms = char_dim * 2
+
+# Section points
+spts = []
+for x, y in polygon:
+    spts.append(gmsh.model.geo.addPoint(x, y, 0, {mesh_size}))
+slines = []
+n = len(spts)
+for i in range(n):
+    slines.append(gmsh.model.geo.addLine(spts[i], spts[(i+1)%n]))
+sloop = gmsh.model.geo.addCurveLoop(slines)
+
+# Far-field circle
+ff_pts = []
+for i in range(32):
+    a = 2*math.pi*i/32
+    ff_pts.append(gmsh.model.geo.addPoint(cx+ff_r*math.cos(a), cy+ff_r*math.sin(a), 0, ff_ms))
+cpt = gmsh.model.geo.addPoint(cx, cy, 0, ff_ms)
+ff_arcs = []
+for i in range(4):
+    s = ff_pts[i*8]
+    e = ff_pts[((i+1)*8)%32]
+    ff_arcs.append(gmsh.model.geo.addCircleArc(s, cpt, e))
+ff_loop = gmsh.model.geo.addCurveLoop(ff_arcs)
+
+surf = gmsh.model.geo.addPlaneSurface([ff_loop, sloop])
+gmsh.model.geo.synchronize()
+
+# Size field
+df = gmsh.model.mesh.field.add("Distance")
+gmsh.model.mesh.field.setNumbers(df, "CurvesList", slines)
+tf = gmsh.model.mesh.field.add("Threshold")
+gmsh.model.mesh.field.setNumber(tf, "InField", df)
+gmsh.model.mesh.field.setNumber(tf, "SizeMin", {mesh_size})
+gmsh.model.mesh.field.setNumber(tf, "SizeMax", ff_ms)
+gmsh.model.mesh.field.setNumber(tf, "DistMin", char_dim*0.5)
+gmsh.model.mesh.field.setNumber(tf, "DistMax", ff_r*0.5)
+gmsh.model.mesh.field.setAsBackgroundMesh(tf)
+gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+
+# Physical groups
+gmsh.model.addPhysicalGroup(1, slines, tag=1, name="section")
+gmsh.model.addPhysicalGroup(1, ff_arcs, tag=2, name="farfield")
+gmsh.model.addPhysicalGroup(2, [surf], tag=1, name="fluid")
+
+# Generate 2D mesh first
+gmsh.model.mesh.generate(2)
+
+# Extrude 2D mesh into thin 3D slab (1 element thick) for OpenFOAM
+# OpenFOAM requires 3D cells even for 2D simulations
+extrude_height = 1.0  # arbitrary thickness
+gmsh.model.geo.extrude([(2, surf)], 0, 0, extrude_height, numElements=[1], recombine=True)
+gmsh.model.geo.synchronize()
+
+# Re-add physical groups for the 3D volume
+# The extrude creates new surfaces and a volume
+volumes = gmsh.model.getEntities(dim=3)
+if volumes:
+    gmsh.model.addPhysicalGroup(3, [v[1] for v in volumes], tag=10, name="internal")
+
+# Get front and back surfaces for "empty" BC
+surfaces = gmsh.model.getEntities(dim=2)
+# The original surface (tag=surf) and the extruded copy are front/back
+gmsh.model.addPhysicalGroup(2, [s[1] for s in surfaces], tag=20, name="frontAndBack")
+
+gmsh.model.mesh.generate(3)
+gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
+gmsh.write(r'{msh_path}')
+print("MSH_OK")
+gmsh.finalize()
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True, text=True, timeout=30,
+    )
+    if "MSH_OK" not in result.stdout:
+        raise RuntimeError(f"Gmsh export failed: {result.stderr[:500]}")
+
+
+def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15):
+    """
+    Run OpenFOAM simpleFoam via WSL.
+
+    Steps:
+    1. Generate Gmsh .msh file
+    2. Convert to OpenFOAM polyMesh via gmshToFoam (WSL)
+    3. Fix boundary types
+    4. Run simpleFoam (WSL)
+    5. Parse force coefficients
 
     Returns:
         dict with success, log, force_coefficients
     """
     case_dir = Path(case_dir).resolve()
+    msh_path = str(case_dir / "mesh.msh")
 
-    # Step 1: Convert Gmsh mesh to OpenFOAM polyMesh
-    # gmshToFoam is part of OpenFOAM — run in Docker
-    gmsh_cmd = f"cd /case && gmshToFoam mesh.msh"
+    # Step 1: Generate Gmsh .msh
+    print("  [1/4] Generating Gmsh mesh...")
+    generate_gmsh_msh(polygon, msh_path, mesh_size, far_field_factor)
 
-    # First, create Gmsh .msh file from our mesh data
-    mesh_data_path = case_dir / "mesh_data.json"
-    if mesh_data_path.exists():
-        _create_gmsh_msh(case_dir, mesh_data_path)
+    # Convert Windows path to WSL path
+    wsl_case = str(case_dir).replace("C:\\", "/mnt/c/").replace("\\", "/")
 
-    # Step 2: Run simpleFoam
+    # Step 2-4: Run in WSL
+    print("  [2/4] Converting mesh + running simpleFoam in WSL...")
+    of_script = f"""#!/bin/bash
+set -e
+source /usr/lib/openfoam/openfoam2406/etc/bashrc
+cd "{wsl_case}"
+
+echo "=== gmshToFoam ==="
+gmshToFoam mesh.msh
+
+if [ ! -f constant/polyMesh/points ]; then
+    echo "ERROR: gmshToFoam failed - no polyMesh/points"
+    exit 1
+fi
+echo "=== Mesh converted OK ==="
+
+# Fix boundary: set defaultFaces to empty for 2D
+cd constant/polyMesh
+if [ -f boundary ]; then
+    # Change defaultFaces type to empty
+    python3 -c "
+import re
+with open('boundary','r') as f: txt=f.read()
+txt = re.sub(r'(defaultFaces[^{{]*{{[^}}]*type\\s+)\\w+', r'\\1empty', txt)
+with open('boundary','w') as f: f.write(txt)
+print('Boundary patched')
+" 2>&1 || echo "Boundary patch failed"
+fi
+cd "{wsl_case}"
+
+echo "=== Starting simpleFoam ==="
+simpleFoam 2>&1 || true
+
+echo "=== DONE ==="
+"""
+    script_path = case_dir / "run_of.sh"
+    with open(script_path, "w", newline="\n") as f:
+        f.write(of_script)
+
     try:
-        # Docker command: mount case_dir as /case
         result = subprocess.run(
-            ["docker", "run", "--rm",
-             "-v", f"{case_dir}:/case",
-             "-w", "/case",
-             docker_image,
-             "/bin/bash", "-c",
-             "gmshToFoam mesh.msh 2>&1 && "
-             "changeDictionary 2>&1 || true && "
-             "simpleFoam 2>&1"],
-            capture_output=True, text=True, timeout=300,
+            ["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_case}/run_of.sh"],
+            capture_output=True, timeout=300,
         )
-        log = result.stdout + result.stderr
-        success = "End" in log and result.returncode == 0
+        log = result.stdout.decode("utf-8", errors="replace")
+        log += result.stderr.decode("utf-8", errors="replace")
+        success = "=== DONE ===" in log and "FOAM FATAL" not in log
 
-        # Parse force coefficients
+        print(f"  [3/4] simpleFoam {'OK' if success else 'FAILED'}")
+
+        # Step 4: Parse results
         force_coeffs = _parse_force_coeffs(case_dir)
+        print(f"  [4/4] Force coefficients: {force_coeffs}")
 
         return {
             "success": success,
-            "log": log[-2000:],  # last 2000 chars
+            "log": log[-3000:],
             "force_coefficients": force_coeffs,
         }
     except FileNotFoundError:
-        return {"success": False, "log": "Docker not found. Install Docker Desktop.", "force_coefficients": None}
+        return {"success": False, "log": "WSL not found", "force_coefficients": None}
     except subprocess.TimeoutExpired:
-        return {"success": False, "log": "OpenFOAM timed out (300s)", "force_coefficients": None}
-
-
-def _create_gmsh_msh(case_dir, mesh_data_path):
-    """Convert our JSON mesh data to Gmsh .msh format for gmshToFoam."""
-    import gmsh
-
-    with open(mesh_data_path) as f:
-        mesh_data = json.load(f)
-
-    gmsh.initialize()
-    gmsh.option.setNumber("General.Verbosity", 0)
-    gmsh.model.add("cfd_export")
-
-    # Re-create the mesh using Gmsh from the polygon
-    from tools.cfd_mesh import generate_cfd_mesh
-    polygon = mesh_data["section_polygon"]
-    mesh_size = 0.2  # TODO: get from mesh_data
-    far_field = 15
-
-    # Just re-mesh and export (simpler than reconstructing)
-    result = generate_cfd_mesh(polygon, mesh_size=mesh_size, far_field_factor=far_field)
-
-    # Gmsh is still initialized from generate_cfd_mesh... need to re-init
-    gmsh.initialize()
-    gmsh.option.setNumber("General.Verbosity", 0)
-
-    # Rebuild mesh in Gmsh and export
-    # (This is a simplified approach — in production, cache the Gmsh model)
-
-    gmsh.finalize()
-
-    # For now, just save a placeholder
-    msh_path = case_dir / "mesh.msh"
-    msh_path.touch()
+        return {"success": False, "log": "simpleFoam timed out (300s)", "force_coefficients": None}
 
 
 def _parse_force_coeffs(case_dir):

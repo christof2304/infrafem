@@ -16,6 +16,7 @@ export class CFDPanel {
         this.canvas.scene.add(this.cfdGroup);
 
         this._meshData = null;
+        this._solveResult = null;
         this._sectionPolygon = null;
     }
 
@@ -66,11 +67,15 @@ export class CFDPanel {
             <button id="cfd-from-area" style="width:100%;padding:5px;background:rgba(126,184,255,0.15);border:1px solid #445;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;margin-bottom:4px">
                 Querschnitt aus Fläche
             </button>
-            <button id="cfd-generate" style="width:100%;padding:5px;background:rgba(126,184,255,0.2);border:1px solid #7eb8ff;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:8px">
+            <button id="cfd-generate" style="width:100%;padding:5px;background:rgba(126,184,255,0.2);border:1px solid #7eb8ff;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:4px">
                 CFD Mesh generieren
+            </button>
+            <button id="cfd-solve" style="width:100%;padding:5px;background:rgba(68,255,68,0.15);border:1px solid #4a4;border-radius:4px;color:#4d4;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:8px">
+                ▶ OpenFOAM Berechnung starten
             </button>
             <div id="cfd-status" style="font-size:11px;color:#667"></div>
             ${this._meshData ? this._renderStats() : ''}
+            ${this._solveResult ? this._renderForceCoeffs() : ''}
         `;
 
         this.el.querySelector('#cfd-close').onclick = () => this.hide();
@@ -82,6 +87,23 @@ export class CFDPanel {
         this.el.querySelector('#cfd-generate').onclick = async () => {
             await this._generateMesh();
         };
+
+        this.el.querySelector('#cfd-solve').onclick = async () => {
+            await this._runSolver();
+        };
+    }
+
+    _renderForceCoeffs() {
+        const fc = this._solveResult?.force_coefficients;
+        if (!fc) return '<div style="color:#ff6644;font-size:11px;margin-top:4px">Keine Koeffizienten (Solver-Fehler?)</div>';
+        return `
+            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
+                <div style="color:#44ff44;font-size:11px;font-weight:600;margin-bottom:4px">Windlast-Koeffizienten</div>
+                <div style="font-size:12px;color:#c8d0e0">c<sub>D</sub> = ${fc.Cd?.toFixed(4) || '—'}</div>
+                <div style="font-size:12px;color:#c8d0e0">c<sub>L</sub> = ${fc.Cl?.toFixed(4) || '—'}</div>
+                <div style="font-size:12px;color:#c8d0e0">c<sub>M</sub> = ${fc.Cm?.toFixed(4) || '—'}</div>
+            </div>
+        `;
     }
 
     _renderStats() {
@@ -160,6 +182,48 @@ export class CFDPanel {
         } catch (err) {
             if (status) status.textContent = `Fehler: ${err.message}`;
             console.error('CFD mesh error:', err);
+        }
+    }
+
+    async _runSolver() {
+        if (!this._sectionPolygon || this._sectionPolygon.length < 3) {
+            alert('Zuerst Querschnitt extrahieren und Mesh generieren.');
+            return;
+        }
+
+        const meshSize = parseFloat(this.el?.querySelector('#cfd-mesh-size')?.value || '0.2');
+        const ffFactor = parseFloat(this.el?.querySelector('#cfd-ff')?.value || '15');
+        const angle = parseFloat(this.el?.querySelector('#cfd-angle')?.value || '0');
+
+        const status = this.el?.querySelector('#cfd-status');
+        if (status) status.textContent = 'OpenFOAM läuft (kann 1-5 Min dauern)...';
+        if (status) status.style.color = '#ffaa44';
+
+        try {
+            const res = await fetch('/api/cfd/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    polygon: this._sectionPolygon,
+                    meshSize,
+                    farFieldFactor: ffFactor,
+                    windAngle: angle,
+                    windSpeed: 20,
+                }),
+            });
+            if (!res.ok) throw new Error(await res.text());
+            this._solveResult = await res.json();
+
+            if (this._solveResult.success) {
+                if (status) { status.textContent = 'OpenFOAM OK!'; status.style.color = '#44ff44'; }
+            } else {
+                if (status) { status.textContent = 'Solver-Fehler (siehe Console)'; status.style.color = '#ff4444'; }
+                console.log('OpenFOAM log:', this._solveResult.log);
+            }
+            this._render();
+        } catch (err) {
+            if (status) { status.textContent = `Fehler: ${err.message}`; status.style.color = '#ff4444'; }
+            console.error('CFD solve error:', err);
         }
     }
 

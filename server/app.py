@@ -1094,11 +1094,19 @@ def cfd_solve(body: dict):
     """Run OpenFOAM CFD analysis on a cross-section. Requires Docker."""
     import subprocess as sp
 
-    # Check Docker
+    # Check WSL + OpenFOAM via script file
+    check_script = Path(__file__).resolve().parent.parent / "tests" / "_output" / "check_of.sh"
+    check_script.parent.mkdir(parents=True, exist_ok=True)
+    check_script.write_text("#!/bin/bash\nsource /usr/lib/openfoam/openfoam2406/etc/bashrc\nwhich simpleFoam && echo FOUND || echo NOTFOUND\n")
+    wsl_check = str(check_script).replace("C:\\", "/mnt/c/").replace("\\", "/")
     try:
-        sp.run(["docker", "--version"], capture_output=True, timeout=5)
+        r = sp.run(["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_check}"],
+                    capture_output=True, timeout=15)
+        out = r.stdout.decode("utf-8", errors="replace")
+        if "FOUND" not in out:
+            raise HTTPException(status_code=503, detail="OpenFOAM not found in WSL.")
     except (FileNotFoundError, sp.TimeoutExpired):
-        raise HTTPException(status_code=503, detail="Docker not available. Install Docker Desktop.")
+        raise HTTPException(status_code=503, detail="WSL not available.")
 
     polygon = body.get("polygon", [])
     if len(polygon) < 3:
@@ -1110,7 +1118,7 @@ def cfd_solve(body: dict):
     wind_angle = body.get("windAngle", 0)
 
     try:
-        # Generate mesh + case in subprocess
+        # Generate mesh + case + run solver in subprocess
         import tempfile
         case_dir = tempfile.mkdtemp(prefix="cfd_")
 
@@ -1118,22 +1126,27 @@ def cfd_solve(body: dict):
 import sys, json
 sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
 from tools.cfd_mesh import generate_cfd_mesh
-from tools.cfd_openfoam import create_openfoam_case
-mesh = generate_cfd_mesh({json.dumps(polygon)}, mesh_size={mesh_size}, far_field_factor={far_field})
-case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}')
-print(json.dumps({{"case_dir": case, "stats": mesh["stats"]}}))
-"""
-        r = sp.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=30)
-        if r.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"Case generation failed: {r.stderr[:500]}")
+from tools.cfd_openfoam import create_openfoam_case, run_openfoam
 
-        case_info = json.loads(r.stdout)
-        return {
-            "success": True,
-            "case_dir": case_info["case_dir"],
-            "stats": case_info["stats"],
-            "message": "OpenFOAM case generated. Docker run pending.",
-        }
+polygon = {json.dumps(polygon)}
+mesh = generate_cfd_mesh(polygon, mesh_size={mesh_size}, far_field_factor={far_field})
+case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}')
+result = run_openfoam(case, polygon, mesh_size={mesh_size}, far_field_factor={far_field})
+result["stats"] = mesh["stats"]
+print(json.dumps(result))
+"""
+        r = sp.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"CFD failed: {r.stderr[:1000]}")
+
+        # Find the JSON output (last line with curly braces)
+        for line in reversed(r.stdout.split("\n")):
+            line = line.strip()
+            if line.startswith("{"):
+                return json.loads(line)
+        raise HTTPException(status_code=500, detail=f"No result JSON: {r.stdout[-500:]}")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

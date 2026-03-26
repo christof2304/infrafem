@@ -1087,6 +1087,37 @@ print(json.dumps(result))
         raise HTTPException(status_code=500, detail=f"Invalid mesh output: {r.stdout[:200]}")
 
 
+# ── CFD Solve with streaming log ──────────────────────────────────────────
+
+from fastapi.responses import StreamingResponse
+import threading
+import queue
+
+# Global log queue for CFD streaming
+_cfd_log_queue = queue.Queue()
+_cfd_status = {"running": False, "result": None}
+
+
+@app.get("/api/cfd/log-stream")
+def cfd_log_stream():
+    """Server-Sent Events stream of CFD solver output."""
+    def event_generator():
+        while True:
+            try:
+                msg = _cfd_log_queue.get(timeout=1)
+                if msg == "__DONE__":
+                    yield f"data: __DONE__\n\n"
+                    break
+                yield f"data: {msg}\n\n"
+            except queue.Empty:
+                yield f"data: \n\n"  # keepalive
+                if not _cfd_status["running"]:
+                    yield f"data: __DONE__\n\n"
+                    break
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 # ── CFD Solve endpoint ───────────────────────────────────────────────────
 
 @app.post("/api/cfd/solve")
@@ -1121,7 +1152,13 @@ def cfd_solve(body: dict):
     dt = body.get("dt", 0.002)
 
     try:
-        # Generate mesh + case + run solver in subprocess
+        # Clear log queue
+        while not _cfd_log_queue.empty():
+            try: _cfd_log_queue.get_nowait()
+            except: break
+        _cfd_status["running"] = True
+        _cfd_status["result"] = None
+
         import tempfile
         case_dir = tempfile.mkdtemp(prefix="cfd_")
 
@@ -1145,20 +1182,112 @@ if field_data:
     result["field"] = field_data
 print(json.dumps(result))
 """
-        r = sp.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=600)
-        if r.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"CFD failed: {r.stderr[:1000]}")
+        # Run with line-by-line log streaming to queue
+        proc = sp.Popen([sys.executable, "-c", script],
+                        stdout=sp.PIPE, stderr=sp.STDOUT, text=True, bufsize=1)
+
+        output_lines = []
+        for line in proc.stdout:
+            line = line.rstrip()
+            output_lines.append(line)
+            # Stream to SSE queue (filter for interesting lines)
+            if any(kw in line for kw in ["Time =", "Cd:", "Cl:", "Cm", "FOAM", "===", "Mesh", "Re =",
+                                           "smoothSolver", "GAMG", "Solver:", "time step", "End"]):
+                _cfd_log_queue.put(line)
+
+        proc.wait()
+        _cfd_status["running"] = False
+        _cfd_log_queue.put("__DONE__")
+
+        if proc.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"CFD failed: {''.join(output_lines[-10:])}")
 
         # Find the JSON output (last line with curly braces)
-        for line in reversed(r.stdout.split("\n")):
+        for line in reversed(output_lines):
             line = line.strip()
             if line.startswith("{"):
-                return json.loads(line)
-        raise HTTPException(status_code=500, detail=f"No result JSON: {r.stdout[-500:]}")
+                result = json.loads(line)
+                _cfd_status["result"] = result
+                return result
+        raise HTTPException(status_code=500, detail=f"No result JSON")
     except HTTPException:
+        _cfd_status["running"] = False
         raise
     except Exception as e:
+        _cfd_status["running"] = False
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── CFD Time Step endpoint ───────────────────────────────────────────────
+
+@app.post("/api/cfd/timestep")
+def cfd_timestep(body: dict):
+    """Get pressure field for a specific time step from a CFD case."""
+    case_dir = body.get("caseDir", "")
+    time = body.get("time", 0)
+
+    if not case_dir or not os.path.isdir(case_dir):
+        raise HTTPException(status_code=400, detail="Invalid case directory")
+
+    from tools.cfd_openfoam import _parse_of_scalar_field, _parse_of_vector_field, _parse_of_faces, _parse_of_int_list
+
+    case_path = Path(case_dir)
+
+    # Find closest time directory
+    time_dirs = []
+    for d in case_path.iterdir():
+        if d.is_dir():
+            try:
+                time_dirs.append((float(d.name), d))
+            except ValueError:
+                pass
+    if not time_dirs:
+        raise HTTPException(status_code=404, detail="No time steps found")
+
+    time_dirs.sort()
+    closest = min(time_dirs, key=lambda t: abs(t[0] - time))
+    time_dir = closest[1]
+
+    # Parse pressure
+    pressure = _parse_of_scalar_field(time_dir / "p")
+
+    # Parse points + faces for triangles (cached from first call)
+    points = _parse_of_vector_field(case_path / "constant" / "polyMesh" / "points")
+    faces = _parse_of_faces(case_path / "constant" / "polyMesh" / "faces")
+    owner = _parse_of_int_list(case_path / "constant" / "polyMesh" / "owner")
+
+    # Build 2D nodes
+    nodes_2d = []
+    if points:
+        for i, pt in enumerate(points):
+            if abs(pt[2]) < 0.01:
+                nodes_2d.append({"id": i, "x": round(pt[0], 4), "y": round(pt[1], 4)})
+
+    # Build triangles on z=0
+    triangles = []
+    if faces and owner and points and pressure:
+        pMin = min(pressure)
+        pMax = max(pressure)
+        for i, face in enumerate(faces):
+            if len(face) < 3:
+                continue
+            face_pts = [points[n] for n in face if n < len(points)]
+            if not face_pts:
+                continue
+            avg_z = sum(p[2] for p in face_pts) / len(face_pts)
+            if abs(avg_z) > 0.01:
+                continue
+            cell_id = owner[i] if i < len(owner) else -1
+            p_val = pressure[cell_id] if 0 <= cell_id < len(pressure) else 0
+            for j in range(1, len(face) - 1):
+                triangles.append({"nodes": [face[0], face[j], face[j+1]], "p": p_val})
+
+    return {
+        "time": closest[0],
+        "nodes": nodes_2d,
+        "triangles": triangles[:20000],
+        "p_range": [min(pressure) if pressure else 0, max(pressure) if pressure else 0],
+    }
 
 
 # ── CLI entry point ─────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 // Draws cross-section polygon, generates CFD mesh, displays results
 
 import * as THREE from 'three';
+import { CFD_TEST_CASES } from './cfd-testcases.js';
 
 /**
  * CFD Panel — floating panel for wind analysis setup and results.
@@ -46,8 +47,12 @@ export class CFDPanel {
                 <span style="color:#7eb8ff;font-weight:600;font-size:13px">CFD Windanalyse</span>
                 <button id="cfd-close" style="background:none;border:none;color:#667;font-size:16px;cursor:pointer">&times;</button>
             </div>
-            <div style="margin-bottom:8px;color:#8899aa;font-size:11px">
-                Querschnitt aus selektierter Fläche oder Stäben extrahieren, dann CFD-Mesh generieren.
+            <div style="margin-bottom:8px">
+                <label style="color:#8899aa;font-size:11px">Test-Case laden:</label>
+                <select id="cfd-testcase" style="width:100%;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:4px 6px;font-size:11px;margin-top:2px">
+                    <option value="">— Querschnitt wählen —</option>
+                    ${CFD_TEST_CASES.map((tc, i) => `<option value="${i}">${tc.name}</option>`).join('')}
+                </select>
             </div>
             <div style="margin-bottom:6px">
                 <label style="color:#8899aa;font-size:11px">Mesh-Größe [m]</label>
@@ -93,9 +98,32 @@ export class CFDPanel {
             ${this._meshData ? this._renderStats() : ''}
             ${this._solveResult ? this._renderForceCoeffs() : ''}
             ${this._solveResult?.field?.force_history ? this._renderForceHistory() : ''}
+            ${this._solveResult?.field?.time_steps?.length > 1 ? this._renderAnimationControls() : ''}
         `;
 
         this.el.querySelector('#cfd-close').onclick = () => this.hide();
+
+        // Test case selector
+        this.el.querySelector('#cfd-testcase').onchange = (e) => {
+            const idx = parseInt(e.target.value);
+            if (isNaN(idx)) return;
+            const tc = CFD_TEST_CASES[idx];
+            if (!tc) return;
+            this._sectionPolygon = tc.polygon;
+            // Update parameter fields
+            const meshInput = this.el.querySelector('#cfd-mesh-size');
+            const ffInput = this.el.querySelector('#cfd-ff');
+            if (meshInput) meshInput.value = tc.meshSize;
+            if (ffInput) ffInput.value = tc.farField;
+            // Visualize the section
+            this._visualizeSection(tc.polygon);
+            // Show info
+            const status = this.el.querySelector('#cfd-status');
+            if (status) {
+                status.textContent = `${tc.name}: ${tc.polygon.length} Punkte, v=${tc.windSpeed} m/s`;
+                status.style.color = '#44ff44';
+            }
+        };
 
         this.el.querySelector('#cfd-from-area').onclick = () => {
             this._extractSectionFromArea();
@@ -228,10 +256,14 @@ export class CFDPanel {
         const status = this.el?.querySelector('#cfd-status');
         if (status) {
             status.textContent = transient
-                ? `pimpleFoam transient (${endTime}s, dt=${dt}) — kann 5-15 Min dauern...`
-                : 'simpleFoam stationär (ca. 30-60s)...';
+                ? `pimpleFoam transient (${endTime}s, dt=${dt})`
+                : 'simpleFoam stationär';
             status.style.color = '#ffaa44';
         }
+
+        // Show terminal widget and start log stream
+        this._showTerminal();
+        this._startLogStream();
 
         try {
             const res = await fetch('/api/cfd/solve', {
@@ -257,6 +289,8 @@ export class CFDPanel {
                 if (this._solveResult.field) {
                     this._visualizePressureField(this._solveResult.field);
                 }
+                // Bind animation controls after render
+                setTimeout(() => this._bindAnimationControls(), 100);
             } else {
                 if (status) { status.textContent = 'Solver-Fehler (siehe Console)'; status.style.color = '#ff4444'; }
                 console.log('OpenFOAM log:', this._solveResult.log);
@@ -298,6 +332,152 @@ export class CFDPanel {
                 <div style="font-size:10px;color:#667">t: ${tMin.toFixed(2)} — ${tMax.toFixed(2)} s, Δc<sub>L</sub> = ${(clMax - clMin).toFixed(4)}</div>
             </div>
         `;
+    }
+
+    _showTerminal() {
+        let term = document.getElementById('cfd-terminal');
+        if (!term) {
+            term = document.createElement('div');
+            term.id = 'cfd-terminal';
+            term.style.cssText = `
+                position: fixed; bottom: 40px; left: 60px; right: 280px;
+                height: 150px; background: #0a0a14; border: 1px solid #334;
+                border-radius: 6px; font-family: 'Consolas','Monaco',monospace;
+                font-size: 11px; color: #44ff44; padding: 8px; overflow-y: auto;
+                z-index: 25; box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+                white-space: pre-wrap; line-height: 1.4;
+            `;
+            term.innerHTML = '<span style="color:#7eb8ff">OpenFOAM Terminal</span>\n';
+            document.body.appendChild(term);
+        }
+        return term;
+    }
+
+    _hideTerminal() {
+        const term = document.getElementById('cfd-terminal');
+        if (term) term.remove();
+    }
+
+    _startLogStream() {
+        if (this._logEventSource) this._logEventSource.close();
+        const term = document.getElementById('cfd-terminal');
+        if (!term) return;
+
+        this._logEventSource = new EventSource('/api/cfd/log-stream');
+        this._logEventSource.onmessage = (e) => {
+            if (e.data === '__DONE__') {
+                term.innerHTML += '\n<span style="color:#7eb8ff">--- Berechnung abgeschlossen ---</span>\n';
+                this._logEventSource.close();
+                this._logEventSource = null;
+                // Auto-hide terminal after 3 seconds
+                setTimeout(() => this._hideTerminal(), 5000);
+                return;
+            }
+            if (e.data.trim()) {
+                // Color-code certain lines
+                let line = e.data;
+                if (line.includes('Cd:') || line.includes('Cl:') || line.includes('Cm')) {
+                    line = `<span style="color:#ffaa44">${line}</span>`;
+                } else if (line.includes('FOAM FATAL') || line.includes('Error')) {
+                    line = `<span style="color:#ff4444">${line}</span>`;
+                } else if (line.includes('===')) {
+                    line = `<span style="color:#7eb8ff">${line}</span>`;
+                } else if (line.includes('Time =')) {
+                    line = `<span style="color:#667">${line}</span>`;
+                }
+                term.innerHTML += line + '\n';
+                term.scrollTop = term.scrollHeight;
+            }
+        };
+        this._logEventSource.onerror = () => {
+            if (this._logEventSource) this._logEventSource.close();
+            this._logEventSource = null;
+        };
+    }
+
+    _renderAnimationControls() {
+        const ts = this._solveResult?.field?.time_steps || [];
+        return `
+            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
+                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">Animation (${ts.length} Zeitschritte)</div>
+                <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <button id="cfd-anim-play" style="background:#16162b;border:1px solid #445;border-radius:3px;color:#44ff44;cursor:pointer;padding:2px 8px;font-size:14px">▶</button>
+                    <button id="cfd-anim-stop" style="background:#16162b;border:1px solid #445;border-radius:3px;color:#ff4444;cursor:pointer;padding:2px 8px;font-size:14px">⏹</button>
+                    <input type="range" id="cfd-anim-slider" min="0" max="${ts.length - 1}" value="0"
+                        style="flex:1;height:4px;accent-color:#7eb8ff;cursor:pointer">
+                    <span id="cfd-anim-time" style="color:#8899aa;font-size:10px;min-width:40px">t=0</span>
+                </div>
+            </div>
+        `;
+    }
+
+    _bindAnimationControls() {
+        const playBtn = this.el?.querySelector('#cfd-anim-play');
+        const stopBtn = this.el?.querySelector('#cfd-anim-stop');
+        const slider = this.el?.querySelector('#cfd-anim-slider');
+        if (!playBtn || !slider) return;
+
+        const ts = this._solveResult?.field?.time_steps || [];
+        const caseDir = this._solveResult?.case_dir;
+        if (!caseDir || ts.length < 2) return;
+
+        // Cache fetched frames
+        this._animFrames = this._animFrames || {};
+        this._animPlaying = false;
+
+        slider.oninput = async () => {
+            const idx = parseInt(slider.value);
+            const time = ts[idx];
+            this.el.querySelector('#cfd-anim-time').textContent = `t=${time.toFixed(3)}`;
+            await this._showFrame(caseDir, time);
+        };
+
+        playBtn.onclick = () => {
+            this._animPlaying = true;
+            playBtn.style.color = '#888';
+            this._playAnimation(caseDir, ts, slider);
+        };
+
+        stopBtn.onclick = () => {
+            this._animPlaying = false;
+            playBtn.style.color = '#44ff44';
+        };
+    }
+
+    async _playAnimation(caseDir, timeSteps, slider) {
+        for (let i = parseInt(slider.value); i < timeSteps.length && this._animPlaying; i++) {
+            slider.value = i;
+            const time = timeSteps[i];
+            this.el.querySelector('#cfd-anim-time').textContent = `t=${time.toFixed(3)}`;
+            await this._showFrame(caseDir, time);
+            await new Promise(r => setTimeout(r, 50)); // ~20 fps
+        }
+        this._animPlaying = false;
+        const playBtn = this.el?.querySelector('#cfd-anim-play');
+        if (playBtn) playBtn.style.color = '#44ff44';
+    }
+
+    async _showFrame(caseDir, time) {
+        const key = time.toFixed(4);
+        if (!this._animFrames[key]) {
+            try {
+                const res = await fetch('/api/cfd/timestep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ caseDir, time }),
+                });
+                if (res.ok) {
+                    this._animFrames[key] = await res.json();
+                }
+            } catch (e) {
+                console.error('Frame fetch error:', e);
+                return;
+            }
+        }
+        const frame = this._animFrames[key];
+        if (frame) {
+            this._visualizePressureField(frame);
+        }
     }
 
     _visualizePressureField(field) {
@@ -386,13 +566,32 @@ export class CFDPanel {
     }
 
     _visualizeSection(polygon) {
-        // Draw section polygon as bright outline
+        // Draw section polygon as bright outline + filled
         this._clearMesh();
         const points = polygon.map(p => new THREE.Vector3(p[0], p[1], 0.01));
-        points.push(points[0].clone()); // close
+        points.push(points[0].clone());
         const geo = new THREE.BufferGeometry().setFromPoints(points);
         const mat = new THREE.LineBasicMaterial({ color: 0xff8844, linewidth: 2 });
         this.cfdGroup.add(new THREE.Line(geo, mat));
+
+        // Fill section
+        if (polygon.length >= 3) {
+            const shape = new THREE.Shape();
+            shape.moveTo(polygon[0][0], polygon[0][1]);
+            for (let i = 1; i < polygon.length; i++) shape.lineTo(polygon[i][0], polygon[i][1]);
+            shape.closePath();
+            const fillGeo = new THREE.ShapeGeometry(shape);
+            const fillMat = new THREE.MeshBasicMaterial({ color: 0x334455, side: THREE.DoubleSide });
+            this.cfdGroup.add(new THREE.Mesh(fillGeo, fillMat));
+        }
+
+        // Fit camera to section
+        const xs = polygon.map(p => p[0]), ys = polygon.map(p => p[1]);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 2);
+        this.canvas.camera.position.set(cx, cy, span * 2);
+        this.canvas.controls.target.set(cx, cy, 0);
     }
 
     _visualizeMesh(meshData) {

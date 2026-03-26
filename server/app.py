@@ -1116,6 +1116,9 @@ def cfd_solve(body: dict):
     far_field = body.get("farFieldFactor", 15)
     wind_speed = body.get("windSpeed", 20.0)
     wind_angle = body.get("windAngle", 0)
+    transient = body.get("transient", False)
+    end_time = body.get("endTime", 2.0)
+    dt = body.get("dt", 0.002)
 
     try:
         # Generate mesh + case + run solver in subprocess
@@ -1130,7 +1133,9 @@ from tools.cfd_openfoam import create_openfoam_case, run_openfoam, parse_cfd_res
 
 polygon = {json.dumps(polygon)}
 mesh = generate_cfd_mesh(polygon, mesh_size={mesh_size}, far_field_factor={far_field})
-case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}')
+import sys as _s
+print(f"transient={transient}, end_time={end_time}, dt={dt}", file=_s.stderr)
+case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}', transient={transient}, end_time={end_time}, dt={dt})
 result = run_openfoam(case, polygon, mesh_size={mesh_size}, far_field_factor={far_field})
 result["stats"] = mesh["stats"]
 result["case_dir"] = r'{case_dir}'

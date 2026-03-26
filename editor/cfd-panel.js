@@ -64,6 +64,22 @@ export class CFDPanel {
                 <input type="number" id="cfd-angle" value="0" step="5"
                     style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 6px;font-size:12px">
             </div>
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                <input type="checkbox" id="cfd-transient" style="accent-color:#7eb8ff">
+                <label for="cfd-transient" style="color:#8899aa;font-size:11px">Transient (Wirbelablösung)</label>
+            </div>
+            <div id="cfd-transient-opts" style="display:none;margin-bottom:6px;padding-left:20px">
+                <div style="margin-bottom:4px">
+                    <label style="color:#667;font-size:10px">Endzeit [s]</label>
+                    <input type="number" id="cfd-endtime" value="2" step="0.5" min="0.5" max="20"
+                        style="width:50px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 4px;font-size:11px">
+                </div>
+                <div>
+                    <label style="color:#667;font-size:10px">Zeitschritt [s]</label>
+                    <input type="number" id="cfd-dt" value="0.002" step="0.001" min="0.0001" max="0.1"
+                        style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 4px;font-size:11px">
+                </div>
+            </div>
             <button id="cfd-from-area" style="width:100%;padding:5px;background:rgba(126,184,255,0.15);border:1px solid #445;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;margin-bottom:4px">
                 Querschnitt aus Fläche
             </button>
@@ -76,6 +92,7 @@ export class CFDPanel {
             <div id="cfd-status" style="font-size:11px;color:#667"></div>
             ${this._meshData ? this._renderStats() : ''}
             ${this._solveResult ? this._renderForceCoeffs() : ''}
+            ${this._solveResult?.field?.force_history ? this._renderForceHistory() : ''}
         `;
 
         this.el.querySelector('#cfd-close').onclick = () => this.hide();
@@ -91,6 +108,15 @@ export class CFDPanel {
         this.el.querySelector('#cfd-solve').onclick = async () => {
             await this._runSolver();
         };
+
+        // Transient toggle
+        const transCb = this.el.querySelector('#cfd-transient');
+        if (transCb) {
+            transCb.onchange = () => {
+                const opts = this.el.querySelector('#cfd-transient-opts');
+                if (opts) opts.style.display = transCb.checked ? 'block' : 'none';
+            };
+        }
     }
 
     _renderForceCoeffs() {
@@ -195,9 +221,17 @@ export class CFDPanel {
         const ffFactor = parseFloat(this.el?.querySelector('#cfd-ff')?.value || '15');
         const angle = parseFloat(this.el?.querySelector('#cfd-angle')?.value || '0');
 
+        const transient = this.el?.querySelector('#cfd-transient')?.checked || false;
+        const endTime = parseFloat(this.el?.querySelector('#cfd-endtime')?.value || '2');
+        const dt = parseFloat(this.el?.querySelector('#cfd-dt')?.value || '0.002');
+
         const status = this.el?.querySelector('#cfd-status');
-        if (status) status.textContent = 'OpenFOAM läuft (kann 1-5 Min dauern)...';
-        if (status) status.style.color = '#ffaa44';
+        if (status) {
+            status.textContent = transient
+                ? `pimpleFoam transient (${endTime}s, dt=${dt}) — kann 5-15 Min dauern...`
+                : 'simpleFoam stationär (ca. 30-60s)...';
+            status.style.color = '#ffaa44';
+        }
 
         try {
             const res = await fetch('/api/cfd/solve', {
@@ -209,6 +243,9 @@ export class CFDPanel {
                     farFieldFactor: ffFactor,
                     windAngle: angle,
                     windSpeed: 20,
+                    transient,
+                    endTime,
+                    dt,
                 }),
             });
             if (!res.ok) throw new Error(await res.text());
@@ -229,6 +266,38 @@ export class CFDPanel {
             if (status) { status.textContent = `Fehler: ${err.message}`; status.style.color = '#ff4444'; }
             console.error('CFD solve error:', err);
         }
+    }
+
+    _renderForceHistory() {
+        const fh = this._solveResult?.field?.force_history;
+        if (!fh || !fh.time || fh.time.length < 2) return '';
+
+        // Draw cL(t) as SVG sparkline
+        const w = 190, h = 60;
+        const t = fh.time, cl = fh.Cl;
+        const tMin = t[0], tMax = t[t.length - 1];
+        const clMin = Math.min(...cl), clMax = Math.max(...cl);
+        const clRange = Math.max(clMax - clMin, 1e-6);
+        const tRange = Math.max(tMax - tMin, 1e-6);
+
+        let path = '';
+        for (let i = 0; i < t.length; i++) {
+            const x = ((t[i] - tMin) / tRange) * w;
+            const y = h - ((cl[i] - clMin) / clRange) * h;
+            path += (i === 0 ? 'M' : 'L') + `${x.toFixed(1)},${y.toFixed(1)} `;
+        }
+
+        return `
+            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
+                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">c<sub>L</sub>(t) — Wirbelablösung</div>
+                <svg width="${w}" height="${h}" style="background:#16162b;border-radius:4px">
+                    <path d="${path}" fill="none" stroke="#44ff44" stroke-width="1.5"/>
+                    <text x="2" y="10" fill="#667" font-size="8">${clMax.toFixed(3)}</text>
+                    <text x="2" y="${h - 2}" fill="#667" font-size="8">${clMin.toFixed(3)}</text>
+                </svg>
+                <div style="font-size:10px;color:#667">t: ${tMin.toFixed(2)} — ${tMax.toFixed(2)} s, Δc<sub>L</sub> = ${(clMax - clMin).toFixed(4)}</div>
+            </div>
+        `;
     }
 
     _visualizePressureField(field) {

@@ -26,7 +26,8 @@ from pathlib import Path
 
 def create_openfoam_case(mesh_result, wind_speed=20.0, wind_angle=0.0,
                          nu=1.5e-5, turbulence_intensity=0.05,
-                         output_dir=None):
+                         output_dir=None, transient=False, end_time=5.0, dt=0.001,
+                         write_interval=100):
     """
     Create an OpenFOAM case directory from a CFD mesh result.
 
@@ -213,6 +214,19 @@ RAS
 
     # ── system/ — Solver settings ──
 
+    if transient:
+        solver_app = "pimpleFoam"
+        delta_t = dt
+        end_t = end_time
+        write_int = write_interval
+        purge = 0  # keep all time steps for animation
+    else:
+        solver_app = "simpleFoam"
+        delta_t = 1
+        end_t = 500
+        write_int = 500
+        purge = 1
+
     _write_of_file(case_dir / "system" / "controlDict", None, None, f"""
 FoamFile
 {{
@@ -221,15 +235,15 @@ FoamFile
     class       dictionary;
     object      controlDict;
 }}
-application     simpleFoam;
+application     {solver_app};
 startFrom       startTime;
 startTime       0;
 stopAt          endTime;
-endTime         500;
-deltaT          1;
+endTime         {end_t};
+deltaT          {delta_t};
 writeControl    timeStep;
-writeInterval   500;
-purgeWrite      1;
+writeInterval   {write_int};
+purgeWrite      {purge};
 writeFormat     ascii;
 writePrecision  8;
 writeCompression off;
@@ -259,30 +273,65 @@ functions
 }}
 """)
 
-    _write_of_file(case_dir / "system" / "fvSchemes", None, None, """
+    ddt_scheme = "Euler" if transient else "steadyState"
+    _write_of_file(case_dir / "system" / "fvSchemes", None, None, f"""
 FoamFile
-{
+{{
     version     2.0;
     format      ascii;
     class       dictionary;
     object      fvSchemes;
-}
-ddtSchemes      { default steadyState; }
-gradSchemes     { default Gauss linear; }
+}}
+ddtSchemes      {{ default {ddt_scheme}; }}
+gradSchemes     {{ default Gauss linear; }}
 divSchemes
-{
+{{
     default             none;
     div(phi,U)          bounded Gauss linearUpwind grad(U);
     div(phi,k)          bounded Gauss upwind;
     div(phi,epsilon)    bounded Gauss upwind;
     div((nuEff*dev2(T(grad(U))))) Gauss linear;
-}
-laplacianSchemes { default Gauss linear corrected; }
-interpolationSchemes { default linear; }
-snGradSchemes { default corrected; }
+}}
+laplacianSchemes {{ default Gauss linear corrected; }}
+interpolationSchemes {{ default linear; }}
+snGradSchemes {{ default corrected; }}
 """)
 
-    _write_of_file(case_dir / "system" / "fvSolution", None, None, """
+    if transient:
+        _write_of_file(case_dir / "system" / "fvSolution", None, None, """
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+solvers
+{
+    p   { solver GAMG; smoother GaussSeidel; tolerance 1e-06; relTol 0.01; }
+    pFinal { $p; relTol 0; }
+    U   { solver smoothSolver; smoother GaussSeidel; tolerance 1e-07; relTol 0.01; }
+    UFinal { $U; relTol 0; }
+    k   { solver smoothSolver; smoother GaussSeidel; tolerance 1e-07; relTol 0.01; }
+    kFinal { $k; relTol 0; }
+    epsilon { solver smoothSolver; smoother GaussSeidel; tolerance 1e-07; relTol 0.01; }
+    epsilonFinal { $epsilon; relTol 0; }
+}
+PIMPLE
+{
+    nNonOrthogonalCorrectors 1;
+    nCorrectors 2;
+    nOuterCorrectors 1;
+    pRefCell 0;
+    pRefValue 0;
+}
+relaxationFactors
+{
+    equations { ".*" 1; }
+}
+""")
+    else:
+        _write_of_file(case_dir / "system" / "fvSolution", None, None, """
 FoamFile
 {
     version     2.0;
@@ -333,7 +382,7 @@ relaxationFactors
 
 
 def _write_of_file(path, class_name, object_name, content):
-    """Write an OpenFOAM file with standard FoamFile header."""
+    """Write an OpenFOAM file with standard FoamFile header (Unix line endings)."""
     path = Path(path)
     if class_name and object_name:
         header = f"""FoamFile
@@ -344,10 +393,10 @@ def _write_of_file(path, class_name, object_name, content):
     object      {object_name};
 }}
 """
-        with open(path, "w") as f:
+        with open(path, "w", newline="\n") as f:
             f.write(header + content)
     else:
-        with open(path, "w") as f:
+        with open(path, "w", newline="\n") as f:
             f.write(content)
 
 
@@ -514,8 +563,11 @@ print('Boundary: section=wall, frontAndBack=empty, farfield=patch')
 " 2>&1
 cd "{wsl_case}"
 
-echo "=== Starting simpleFoam ==="
-simpleFoam 2>&1 || true
+echo "=== Starting solver ==="
+# Detect solver from controlDict (strip Windows CR)
+SOLVER=$(grep "application" system/controlDict | awk '{{print $2}}' | tr -d ';\\r\\n')
+echo "Solver: $SOLVER"
+$SOLVER 2>&1 || true
 
 echo "=== DONE ==="
 """
@@ -594,11 +646,19 @@ def parse_cfd_results(case_dir):
     """Parse OpenFOAM results: cell centers, pressure, velocity."""
     case_dir = Path(case_dir)
 
-    # Find latest time directory
-    time_dirs = [d for d in case_dir.iterdir() if d.is_dir() and d.name.replace('.', '').isdigit()]
+    # Find all time directories
+    time_dirs = []
+    for d in case_dir.iterdir():
+        if d.is_dir():
+            try:
+                float(d.name)
+                time_dirs.append(d)
+            except ValueError:
+                pass
     if not time_dirs:
         return None
-    latest = sorted(time_dirs, key=lambda d: float(d.name))[-1]
+    time_dirs = sorted(time_dirs, key=lambda d: float(d.name))
+    latest = time_dirs[-1]
 
     # Parse points (cell centers via mesh)
     points_file = case_dir / "constant" / "polyMesh" / "points"
@@ -666,6 +726,12 @@ def parse_cfd_results(case_dir):
                     "p": p_val,
                 })
 
+    # Available time steps for animation
+    time_steps = [float(d.name) for d in time_dirs if float(d.name) > 0]
+
+    # Force coefficient time series (for transient simulations)
+    force_history = _parse_force_history(case_dir)
+
     return {
         "nodes": nodes_2d,
         "pressure": pressure[:len(nodes_2d)] if pressure else [],
@@ -675,6 +741,8 @@ def parse_cfd_results(case_dir):
         "n_points": len(points),
         "p_range": [pMin, pMax] if pressure else [0, 0],
         "force_coefficients": force_coeffs,
+        "time_steps": time_steps[:200],  # limit for JSON size
+        "force_history": force_history,
     }
 
 
@@ -722,6 +790,47 @@ def _parse_of_int_list(filepath):
             except ValueError:
                 pass
     return values
+
+
+def _parse_force_history(case_dir):
+    """Parse forceCoeffs time series for transient results."""
+    case_dir = Path(case_dir)
+    candidates = [
+        case_dir / "postProcessing" / "forces" / "0" / "coefficient.dat",
+        case_dir / "postProcessing" / "forces" / "0" / "forceCoeffs.dat",
+        case_dir / "postProcessing" / "forceCoeffs" / "0" / "coefficient.dat",
+    ]
+    coeffs_file = None
+    for c in candidates:
+        if c.exists():
+            coeffs_file = c
+            break
+    if not coeffs_file:
+        return None
+
+    try:
+        times, cds, cls, cms = [], [], [], []
+        with open(coeffs_file) as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                parts = line.split()
+                if len(parts) >= 4:
+                    times.append(float(parts[0]))
+                    cds.append(float(parts[1]))
+                    cls.append(float(parts[2]))
+                    cms.append(float(parts[3]))
+        # Subsample if too many points
+        n = len(times)
+        if n > 500:
+            step = n // 500
+            times = times[::step]
+            cds = cds[::step]
+            cls = cls[::step]
+            cms = cms[::step]
+        return {"time": times, "Cd": cds, "Cl": cls, "Cm": cms}
+    except Exception:
+        return None
 
 
 def _parse_of_scalar_field(filepath):

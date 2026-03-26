@@ -633,14 +633,95 @@ def parse_cfd_results(case_dir):
     # Force coefficients
     force_coeffs = _parse_force_coeffs(case_dir)
 
+    # Pressure range
+    pMin = min(pressure) if pressure else 0
+    pMax = max(pressure) if pressure else 0
+
+    # Parse faces + owner for cell→node connectivity (2D slice)
+    faces_file = case_dir / "constant" / "polyMesh" / "faces"
+    owner_file = case_dir / "constant" / "polyMesh" / "owner"
+    faces = _parse_of_faces(faces_file)
+    owner = _parse_of_int_list(owner_file)
+
+    # Build triangles from faces on z=0 plane
+    triangles_2d = []
+    if faces and owner and points:
+        for i, face in enumerate(faces):
+            if len(face) < 3:
+                continue
+            # Check if face is on z=0 plane
+            face_pts = [points[n] for n in face if n < len(points)]
+            if not face_pts:
+                continue
+            avg_z = sum(p[2] for p in face_pts) / len(face_pts)
+            if abs(avg_z) > 0.01:
+                continue
+            # Get cell (owner) pressure value
+            cell_id = owner[i] if i < len(owner) else -1
+            p_val = pressure[cell_id] if pressure and 0 <= cell_id < len(pressure) else 0
+            # Add triangle fan for this face
+            for j in range(1, len(face) - 1):
+                triangles_2d.append({
+                    "nodes": [face[0], face[j], face[j+1]],
+                    "p": p_val,
+                })
+
     return {
-        "nodes": nodes_2d[:5000],  # limit for performance
-        "pressure": pressure[:5000] if pressure else [],
-        "velocity": [(v[0], v[1]) for v in (velocity or [])[:5000]],
+        "nodes": nodes_2d,
+        "pressure": pressure[:len(nodes_2d)] if pressure else [],
+        "velocity": [(v[0], v[1]) for v in (velocity or [])[:len(nodes_2d)]],
+        "triangles": triangles_2d[:20000],
         "n_cells": n_cells,
         "n_points": len(points),
+        "p_range": [pMin, pMax] if pressure else [0, 0],
         "force_coefficients": force_coeffs,
     }
+
+
+def _parse_of_faces(filepath):
+    """Parse OpenFOAM faces file: list of face→node indices."""
+    if not filepath.exists():
+        return None
+    with open(filepath) as f:
+        content = f.read()
+
+    faces = []
+    import re
+    # Find the data block after the count
+    match = re.search(r'(\d+)\s*\(', content)
+    if not match:
+        return None
+    # Extract face definitions: N(n1 n2 n3 ...)
+    for m in re.finditer(r'(\d+)\(([^)]+)\)', content[match.start():]):
+        n = int(m.group(1))
+        indices = [int(x) for x in m.group(2).split()]
+        if len(indices) == n:
+            faces.append(indices)
+    return faces
+
+
+def _parse_of_int_list(filepath):
+    """Parse OpenFOAM integer list (owner, neighbour)."""
+    if not filepath.exists():
+        return None
+    with open(filepath) as f:
+        lines = f.readlines()
+
+    values = []
+    in_data = False
+    for line in lines:
+        line = line.strip()
+        if line == '(':
+            in_data = True
+            continue
+        if line == ')':
+            break
+        if in_data:
+            try:
+                values.append(int(line))
+            except ValueError:
+                pass
+    return values
 
 
 def _parse_of_scalar_field(filepath):

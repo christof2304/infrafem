@@ -52,6 +52,7 @@ export class Toolbar {
             { icon: '💾', label: 'Speichern', action: () => this._save() },
             { icon: '📂', label: 'Laden', action: () => this._load() },
             { icon: '📐', label: 'DXF Import', action: () => this._importDxf() },
+            { icon: '💨', label: 'CFD Wind', action: () => this._openCFD() },
             { icon: '🗑', label: 'Neu', action: () => { if (confirm('Modell zurücksetzen?')) this.model.reset(); } },
         ];
 
@@ -153,6 +154,14 @@ export class Toolbar {
         } else {
             alert('Erst berechnen — keine Ergebnisse vorhanden.');
         }
+    }
+
+    async _openCFD() {
+        const { CFDPanel } = await import('./cfd-panel.js');
+        if (!this._cfdPanel) {
+            this._cfdPanel = new CFDPanel(this.model, this.canvas, this.api);
+        }
+        this._cfdPanel.show();
     }
 
     async _save() {

@@ -1043,6 +1043,50 @@ async def import_dxf(file: UploadFile = File(...)):
     }
 
 
+# ── CFD Mesh endpoint ────────────────────────────────────────────────────
+
+@app.post("/api/cfd/mesh")
+def cfd_mesh(body: dict):
+    """Generate 2D CFD mesh around a cross-section polygon."""
+    import subprocess
+
+    polygon = body.get("polygon", [])
+    if len(polygon) < 3:
+        raise HTTPException(status_code=400, detail="Polygon needs at least 3 points")
+
+    mesh_size = body.get("meshSize", 0.2)
+    far_field = body.get("farFieldFactor", 15)
+    wind_angle = body.get("windAngle", 0)
+
+    # Run Gmsh in subprocess (Gmsh requires main thread for signal handling)
+    import tempfile
+    input_data = json.dumps({
+        "polygon": polygon, "meshSize": mesh_size,
+        "farFieldFactor": far_field, "windAngle": wind_angle,
+    })
+    script = f"""
+import json, sys
+sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
+from tools.cfd_mesh import generate_cfd_mesh
+data = json.loads('''{input_data}''')
+result = generate_cfd_mesh(data['polygon'], wind_angle=data['windAngle'],
+    mesh_size=data['meshSize'], far_field_factor=data['farFieldFactor'])
+print(json.dumps(result))
+"""
+    try:
+        r = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True, text=True, timeout=30,
+        )
+        if r.returncode != 0:
+            raise HTTPException(status_code=500, detail=r.stderr[:500])
+        return json.loads(r.stdout)
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Mesh generation timed out")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid mesh output: {r.stdout[:200]}")
+
+
 # ── CLI entry point ─────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

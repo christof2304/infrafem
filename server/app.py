@@ -40,6 +40,11 @@ VIEWER_DIR = PROJECT_ROOT / "viewer"
 app.mount("/editor", StaticFiles(directory=str(EDITOR_DIR), html=True), name="editor")
 app.mount("/viewer", StaticFiles(directory=str(VIEWER_DIR), html=True), name="viewer")
 
+# Serve uploaded models (GLB/STL) so the browser can load them
+UPLOADS_DIR = PROJECT_ROOT / "examples" / "_uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
 
 @app.get("/")
 def root():
@@ -1248,10 +1253,25 @@ def cfd_timestep(body: dict):
     closest = min(time_dirs, key=lambda t: abs(t[0] - time))
     time_dir = closest[1]
 
-    # Parse pressure
-    pressure = _parse_of_scalar_field(time_dir / "p")
+    field_name = body.get("field", "pressure")
 
-    # Parse points + faces for triangles (cached from first call)
+    # Parse requested field
+    import math
+    pressure = _parse_of_scalar_field(time_dir / "p")
+    velocity = _parse_of_vector_field(time_dir / "U")
+    vorticity_vec = _parse_of_vector_field(time_dir / "vorticity")
+
+    # Compute cell values for requested field
+    if field_name == "speed" and velocity:
+        cell_values = [math.sqrt(v[0]**2 + v[1]**2 + v[2]**2) for v in velocity]
+    elif field_name == "vorticity" and vorticity_vec:
+        cell_values = [v[2] for v in vorticity_vec]  # ωz component
+    elif field_name == "turb_k":
+        cell_values = _parse_of_scalar_field(time_dir / "k") or []
+    else:
+        cell_values = pressure or []
+
+    # Parse points + faces for triangles
     points = _parse_of_vector_field(case_path / "constant" / "polyMesh" / "points")
     faces = _parse_of_faces(case_path / "constant" / "polyMesh" / "faces")
     owner = _parse_of_int_list(case_path / "constant" / "polyMesh" / "owner")
@@ -1265,9 +1285,9 @@ def cfd_timestep(body: dict):
 
     # Build triangles on z=0
     triangles = []
-    if faces and owner and points and pressure:
-        pMin = min(pressure)
-        pMax = max(pressure)
+    if faces and owner and points and cell_values:
+        pMin = min(cell_values)
+        pMax = max(cell_values)
         for i, face in enumerate(faces):
             if len(face) < 3:
                 continue
@@ -1278,16 +1298,250 @@ def cfd_timestep(body: dict):
             if abs(avg_z) > 0.01:
                 continue
             cell_id = owner[i] if i < len(owner) else -1
-            p_val = pressure[cell_id] if 0 <= cell_id < len(pressure) else 0
+            p_val = cell_values[cell_id] if 0 <= cell_id < len(cell_values) else 0
             for j in range(1, len(face) - 1):
-                triangles.append({"nodes": [face[0], face[j], face[j+1]], "p": p_val})
+                triangles.append({"nodes": [face[0], face[j], face[j+1]], "p": p_val, "cell_id": cell_id})
 
-    return {
+    v_range = [min(cell_values), max(cell_values)] if cell_values else [0, 0]
+    # Map field name to range key
+    range_keys = {"pressure": "p_range", "speed": "speed_range", "vorticity": "vorticity_range", "turb_k": "k_range"}
+    result = {
         "time": closest[0],
         "nodes": nodes_2d,
         "triangles": triangles[:20000],
-        "p_range": [min(pressure) if pressure else 0, max(pressure) if pressure else 0],
+        "p_range": v_range,
     }
+    # Also set the specific range key so _visualizeField picks it up
+    rk = range_keys.get(field_name, "p_range")
+    result[rk] = v_range
+    return result
+
+
+# ── 3D CFD Endpoints ────────────────────────────────────────────────────────
+
+@app.post("/api/cfd/solve3d")
+def cfd_solve3d(body: dict):
+    """Run 3D OpenFOAM building CFD analysis."""
+    import subprocess as sp
+
+    footprint = body.get("footprint", [])
+    buildings = body.get("buildings", None)
+    print(f"[CFD3D] buildings={'None' if not buildings else f'{len(buildings)} items'}, footprint={len(footprint)} pts, keys={list(body.keys())}")
+    height = body.get("height", 40)
+    wind_speed = body.get("windSpeed", 10)
+    wind_angle = body.get("windAngle", 0)
+    z0 = body.get("z0", 0.1)
+    mesh_size = body.get("meshSize", None)
+    n_iterations = body.get("nIterations", 500)
+    n_procs = body.get("nProcs", 4)
+    domain_factor = body.get("domainFactor", 3)
+
+    if not buildings and len(footprint) < 3:
+        raise HTTPException(status_code=400, detail="Need at least 3 footprint points or buildings array")
+
+    _cfd_status["running"] = True
+    _cfd_status["result"] = None
+
+    buildings_json = json.dumps(buildings) if buildings else "None"
+    max_height = max(b["height"] for b in buildings) if buildings else height
+
+    try:
+        # Run the 3D pipeline in a subprocess that prints JSON result
+        script = f"""
+import sys, json
+sys.path.insert(0, r'{str(Path(__file__).resolve().parent.parent)}')
+from tools.cfd_openfoam import create_openfoam_case_3d, run_openfoam_3d
+
+footprint = {json.dumps(footprint)}
+buildings = {buildings_json}
+case_dir = create_openfoam_case_3d(
+    footprint, height={max_height}, wind_speed={wind_speed},
+    wind_angle={wind_angle}, z0={z0}, n_iterations={n_iterations},
+    n_procs={n_procs}, buildings=buildings)
+
+domain_factors = {{"upstream": {domain_factor}, "downstream": {domain_factor}*2.5, "lateral": {domain_factor}, "top": {domain_factor}}}
+result = run_openfoam_3d(case_dir, footprint, height={max_height},
+                          mesh_size={mesh_size if mesh_size else 'None'},
+                          n_procs={n_procs}, domain_factors=domain_factors,
+                          buildings=buildings)
+result["case_dir"] = case_dir
+result["mode"] = "3d"
+result["building_height"] = {max_height}
+print(json.dumps(result))
+"""
+        proc = sp.Popen(
+            [sys.executable, "-c", script],
+            stdout=sp.PIPE, stderr=sp.STDOUT, text=True,
+        )
+        output_lines = []
+        for line in iter(proc.stdout.readline, ""):
+            output_lines.append(line)
+            if any(kw in line for kw in ["Time =", "Cd:", "Cl:", "Cm", "FOAM", "===", "Mesh", "Re =",
+                                          "3D CFD", "nodes", "cells", "simpleFoam", "GAMG", "Solver:",
+                                          "BUILDINGS", "BOOLEAN", "RESULT", "Building"]):
+                _cfd_log_queue.put(line.rstrip())
+        proc.wait()
+        _cfd_status["running"] = False
+        _cfd_log_queue.put("__DONE__")
+
+        if proc.returncode != 0:
+            raise HTTPException(status_code=500,
+                                detail=f"3D CFD failed: {''.join(output_lines[-10:])}")
+
+        for line in reversed(output_lines):
+            line = line.strip()
+            if line.startswith("{"):
+                result = json.loads(line)
+                _cfd_status["result"] = result
+                return result
+        raise HTTPException(status_code=500, detail="No result JSON")
+    except HTTPException:
+        _cfd_status["running"] = False
+        raise
+    except Exception as e:
+        _cfd_status["running"] = False
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/cfd/slice3d")
+def cfd_slice3d(body: dict):
+    """Extract a 2D slice from 3D CFD results."""
+    case_dir = body.get("caseDir", "")
+    plane = body.get("plane", "z")
+    value = body.get("value", 0)
+    field = body.get("field", "pressure")
+
+    if not case_dir or not os.path.isdir(case_dir):
+        raise HTTPException(status_code=400, detail="Invalid case directory")
+
+    from tools.cfd_openfoam import extract_slice
+    result = extract_slice(case_dir, plane=plane, value=value, field=field)
+    if not result:
+        raise HTTPException(status_code=404, detail="No data for this slice")
+    return result
+
+
+@app.post("/api/cfd/upload-model")
+async def cfd_upload_model(file: UploadFile):
+    """Upload GLB/STL for 3D CFD. Returns server path + geometry info."""
+    import trimesh
+
+    # Save uploaded file
+    upload_dir = PROJECT_ROOT / "examples" / "_uploads"
+    upload_dir.mkdir(exist_ok=True)
+    safe_name = file.filename.replace(" ", "_")
+    dest = upload_dir / safe_name
+    content = await file.read()
+    with open(dest, "wb") as f:
+        f.write(content)
+
+    # Analyze geometry
+    try:
+        scene = trimesh.load(str(dest))
+        if isinstance(scene, trimesh.Scene):
+            mesh = trimesh.util.concatenate(list(scene.geometry.values()))
+        else:
+            mesh = scene
+        bb = mesh.bounds
+        H = float(bb[1][2] - bb[0][2])
+        return {
+            "path": str(dest.relative_to(PROJECT_ROOT)),
+            "url": f"/uploads/{safe_name}",
+            "bounds": {"min": bb[0].tolist(), "max": bb[1].tolist()},
+            "height": H,
+            "faces": len(mesh.faces),
+            "vertices": len(mesh.vertices),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Cannot parse geometry: {e}")
+
+
+@app.post("/api/cfd/solve3d-stl")
+def cfd_solve3d_stl(body: dict):
+    """Run 3D CFD around an STL/GLB geometry (e.g. wind turbine)."""
+    import subprocess as sp
+
+    stl_file = body.get("stlFile", "")  # relative to project
+    scale = body.get("scale", 1.0)
+    wind_speed = body.get("windSpeed", 12)
+    z0 = body.get("z0", 0.03)
+    mesh_size = body.get("meshSize", 10)
+    domain_factor = body.get("domainFactor", 2)
+    n_procs = body.get("nProcs", 4)
+    n_iterations = body.get("nIterations", 300)
+    rot_x = body.get("rotX", 0)
+    rot_y = body.get("rotY", 0)
+    rot_z = body.get("rotZ", 0)
+
+    # Resolve file path
+    stl_path = PROJECT_ROOT / stl_file
+    if not stl_path.exists():
+        raise HTTPException(status_code=400, detail=f"File not found: {stl_file}")
+
+    _cfd_status["running"] = True
+
+    try:
+        script = f"""
+import sys, json
+sys.path.insert(0, r'{str(PROJECT_ROOT)}')
+from tools.cfd_openfoam import prepare_stl_case, run_openfoam_3d_stl, extract_slice
+import tempfile
+
+case_dir = tempfile.mkdtemp(prefix='cfd3d_stl_')
+info = prepare_stl_case(r'{stl_path}', case_dir, scale={scale},
+    wind_speed={wind_speed}, z0={z0}, mesh_size={mesh_size},
+    domain_factor={domain_factor}, n_procs={n_procs}, n_iterations={n_iterations},
+    rot_x={rot_x}, rot_y={rot_y}, rot_z={rot_z})
+
+result = run_openfoam_3d_stl(case_dir, n_procs={n_procs})
+result["case_dir"] = case_dir
+result["mode"] = "3d_stl"
+result["building_height"] = info["height"]
+result["mesh_stats"] = {{"bg_cells": info["bg_cells"], "char_dim": info["char_dim"],
+    "n_cells": result.get("n_cells", 0), "n_nodes": result.get("n_points", 0),
+    "building_height": info["height"]}}
+result["bounds"] = info["bounds"]
+print(json.dumps(result))
+"""
+        proc = sp.Popen([sys.executable, "-c", script],
+                        stdout=sp.PIPE, stderr=sp.STDOUT, text=True)
+        output_lines = []
+        for line in iter(proc.stdout.readline, ""):
+            output_lines.append(line)
+            if any(kw in line for kw in ["===", "Mesh", "snappy", "simpleFoam", "FOAM",
+                                          "blockMesh", "Time =", "Cd:", "cells", "DONE"]):
+                _cfd_log_queue.put(line.rstrip())
+        proc.wait()
+        _cfd_status["running"] = False
+        _cfd_log_queue.put("__DONE__")
+
+        for line in reversed(output_lines):
+            if line.strip().startswith("{"):
+                return json.loads(line.strip())
+        raise HTTPException(status_code=500, detail="No JSON result")
+    except HTTPException:
+        _cfd_status["running"] = False
+        raise
+    except Exception as e:
+        _cfd_status["running"] = False
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/cfd/streamlines3d")
+def cfd_streamlines3d(body: dict):
+    """Extract 3D streamlines from completed CFD case."""
+    case_dir = body.get("caseDir", "")
+    n_seeds = body.get("nSeeds", 30)
+    seed_z_min = body.get("seedZmin", 0.0)  # fraction of H (0..1)
+    seed_z_max = body.get("seedZmax", 1.0)
+
+    if not case_dir or not os.path.isdir(case_dir):
+        raise HTTPException(status_code=400, detail="Invalid case directory")
+
+    from tools.cfd_openfoam import extract_streamlines
+    lines = extract_streamlines(case_dir, n_seeds=n_seeds,
+                                 seed_z_min=seed_z_min, seed_z_max=seed_z_max)
+    return {"streamlines": lines, "count": len(lines)}
 
 
 # ── CLI entry point ─────────────────────────────────────────────────────────
@@ -1303,4 +1557,5 @@ if __name__ == "__main__":
     print(f"Database: {DB_PATH}")
     print(f"Size:     {os.path.getsize(DB_PATH) / 1024:.0f} KB")
     print()
-    uvicorn.run("server.app:app", host="127.0.0.1", port=8000)
+    port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
+    uvicorn.run("server.app:app", host="127.0.0.1", port=port)

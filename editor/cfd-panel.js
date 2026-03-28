@@ -23,6 +23,7 @@ export class CFDPanel {
         this.canvas.scene.add(this.cfdGroup);
         this.canvas.scene.add(this._modelGroup);
 
+        this._mode = '2d';
         this._meshData = null;
         this._solveResult = null;
         this._sectionPolygon = null;
@@ -477,7 +478,7 @@ export class CFDPanel {
         const slNLabel = this.el?.querySelector('#cfd-sl-nlabel');
         if (slNSeeds) {
             slNSeeds.oninput = () => { this._slNSeeds = parseInt(slNSeeds.value); if (slNLabel) slNLabel.textContent = slNSeeds.value; };
-            slNSeeds.onchange = () => { if (this._showStreamlines && this._mode === '3d') this._fetchStreamlines(); };
+            slNSeeds.onchange = () => { if (this._showStreamlines) { if (this._mode === '3d') this._fetchStreamlines(); else this._redraw2dOverlays(); } };
         }
 
         // Transient toggle
@@ -924,6 +925,32 @@ export class CFDPanel {
 
     _renderContour(field, cfg) {
         this._clearMesh();
+
+        // When streamlines are active in 2D: skip contour, just draw section + streamlines
+        if (this._showStreamlines && this._mode !== '3d') {
+            if (this._sectionPolygon) {
+                const pts = this._sectionPolygon.map(p => new THREE.Vector3(p[0], p[1], 0.02));
+                pts.push(pts[0].clone());
+                this.cfdGroup.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints(pts),
+                    new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 })));
+                if (this._sectionPolygon.length >= 3) {
+                    const shape = new THREE.Shape();
+                    shape.moveTo(this._sectionPolygon[0][0], this._sectionPolygon[0][1]);
+                    for (let i = 1; i < this._sectionPolygon.length; i++)
+                        shape.lineTo(this._sectionPolygon[i][0], this._sectionPolygon[i][1]);
+                    shape.closePath();
+                    const m = new THREE.Mesh(new THREE.ShapeGeometry(shape),
+                        new THREE.MeshBasicMaterial({ color: 0x1a1a2e, side: THREE.DoubleSide }));
+                    m.position.z = 0.01;
+                    this.cfdGroup.add(m);
+                }
+            }
+            this._render2dStreamlines();
+            if (this._sectionPolygon) this._frameCFDView(this._sectionPolygon);
+            return;
+        }
+
         const nodes = field.nodes || [];
         const triangles = field.triangles || [];
         const range = cfg.range || field.p_range || [0, 1];
@@ -1032,8 +1059,8 @@ export class CFDPanel {
             this._frameCFDView(this._sectionPolygon);
         }
 
-        // Color legend
-        this._showColorLegend(cfg.label, vMin, vMax, cfg.cmap);
+        // Color legend (hide when streamlines active)
+        if (!this._showStreamlines) this._showColorLegend(cfg.label, vMin, vMax, cfg.cmap);
     }
 
     _redraw2dOverlays() {
@@ -1195,7 +1222,7 @@ export class CFDPanel {
         const secYs = poly ? poly.map(p => p[1]) : [0];
         const secCx = (Math.min(...secXs) + Math.max(...secXs)) / 2;
         const secH = Math.max(...secYs) - Math.min(...secYs) || span * 0.3;
-        const nSeeds = 25;
+        const nSeeds = this._slNSeeds || 25;
         const seedX = Math.min(...secXs) - secH * 2;
         const seedYmin = Math.min(...secYs) - secH * 1.5;
         const seedYmax = Math.max(...secYs) + secH * 1.5;

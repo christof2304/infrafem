@@ -157,7 +157,7 @@ export class Toolbar {
     }
 
     async _openCFD() {
-        const { CFDPanel } = await import('./cfd-panel.js');
+        const { CFDPanel } = await import('./cfd-panel.js?v=' + Date.now());
         if (!this._cfdPanel) {
             this._cfdPanel = new CFDPanel(this.model, this.canvas, this.api);
         }

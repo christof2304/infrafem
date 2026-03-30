@@ -1152,8 +1152,8 @@ export class CFDPanel {
         const nodePos = {};
         for (const n of nodes) nodePos[n.id] = { x: n.x, y: n.y };
 
-        // Build spatial grid for velocity lookup
-        const cellVecs = [];
+        // Build triangle list with vertices and cell velocity
+        const tris = [];
         const seen = new Set();
         for (const tri of triangles) {
             const cid = tri.cell_id;
@@ -1162,49 +1162,62 @@ export class CFDPanel {
             const [n1, n2, n3] = tri.nodes;
             const p1 = nodePos[n1], p2 = nodePos[n2], p3 = nodePos[n3];
             if (!p1 || !p2 || !p3) continue;
-            cellVecs.push({
-                x: (p1.x + p2.x + p3.x) / 3,
-                y: (p1.y + p2.y + p3.y) / 3,
-                vx: velocity[cid][0],
-                vy: velocity[cid][1],
+            tris.push({
+                x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, x3: p3.x, y3: p3.y,
+                vx: velocity[cid][0], vy: velocity[cid][1],
             });
         }
-        if (cellVecs.length < 10) return;
+        if (tris.length < 10) return;
 
-        // Build a simple grid-based lookup for nearest-neighbor velocity interpolation
-        const allX = cellVecs.map(c => c.x), allY = cellVecs.map(c => c.y);
-        const xMin = Math.min(...allX), xMax = Math.max(...allX);
-        const yMin = Math.min(...allY), yMax = Math.max(...allY);
-        const span = Math.max(xMax - xMin, yMax - yMin, 0.1);
-        const gridN = 80;
-        const cellW = (xMax - xMin) / gridN, cellH = (yMax - yMin) / gridN;
-        const grid = new Map();
-        for (const cv of cellVecs) {
-            const gi = Math.floor((cv.x - xMin) / Math.max(cellW, 1e-6));
-            const gj = Math.floor((cv.y - yMin) / Math.max(cellH, 1e-6));
-            const key = `${gi},${gj}`;
-            if (!grid.has(key)) grid.set(key, []);
-            grid.get(key).push(cv);
+        // Spatial grid for fast triangle lookup
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const t of tris) {
+            const txMin = Math.min(t.x1, t.x2, t.x3), txMax = Math.max(t.x1, t.x2, t.x3);
+            const tyMin = Math.min(t.y1, t.y2, t.y3), tyMax = Math.max(t.y1, t.y2, t.y3);
+            if (txMin < xMin) xMin = txMin; if (txMax > xMax) xMax = txMax;
+            if (tyMin < yMin) yMin = tyMin; if (tyMax > yMax) yMax = tyMax;
         }
-
-        const lookupV = (px, py) => {
-            const gi = Math.floor((px - xMin) / Math.max(cellW, 1e-6));
-            const gj = Math.floor((py - yMin) / Math.max(cellH, 1e-6));
-            let best = null, bestDist = Infinity;
-            for (let di = -1; di <= 1; di++) {
-                for (let dj = -1; dj <= 1; dj++) {
-                    const bucket = grid.get(`${gi+di},${gj+dj}`);
-                    if (!bucket) continue;
-                    for (const cv of bucket) {
-                        const d = (cv.x-px)**2 + (cv.y-py)**2;
-                        if (d < bestDist) { bestDist = d; best = cv; }
-                    }
+        const span = Math.max(xMax - xMin, yMax - yMin, 0.1);
+        const gridN = 100;
+        const cellW = (xMax - xMin) / gridN || 1, cellH = (yMax - yMin) / gridN || 1;
+        const grid = new Map();
+        for (const tri of tris) {
+            // Insert triangle into all grid cells its bounding box touches
+            const gx0 = Math.floor((Math.min(tri.x1, tri.x2, tri.x3) - xMin) / cellW);
+            const gx1 = Math.floor((Math.max(tri.x1, tri.x2, tri.x3) - xMin) / cellW);
+            const gy0 = Math.floor((Math.min(tri.y1, tri.y2, tri.y3) - yMin) / cellH);
+            const gy1 = Math.floor((Math.max(tri.y1, tri.y2, tri.y3) - yMin) / cellH);
+            for (let gi = gx0; gi <= gx1; gi++) {
+                for (let gj = gy0; gj <= gy1; gj++) {
+                    const key = gi * 10000 + gj;
+                    if (!grid.has(key)) grid.set(key, []);
+                    grid.get(key).push(tri);
                 }
             }
-            return best;
+        }
+
+        // Barycentric point-in-triangle test + velocity lookup
+        const lookupV = (px, py) => {
+            const gi = Math.floor((px - xMin) / cellW);
+            const gj = Math.floor((py - yMin) / cellH);
+            const bucket = grid.get(gi * 10000 + gj);
+            if (!bucket) return null;
+            for (const tri of bucket) {
+                const dx = px - tri.x3, dy = py - tri.y3;
+                const dx31 = tri.x1 - tri.x3, dy31 = tri.y1 - tri.y3;
+                const dx32 = tri.x2 - tri.x3, dy32 = tri.y2 - tri.y3;
+                const det = dx31 * dy32 - dx32 * dy31;
+                if (Math.abs(det) < 1e-14) continue;
+                const u = (dy32 * dx - dx32 * dy) / det;
+                const v = (dx31 * dy - dy31 * dx) / det;
+                if (u >= -0.01 && v >= -0.01 && u + v <= 1.01) {
+                    return { vx: tri.vx, vy: tri.vy };
+                }
+            }
+            return null;
         };
 
-        // Point-in-polygon test for section body (avoid streamlines inside)
+        // Point-in-polygon test for section body
         const poly = this._sectionPolygon;
         const inBody = (px, py) => {
             if (!poly || poly.length < 3) return false;
@@ -1217,43 +1230,118 @@ export class CFDPanel {
             return inside;
         };
 
-        // Trace streamlines from seed points (upstream of section)
+        // RK4 integration step
+        const rk4Step = (px, py, sign, h) => {
+            const v1 = lookupV(px, py);
+            if (!v1) return null;
+            const s1 = Math.sqrt(v1.vx*v1.vx + v1.vy*v1.vy);
+            if (s1 < 1e-8) return null;
+
+            const v2 = lookupV(px + sign*v1.vx*h*0.5, py + sign*v1.vy*h*0.5);
+            if (!v2) return { x: px + sign*v1.vx*h, y: py + sign*v1.vy*h, speed: s1 };
+
+            const v3 = lookupV(px + sign*v2.vx*h*0.5, py + sign*v2.vy*h*0.5);
+            if (!v3) return { x: px + sign*v1.vx*h, y: py + sign*v1.vy*h, speed: s1 };
+
+            const v4 = lookupV(px + sign*v3.vx*h, py + sign*v3.vy*h);
+            if (!v4) return { x: px + sign*v1.vx*h, y: py + sign*v1.vy*h, speed: s1 };
+
+            const dx = sign * h/6 * (v1.vx + 2*v2.vx + 2*v3.vx + v4.vx);
+            const dy = sign * h/6 * (v1.vy + 2*v2.vy + 2*v3.vy + v4.vy);
+            const spd = Math.sqrt(
+                ((v1.vx+2*v2.vx+2*v3.vx+v4.vx)/6)**2 +
+                ((v1.vy+2*v2.vy+2*v3.vy+v4.vy)/6)**2);
+            return { x: px + dx, y: py + dy, speed: spd };
+        };
+
+        // Section geometry
         const secXs = poly ? poly.map(p => p[0]) : [0];
         const secYs = poly ? poly.map(p => p[1]) : [0];
-        const secCx = (Math.min(...secXs) + Math.max(...secXs)) / 2;
-        const secH = Math.max(...secYs) - Math.min(...secYs) || span * 0.3;
+        const secMinX = Math.min(...secXs), secMaxX = Math.max(...secXs);
+        const secMinY = Math.min(...secYs), secMaxY = Math.max(...secYs);
+        const secW = secMaxX - secMinX || span * 0.3;
+        const secH = secMaxY - secMinY || span * 0.3;
         const nSeeds = this._slNSeeds || 25;
-        const seedX = Math.min(...secXs) - secH * 2;
-        const seedYmin = Math.min(...secYs) - secH * 1.5;
-        const seedYmax = Math.max(...secYs) + secH * 1.5;
 
+        // Reference speed for adaptive dt
+        let refSpeed = 0.01;
+        for (const t of tris) {
+            const s = Math.sqrt(t.vx*t.vx + t.vy*t.vy);
+            if (s > refSpeed) refSpeed = s;
+        }
+        const baseH = span * 0.002;
+
+        // Seed points: upstream, wake, near-body
+        const seeds = [];
+        const nUp = Math.ceil(nSeeds * 0.5);
+        const nWake = Math.ceil(nSeeds * 0.25);
+        const nNear = nSeeds - nUp - nWake;
+        // Upstream
+        const seedX = secMinX - secH * 2.5;
+        for (let s = 0; s < nUp; s++) {
+            const f = s / Math.max(nUp - 1, 1);
+            seeds.push({ x: seedX, y: (secMinY - secH*2.5) + f * (secH*5 + secMaxY - secMinY) });
+        }
+        // Wake (behind body, spread vertically)
+        for (let s = 0; s < nWake; s++) {
+            const f = (s + 0.5) / nWake;
+            const wy = secMinY - secH*0.5 + f * (secH + secMaxY - secMinY);
+            seeds.push({ x: secMaxX + secW * 0.3, y: wy });
+            seeds.push({ x: secMaxX + secW * 1.0, y: wy });
+        }
+        // Near-body (close to surface for boundary layer)
+        const margin = Math.max(secW, secH) * 0.15;
+        for (let s = 0; s < nNear; s++) {
+            const f = s / Math.max(nNear - 1, 1);
+            seeds.push({ x: secMinX - margin, y: secMinY + f * (secMaxY - secMinY) });
+            seeds.push({ x: secMaxX + margin, y: secMinY + f * (secMaxY - secMinY) });
+            seeds.push({ x: secMinX + f * (secMaxX - secMinX), y: secMaxY + margin });
+            seeds.push({ x: secMinX + f * (secMaxX - secMinX), y: secMinY - margin });
+        }
+
+        // Trace streamlines bidirectionally with RK4
         const streamlines = [];
-        const dt = span * 0.003;
-        const maxSteps = 600;
+        const maxSteps = 1500;
 
-        for (let s = 0; s < nSeeds; s++) {
-            const sy = seedYmin + (seedYmax - seedYmin) * s / (nSeeds - 1);
-            const line = [{ x: seedX, y: sy }];
-            let px = seedX, py = sy;
+        for (const seed of seeds) {
+            if (inBody(seed.x, seed.y)) continue;
+            // Forward trace
+            const fwd = [{ x: seed.x, y: seed.y, speed: 0 }];
+            let px = seed.x, py = seed.y;
             for (let step = 0; step < maxSteps; step++) {
-                const v = lookupV(px, py);
-                if (!v) break;
-                const spd = Math.sqrt(v.vx*v.vx + v.vy*v.vy);
-                if (spd < 0.01) break;
-                px += (v.vx / spd) * dt;
-                py += (v.vy / spd) * dt;
-                if (px < xMin || px > xMax || py < yMin || py > yMax) break;
-                if (inBody(px, py)) break;
-                line.push({ x: px, y: py, speed: spd });
+                const next = rk4Step(px, py, 1, baseH);
+                if (!next) break;
+                if (next.x < xMin || next.x > xMax || next.y < yMin || next.y > yMax) break;
+                if (inBody(next.x, next.y)) break;
+                px = next.x; py = next.y;
+                fwd.push(next);
             }
-            if (line.length > 5) streamlines.push(line);
+            // Backward trace
+            const bwd = [];
+            px = seed.x; py = seed.y;
+            for (let step = 0; step < maxSteps; step++) {
+                const next = rk4Step(px, py, -1, baseH);
+                if (!next) break;
+                if (next.x < xMin || next.x > xMax || next.y < yMin || next.y > yMax) break;
+                if (inBody(next.x, next.y)) break;
+                px = next.x; py = next.y;
+                bwd.push(next);
+            }
+            // Combine: reversed backward + forward
+            const line = [...bwd.reverse(), ...fwd];
+            if (line.length > 8) streamlines.push(line);
         }
 
         // Render streamlines with speed-based coloring
-        const maxSpd = Math.max(...streamlines.flat().map(p => p.speed || 0), 0.01);
+        let maxSpd = 0.01;
+        for (const sl of streamlines) for (const p of sl) if ((p.speed||0) > maxSpd) maxSpd = p.speed;
         const streamColor = (t) => {
             t = Math.max(0, Math.min(1, t));
-            return [t, 1 - 0.5*t, 0.3*(1-t)];  // green→yellow→red
+            // Blue (slow) → Cyan → Green → Yellow → Red (fast)
+            if (t < 0.25) return [0, t*4, 1];
+            if (t < 0.5)  return [0, 1, 1-(t-0.25)*4];
+            if (t < 0.75) return [(t-0.5)*4, 1, 0];
+            return [1, 1-(t-0.75)*4, 0];
         };
 
         for (const sl of streamlines) {
@@ -1274,6 +1362,7 @@ export class CFDPanel {
                     new THREE.LineBasicMaterial({ vertexColors: true, depthTest: false })));
             }
         }
+        console.log(`Streamlines: ${streamlines.length} lines, ${seeds.length} seeds, RK4`);
     }
 
     _visualizeSection(polygon) {

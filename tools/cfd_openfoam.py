@@ -540,7 +540,7 @@ def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15):
     # Step 2-4: Run in WSL
     print("  [2/4] Converting mesh + running simpleFoam in WSL...")
     of_script = f"""#!/bin/bash
-source /usr/lib/openfoam/openfoam2412/etc/bashrc 2>/dev/null
+source /usr/lib/openfoam/openfoam2406/etc/bashrc 2>/dev/null
 cd "{wsl_case}"
 
 echo "=== gmshToFoam ==="
@@ -1420,7 +1420,7 @@ def run_openfoam_3d_stl(case_dir, n_procs=4):
     wsl_case = str(case_dir).replace("C:\\", "/mnt/c/").replace("\\", "/")
 
     of_script = f"""#!/bin/bash
-source /usr/lib/openfoam/openfoam2412/etc/bashrc 2>/dev/null
+source /usr/lib/openfoam/openfoam2406/etc/bashrc 2>/dev/null
 cd "{wsl_case}"
 
 echo "=== blockMesh ==="
@@ -1912,7 +1912,7 @@ def run_openfoam_3d(case_dir, footprint, height, mesh_size=None,
     use_parallel = n_procs > 1
     print(f"  [2/4] Converting mesh + running simpleFoam in WSL ({n_procs} procs)...")
     of_script = f"""#!/bin/bash
-source /usr/lib/openfoam/openfoam2412/etc/bashrc 2>/dev/null
+source /usr/lib/openfoam/openfoam2406/etc/bashrc 2>/dev/null
 cd "{wsl_case}"
 
 echo "=== gmshToFoam ==="
@@ -2371,7 +2371,7 @@ seedSampleSet
     # Run postProcess
     wsl_case = str(case_dir).replace("C:\\", "/mnt/c/").replace("\\", "/")
     script = f"""#!/bin/bash
-source /usr/lib/openfoam/openfoam2412/etc/bashrc 2>/dev/null
+source /usr/lib/openfoam/openfoam2406/etc/bashrc 2>/dev/null
 cd "{wsl_case}"
 postProcess -func streamLineDict -latestTime 2>&1 | tail -5
 echo "STREAMLINE_DONE"

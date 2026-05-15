@@ -1133,7 +1133,7 @@ def cfd_solve(body: dict):
     # Check WSL + OpenFOAM via script file
     check_script = Path(__file__).resolve().parent.parent / "tests" / "_output" / "check_of.sh"
     check_script.parent.mkdir(parents=True, exist_ok=True)
-    check_script.write_text("#!/bin/bash\nsource /usr/lib/openfoam/openfoam2412/etc/bashrc\nwhich simpleFoam && echo FOUND || echo NOTFOUND\n")
+    check_script.write_text("#!/bin/bash\nsource /usr/lib/openfoam/openfoam2406/etc/bashrc\nwhich simpleFoam && echo FOUND || echo NOTFOUND\n")
     wsl_check = str(check_script).replace("C:\\", "/mnt/c/").replace("\\", "/")
     try:
         r = sp.run(["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_check}"],

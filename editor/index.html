@@ -545,11 +545,13 @@ import { EditorAPI } from './editor-api.js';
 
 // ─── System Type Definitions ──────────────────────────────
 const SYSTEM_TYPES = {
-    'RAHM':  { label: '2D Rahmen',  icon: '┃━┃', desc: 'Stäbe in XZ-Ebene',       plane: 'XZ', elements: 'beams' },
-    'PLATTE':{ label: '2D Platte',  icon: '▦',   desc: 'Flächen in XY, Last in Z', plane: 'XY', elements: 'areas' },
-    'SCHEIBE':{ label: '2D Scheibe', icon: '▥',   desc: 'Flächen in XY, Last in XY', plane: 'XY', elements: 'areas' },
-    'ROST':  { label: '2D Rost',    icon: '╬',   desc: 'Stäbe in XY-Ebene',        plane: 'XY', elements: 'beams' },
-    '3D':    { label: '3D',         icon: '⬟',   desc: 'Stäbe + Flächen im Raum',  plane: 'XYZ', elements: 'both' },
+    // Statik
+    'RAHM':   { label: '2D Rahmen',  icon: '┃━┃', desc: 'Stäbe in XZ-Ebene',       plane: 'XZ', elements: 'beams', category: 'statik' },
+    'PLATTE': { label: '2D Platte',  icon: '▦',   desc: 'Flächen in XY, Last in Z', plane: 'XY', elements: 'areas', category: 'statik' },
+    'SCHEIBE':{ label: '2D Scheibe', icon: '▥',   desc: 'Flächen in XY, Last in XY', plane: 'XY', elements: 'areas', category: 'statik' },
+    // CFD
+    'CFD2D':  { label: '2D',         icon: '🌬',  desc: 'Querschnitt-Umströmung',   plane: 'XY', elements: 'none', category: 'cfd' },
+    'CFD3D':  { label: '3D',         icon: '🏙',  desc: 'Gebäude-Umströmung',       plane: 'XYZ', elements: 'none', category: 'cfd' },
 };
 
 // ─── Start Dialog ─────────────────────────────────────────
@@ -564,9 +566,9 @@ function showStartDialog() {
                 <label>Name</label>
                 <input type="text" id="sd-name" value="Neues Modell">
             </div>
-            <h3>Systemtyp</h3>
+            <h3>Statik</h3>
             <div class="system-types">
-                ${Object.entries(SYSTEM_TYPES).map(([key, st]) => `
+                ${Object.entries(SYSTEM_TYPES).filter(([,st]) => st.category === 'statik').map(([key, st]) => `
                     <div class="system-type-btn ${key === 'PLATTE' ? 'selected' : ''}" data-type="${key}">
                         <span class="st-icon">${st.icon}</span>
                         <span class="st-label">${st.label}</span>
@@ -574,6 +576,17 @@ function showStartDialog() {
                     </div>
                 `).join('')}
             </div>
+            <h3>CFD</h3>
+            <div class="system-types" style="grid-template-columns: repeat(2, 1fr)">
+                ${Object.entries(SYSTEM_TYPES).filter(([,st]) => st.category === 'cfd').map(([key, st]) => `
+                    <div class="system-type-btn" data-type="${key}">
+                        <span class="st-icon">${st.icon}</span>
+                        <span class="st-label">${st.label}</span>
+                        <span class="st-desc">${st.desc}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div id="sd-statik-opts">
             <h3>Solver</h3>
             <div class="system-types" style="grid-template-columns: repeat(2, 1fr)">
                 <div class="system-type-btn selected" data-solver="sofistik">
@@ -587,13 +600,6 @@ function showStartDialog() {
                     <span class="st-desc">WASM, kein Server nötig</span>
                 </div>
             </div>
-            <h3>Norm</h3>
-            <div class="start-row">
-                <label>Norm</label>
-                <select id="sd-norm">
-                    <option value="EN199X-200X" selected>EN 1992/1993/1994 (Eurocode)</option>
-                    <option value="DIN">DIN</option>
-                </select>
             </div>
             <div class="start-actions">
                 <button class="btn-cancel" id="sd-cancel">Abbrechen</button>
@@ -605,12 +611,16 @@ function showStartDialog() {
         let selectedType = 'PLATTE';
         let selectedSolver = 'sofistik';
 
-        // System type selection
+        const statikOpts = overlay.querySelector('#sd-statik-opts');
+        // System type selection — mutual exclusion between Statik and CFD
         for (const btn of overlay.querySelectorAll('.system-type-btn[data-type]')) {
             btn.onclick = () => {
                 overlay.querySelectorAll('.system-type-btn[data-type]').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 selectedType = btn.dataset.type;
+                // Show solver/norm only for Statik
+                const isCfd = SYSTEM_TYPES[selectedType]?.category === 'cfd';
+                statikOpts.style.display = isCfd ? 'none' : 'block';
             };
         }
 
@@ -682,10 +692,15 @@ const resultWidget = new ResultWidget(model, canvas);
             }
         }
         model.bus.emit('model:changed');
+        // Auto-open CFD panel for CFD project types
+        if (SYSTEM_TYPES[result.systemType]?.category === 'cfd') {
+            toolbar._openCFD();
+        }
     }
-    const solverLabel = model.data.meta.solver === 'stabileo' ? 'Stabileo' : 'SOFiSTiK';
+    const st = SYSTEM_TYPES[model.data.meta.systemType];
+    const catLabel = st?.category === 'cfd' ? 'CFD' : (model.data.meta.solver === 'stabileo' ? 'Stabileo' : 'SOFiSTiK');
     document.getElementById('status-msg').textContent =
-        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType} — ${solverLabel}`;
+        `${model.data.meta.name} — ${st?.label || model.data.meta.systemType} — ${catLabel}`;
 })();
 
 // ─── Also show dialog on "Neu" (reset) ──────────────────
@@ -701,9 +716,14 @@ model.reset = async function() {
             model.data.sections = [];
         }
         model.bus.emit('model:changed');
+        if (SYSTEM_TYPES[result.systemType]?.category === 'cfd') {
+            toolbar._openCFD();
+        }
     }
+    const st = SYSTEM_TYPES[model.data.meta.systemType];
+    const catLabel = st?.category === 'cfd' ? 'CFD' : (model.data.meta.solver === 'stabileo' ? 'Stabileo' : 'SOFiSTiK');
     document.getElementById('status-msg').textContent =
-        `${model.data.meta.name} — ${SYSTEM_TYPES[model.data.meta.systemType]?.label || model.data.meta.systemType}`;
+        `${model.data.meta.name} — ${st?.label || model.data.meta.systemType} — ${catLabel}`;
 };
 
 // ─── Expose for debugging ─────────────────────────────────

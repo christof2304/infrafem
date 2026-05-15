@@ -31,8 +31,23 @@ examples/Neues_Modell*
 examples/Test1*
 examples/ASE1*
 examples/test_rahmen*
+examples/test1*
+examples/test11*
 examples/test2*
+examples/test3*
+examples/bemess*
 examples/_export_results.dat
+examples/examples.zip
+
+# Uploads + Assets (groß, binär, nicht versioniert)
+examples/_uploads/
+examples/sofiplus/
+examples/editor_models/
+
+# SOFiSTiK-eigene Projektdateien
+*.sofistik
+*.bak
+*.dwg
 
 # OS
 Thumbs.db

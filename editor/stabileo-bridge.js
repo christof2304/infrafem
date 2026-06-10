@@ -70,6 +70,17 @@ function editorToStabileoInput(model) {
             a = Math.PI * r * r;
             iz = Math.PI * r * r * r * r / 4;
             asY = a * 0.9;
+        } else if (sec.type === 'TUBE') {
+            const ro = (sec.params.D || 0.3) / 2;
+            const ri = ro - (sec.params.T || 0.01);
+            a = Math.PI * (ro * ro - ri * ri);
+            iz = Math.PI * (Math.pow(ro, 4) - Math.pow(ri, 4)) / 4;
+            asY = a * 0.9;
+        } else if (sec.type === 'QPRO' && sec.props) {
+            // Rolled profile: use catalog values (cm²/cm⁴ → m²/m⁴)
+            a  = sec.props.A  * 1e-4;
+            iz = sec.props.Iy * 1e-8;  // Stabileo 2D: Iy = strong axis = iz in its convention
+            asY = a * 0.85;
         }
         sections[String(sec.id)] = { id: sec.id, a, iz, asY };
     }
@@ -167,6 +178,21 @@ function stabileoResultsToEditor(results, model) {
         });
     }
 
+    // Support reactions — Stabileo returns them in results.reactions
+    // fx = horizontal (structural X), fy = vertical (structural Z in infraFEM)
+    const rawReactions = results.reactions || results.supportReactions || results.nodeReactions || [];
+    console.log('[Stabileo] result keys:', Object.keys(results), '— reactions:', rawReactions.length);
+    const reactions = rawReactions
+        .map(r => ({
+            nodeId: r.nodeId ?? r.node_id,
+            px: r.fx ?? r.px ?? 0,
+            py: 0,
+            pz: r.fy ?? r.fz ?? r.py ?? r.pz ?? 0,
+            mx: 0, my: 0,
+            mz: r.mz ?? r.fm ?? 0,
+        }))
+        .filter(r => r.nodeId != null && (Math.abs(r.px) > 1e-6 || Math.abs(r.pz) > 1e-6 || Math.abs(r.mz) > 1e-6));
+
     return {
         allNodes,
         nodes,
@@ -174,6 +200,7 @@ function stabileoResultsToEditor(results, model) {
         quads: [],
         quadElements: [],
         beamElements: [],
+        reactions,
         _solver: 'stabileo',
         _solveTime: results.solver_run_meta?.solve_time_ms || 0,
     };

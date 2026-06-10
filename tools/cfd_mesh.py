@@ -19,7 +19,7 @@ import tempfile
 
 
 def generate_cfd_mesh(polygon, wind_angle=0, mesh_size=0.5, far_field_factor=15,
-                      bl_thickness=0.5, bl_layers=5, bl_ratio=1.3):
+                      bl_layers=4, bl_ratio=1.4):
     """
     Generate a 2D CFD mesh around a cross-section polygon.
 
@@ -103,21 +103,51 @@ def generate_cfd_mesh(polygon, wind_angle=0, mesh_size=0.5, far_field_factor=15,
 
     gmsh.model.geo.synchronize()
 
-    # Size field: refine near section, coarser far away
+    # ── Size fields ──────────────────────────────────────────────────────────
+    # 1. Distance from section surface
     dist_field = gmsh.model.mesh.field.add("Distance")
     gmsh.model.mesh.field.setNumbers(dist_field, "CurvesList", section_lines)
 
-    thresh_field = gmsh.model.mesh.field.add("Threshold")
-    gmsh.model.mesh.field.setNumber(thresh_field, "InField", dist_field)
-    gmsh.model.mesh.field.setNumber(thresh_field, "SizeMin", mesh_size)
-    gmsh.model.mesh.field.setNumber(thresh_field, "SizeMax", ff_mesh_size)
-    gmsh.model.mesh.field.setNumber(thresh_field, "DistMin", char_dim * 0.5)
-    gmsh.model.mesh.field.setNumber(thresh_field, "DistMax", far_field_r * 0.5)
+    # 2. Three-zone threshold:
+    #    - Very fine immediately outside BL (near-wake, shear layers)
+    #    - Medium in near-field
+    #    - Coarse in far-field
+    near_size  = mesh_size * 0.6          # just outside BL
+    trans_size = mesh_size                  # mid near-field
+    dist_near  = char_dim * 0.3            # end of very fine zone
+    dist_trans = char_dim * 1.5            # end of near-field
 
-    gmsh.model.mesh.field.setAsBackgroundMesh(thresh_field)
+    thresh1 = gmsh.model.mesh.field.add("Threshold")
+    gmsh.model.mesh.field.setNumber(thresh1, "InField",  dist_field)
+    gmsh.model.mesh.field.setNumber(thresh1, "SizeMin",  near_size)
+    gmsh.model.mesh.field.setNumber(thresh1, "SizeMax",  ff_mesh_size)
+    gmsh.model.mesh.field.setNumber(thresh1, "DistMin",  dist_near)
+    gmsh.model.mesh.field.setNumber(thresh1, "DistMax",  far_field_r * 0.4)
+    gmsh.model.mesh.field.setNumber(thresh1, "Sigmoid",  1)   # smooth S-curve transition
+
+    gmsh.model.mesh.field.setAsBackgroundMesh(thresh1)
     gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
-    gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+    gmsh.option.setNumber("Mesh.MeshSizeFromPoints",         0)
+    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature",      0)
+    gmsh.option.setNumber("Mesh.Smoothing",                  5)  # Laplacian smoothing passes
+
+    # ── Boundary Layer ────────────────────────────────────────────────────────
+    # Tuned for k-epsilon wall functions (y+ ≈ 30–100):
+    #   first_layer ≈ char_dim * 0.003   →  y+ ~ 50 at Re ~ 10^6
+    #   4 layers at ratio 1.4  →  total ≈ 12× first_layer
+    if bl_layers > 0:
+        first_layer = max(2e-4, min(mesh_size * 0.04, char_dim * 0.004))
+
+        bl_field = gmsh.model.mesh.field.add("BoundaryLayer")
+        gmsh.model.mesh.field.setNumbers(bl_field, "CurvesList",    section_lines)
+        gmsh.model.mesh.field.setNumbers(bl_field, "PointsList",    section_points)
+        gmsh.model.mesh.field.setNumber (bl_field, "Size",          first_layer)
+        gmsh.model.mesh.field.setNumber (bl_field, "Ratio",         bl_ratio)
+        gmsh.model.mesh.field.setNumber (bl_field, "NbLayers",      bl_layers)
+        gmsh.model.mesh.field.setNumber (bl_field, "Quads",         1)
+        # IntersectMetrics=1 avoids element collapse at sharp concave corners
+        gmsh.model.mesh.field.setNumber (bl_field, "IntersectMetrics", 1)
+        gmsh.model.mesh.field.setAsBoundaryLayer(bl_field)
 
     # Physical groups for boundary conditions
     gmsh.model.addPhysicalGroup(1, section_lines, tag=1, name="section")

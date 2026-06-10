@@ -1,0 +1,519 @@
+!#!Info  Beispiel:      Taktschieben im Bogen 2
+!#!Info  Schlagwort:    Taktschieben; Moving spring
+!#!Info  Program:       CSM
+
+
+$ Bitte beachten Sie auch : CSM Handbuch:  Theoretische Grundlagen - Taktschieben Schulung
+
+$ Animation:
+$ - Bitte den Animator mit dem ersten BA-Lastfall 4100 starten,
+$ - die Amplitude auf einen festen Wert einstellen (Button)
+$ - klicken ins Feld 'Überhöhung' und z.B. 20 eintippen
+$ - das Animationstempo auf 0 stellen (0 eintippen oder \textcolor[rgb]{1,0,0}{rote Hand})
+$ - dann die 4000-er Lastfälle durchblättern.
+$ Hierzu können die Tastatur-Cursortaste Cursor-down (Pfeil nach unten)
+$ verwendet werden, wenn man in der Lastfall-Dialogbox einen Lastfall ausgewählt hat.
+$ Evtl. ist die Verwendung der Lastfallschleife sinnvoll (mit speed>0).
+
+!#!Kapitel System
++PROG AQUA URS:1
+KOPF Taktschieben im Bogen 2
+NORM  'DIN' 'en199X-200X-BRIDGE'     CAT 'B'
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+!*!Label Material
+BETO  1    C    40        $ = C40/50
+STAH  2                   $ standard reinforcement steel 500
+STAH  9    S  '235' $ structural steel for tubes, rolled steel ...
+STAH 99    S  '235' TMAX 0 GAM 0 ES 900000 $ coupling beams
+STAH 11    Y '1860A' $ prestessing steel
+                    $ fp0,1k = 1600 N/mm2
+                    $ fpk    = 1860 N/mm2
+                    $            0.8*fpk    = 0.80*1860 = 1488 N/mm2
+                    $            0.9*fp0,1k = 0.90*1600 = 1440 N/mm2
+                    $ sigp,max = min(1488,1440)         = 1440 N/mm2 EN-1992-1-1 5.10.2.1(1) maximale Spannung
+                    $ sigp,SLS = 0.65*fpk   = 0.65*1860 = 1209 N/mm2 EN-1992-1-1 7.2(5)      bei Verkehrsübergabe quasiständig
+                    $ sigp,rare= sigp,max
+
+!*!Label  Section 1
+QNR  1 MNR 1
+sto#zmax 1860
+QPOL  UPZ MNR 1
+QP -  0    0
+   - 3280
+   - 3330  200
+   - 1600  350
+   - 1680 1140
+   - 1650 1160
+   - 1600 #zmax
+QPOL  UPZ MNR 0
+QP -  0  280
+   - 1150  380
+   - 1150 1620
+$
+$  Torsion box:  *---------------------> y
+$                |
+$     *----------|----------*     #zo
+$     |          |<---#yo-->|
+$     |          |          |
+$     |          |          |
+$     |          |<---#yu-->|
+$     *----------|----------*     #zu
+$                z
+let#yo  1500 $ [mm] y-Wert der Torsionsbox oben
+let#yu  1500 $ [mm] y-Wert der Torsionsbox unten
+let#zo    60 $ [mm] z-Wert der Torsionsbox oben
+let#zu #zmax-60 $ " der Torsionsbox unten  "       of Torsionsbox below
+LBEW  1 #yo #zo   #yu  #zu AS 1 RANG 0 TORS AKTI D  12
+LBEW  2   -   -  -#yu  #zu AS 1 RANG 0 TORS AKTI D  12
+LBEW  3   -   -  -#yo  #zo AS 1 RANG 0 TORS AKTI D  12
+LBEW  4   -   -   #yo  #zo AS 1 RANG 0 TORS AKTI D  12
+let#yo 3200     $ y Biegebewehrung oben
+let#yu #yu-50   $ unten
+LBEW  5 #yu #zu-50 -#yu  AS     - RANG 1       TORS PASS D  20
+LBEW  6 #yo #zo+50 -#yo  AS     - RANG 2       TORS PASS D  20
+QS 1 ZA 400     MNR 1
+QS 2 ZA 600     MNR 1
+QSP    NR    Y    Z     MNR
+     'UMI'   0  #zmax   1 $ Literal BOT muss in Grossbuchstaben eingegeben werden
+     'OMI'   0    0     1
+loop#i0 11
+  let#i1 #i0+1
+  let#h 1800-120*#i0
+  QNR 100+#i1 MNR 9 BEZ 'launching nose #h'
+    QSP 'TOPL' Y -600 Z #zmax-#h ; QSP 'TOPR' Y +600 Z #zmax-#h $ #zmax from main section 1
+    QSP 'BOTL' Y -600 Z #zmax    ; QSP 'BOTR' Y +600 Z #zmax
+      BLEC REFA REFE   D=8 YA=0 ZA=0 YE=0 ZE=0
+           'TOPL' 'TOPR'
+           'TOPR' 'BOTR'
+           'BOTR' 'BOTL'
+           'BOTL' 'TOPL'
+endloop
+
+QC 91 D 1500[mm] MNR 1 $ Pfeiler
+QC 97 D  10[mm] T 0.01[mm] MNR 99 BEZ 'Launching rail' $ 0.01 mm to get small area and small normalforce in rail !
+QC 98 D 250[mm]  MNR 99 BEZ 'to avoid spreading'
+QC 99 D 1500[mm] T 50[mm]  MNR 99 BEZ 'coupling beams'
+ENDE
+
++PROG SOFIMSHC URS:3 $ Definition of the main axis, spans, main beam and axis variables
+KOPF Taktschieben im Bogen 2
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+SYST RAUM GDIV 1000 POSZ
+sto#R 304.155 $m radius
+
+$ As this span definition is used often in the file, it is defined once and stored:
+STO#S_XI(99)  0     $ allocate table
+STO#S_XI(0)   0.00  $ start of bridge at left excess  -   am linken Überstand
+STO#S_XI(1)   1.00  $ first support                   -   erstes Lager
+STO#S_XI(2)  42.00  $ 2.    support                   -   2.     Lager
+STO#S_XI(3)  94.00  $ 3.    support                   -   3.     Lager
+STO#S_XI(4) 146.00  $ 4.    support                   -   3.     Lager
+STO#S_XI(5) 198.00  $ 4.    support                   -   3.     Lager
+STO#S_XI(6) 240.00  $ 4.    support                   -   3.     Lager
+STO#S_XI(7) 241.00  $ end of bridge at right excess   -   am rechten Überstand
+STO#S_XI(8) 271.00  $ end of launching nose           -   Ende Vorbauschnabel
+$ an excess is always important - otherwise the bridge may not catch the support while launching!
+$
+$ now you can access to the table also with interpolation:
+$ s at span 2 at local xi=0.6 -> let#s =S_XI(2.6)    gives s back with 42 + 0.6*(94-42)
+STO#s_end =S_XI(7.0)  $ for SOFILOAD - end of bridge
+TXA Testprint variable s_end =  #(s_end,8.3)   $ (8 characters and 3 digits)
+
+
+$ ------------------------------------- axis : ------------------------------
+GAX 'AX_1'
+  GAXA S  0 X 0 -#R 0 SX 1 0 0 $ first starting point with starting direction
+  GAXA L 400[m] R #R
+$ ------------------------------------- main beam : ------------------------------
+STEU MESH 1 ; STEU HMIN 999.0  $ meshing of beam elements 999: all nodes individually set !
+$ This is necessary because couplings are not rotated while launched in a circle!
+$ So instead of coupling real coupling beams are used!
+$ To define these individual beams, individual nodes are set:
+
+GAXP 'AX_1' S (0 48.00 2) TYP 'A' GRP - NRQ - SPT (1 1)  $ Launching bed - Taktkeller Knoten
+sto#nbed         24+1 $ number of nodes in launching bed
+let#s0 49.00 $ start station of main bridge excess at #S_XI(0)
+let#spt 100  $ first node number at this point
+                 GAXP 'AX_1' S #s0+0.00        TYP 'A' GRP 5 NRQ 1 SPT #spt $ start main bridge excess  at #S_XI(0)
+sto#node(0) #spt
+sto#grpcs(5) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.00) TYP 'S' GRP 5 NRQ 1 SPT #spt $ first main bridge support at #S_XI(1)
+sto#node(1) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.05) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.10) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.15) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.20) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.25) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.30) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.35) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.40) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.45) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.50) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.55) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.60) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.65) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.70) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.75) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.80) TYP 'S' GRP 5 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.85) TYP 'S' GRP 5 NRQ 1 SPT #spt
+sto#grpcs(4) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.90) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(1.95) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.00) TYP 'S' GRP 4 NRQ 1 SPT #spt  $ 2. main bridge support at #S_XI(2)
+sto#node(2) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.05) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.10) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.15) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.20) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.25) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.30) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.35) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.40) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.45) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.50) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.55) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.60) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.65) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.70) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.75) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.80) TYP 'S' GRP 4 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.85) TYP 'S' GRP 4 NRQ 1 SPT #spt
+sto#grpcs(3) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.90) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(2.95) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.00) TYP 'S' GRP 3 NRQ 1 SPT #spt  $ 3. main bridge support at #S_XI(3)
+sto#node(3) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.05) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.10) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.15) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.20) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.25) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.30) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.35) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.40) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.45) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.50) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.55) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.60) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.65) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.70) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.75) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.80) TYP 'S' GRP 3 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.85) TYP 'S' GRP 3 NRQ 1 SPT #spt
+sto#grpcs(2) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.90) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(3.95) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.00) TYP 'S' GRP 2 NRQ 1 SPT #spt  $ 4. main bridge support at #S_XI(4)
+sto#node(4) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.05) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.10) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.15) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.20) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.25) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.30) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.35) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.40) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.45) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.50) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.55) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.60) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.65) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.70) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.75) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.80) TYP 'S' GRP 2 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.85) TYP 'S' GRP 2 NRQ 1 SPT #spt
+sto#grpcs(1) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.90) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(4.95) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.00) TYP 'S' GRP 1 NRQ 1 SPT #spt  $ 5. main bridge support at #S_XI(5)
+sto#node(5) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.05) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.10) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.15) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.20) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.25) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.30) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.35) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.40) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.45) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.50) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.55) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.60) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.65) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.70) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.75) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.80) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.85) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.90) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(5.95) TYP 'S' GRP 1 NRQ 1 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(6.00) TYP 'S' GRP 1 NRQ 1 SPT #spt  $ 6. main bridge support at #S_XI(6)
+sto#node(6) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.00) TYP 'S' GRP 9 NRQ 1.101 SPT #spt  $ start main bridge excess  at #S_XI(7)
+sto#node(7) #spt
+sto#grpcs(9) #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.10) TYP 'S' GRP 9 NRQ 102.102 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.20) TYP 'S' GRP 9 NRQ 103.103 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.30) TYP 'S' GRP 9 NRQ 104.104 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.40) TYP 'S' GRP 9 NRQ 105.105 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.50) TYP 'S' GRP 9 NRQ 106.106 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.60) TYP 'S' GRP 9 NRQ 107.107 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.70) TYP 'S' GRP 9 NRQ 108.108 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.80) TYP 'S' GRP 9 NRQ 109.109 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(7.90) TYP 'S' GRP 9 NRQ 110.110 SPT #spt
+let#spt #spt+1 ; GAXP 'AX_1' S #s0+#S_XI(8.00) TYP 'S' GRP 9 NRQ 111.111 SPT #spt  $ end of launching nose
+sto#node(8) #spt
+sto#grpcs(10) #spt
+
+GAXS 'AX_1' 'R' SPT 1000 Y  1450[mm] Z #zmax[mm] GRP 100  $ rigth Launching rail
+GAXS 'AX_1' 'L' SPT 2000 Y -1450[mm] Z #zmax[mm] GRP 200  $ left  Launching rail
+
+ENDE
+$
++PROG SOFIMSHA urs:8
+KOPF Launching rail, coupling beams, piers and springs
+SYST REST ; STEU REST 2
+
+KNOT 999 X 0[m] Y 0 $ center of circle to construct points
+
+$ create counpling beams with sorrect group number :
+GRUP 5 BEZ 'coupling beams 5'
+  let#from #grpcs(5)   ; let#to #grpcs(4) ;   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+GRUP 4 BEZ 'coupling beams 4'
+  let#from #grpcs(4)+1 ; let#to #grpcs(3) ;   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+GRUP 3 BEZ 'coupling beams 3'
+  let#from #grpcs(3)+1 ; let#to #grpcs(2) ;   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+GRUP 2 BEZ 'coupling beams 2'
+  let#from #grpcs(2)+1 ; let#to #grpcs(1) ;   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+GRUP 1 BEZ 'coupling beams 1'
+  let#from #grpcs(1)+1 ; let#to #grpcs(9) ;   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+GRUP 9 BEZ 'coupling beams 9'
+  let#from #grpcs(9)+1 ; let#to #grpcs(10);   STAB - KA (#from #to 1)  KE (#from+1000 1) QNR 99
+                                              STAB - KA (#from #to 1)  KE (#from+2000 1) QNR 99
+                                              STAB - KA (#from+1000 #to+1000 1)  KE (#from+2000 1) QNR 98
+
+$ change section right and left to Launching rail cestion 98:
+STAB prop QNR 97
+MOD STAB VON 100000 BIS 110000
+MOD STAB VON 200000 BIS 210000
+
+sto#dzmovs 0.50 $ moving spring height - not too short !
+sto#dhmovs 2.00 $ horizontal movs distance
+$
+$
+$
+$                          * SPT main bridge
+$                         / \
+$                        /   \    right rail
+$                       /     \   SPT+1000
+$                      /       \ /
+$  left rail SPT+2000 *         *--MOVS-HOR---* SPT+7000 horizontal movs node (coupled to SPT+3000)
+$                                     GRP 13
+$                     ^         ^
+$    GRP 11 MOVS-left |         |  MOVS-right GRP 12
+$                     |         |
+$           SPT+4000 |*|       |*| SPT+3000   ---- top    of pier
+$                    | |       | |
+$                    | |       | |
+$                    | |       | |
+$                    | |       | |
+$                    | |       | |
+$                    | |       | |
+$           SPT+6000 |*|       |*| SPT+5000   ---- bottom of pier
+$
+
+$ create piers including moving springs:
+sto#no 1 ; let#spt #node(1) ; let#heigth 3.50
+#define pier
+  TRAN KNOT #spt+2000 DZ #dzmovs+#heigth[m] DNR 4000 ; KNOT #spt+2000+4000 FIX F $ bottom of pier left
+  TRAN KNOT #spt+2000 DZ #dzmovs[m]         DNR 2000                             $ top    of pier
+  TRAN KNOT #spt+1000 DZ #dzmovs+#heigth[m] DNR 4000 ; KNOT #spt+1000+4000 FIX F $ bottom of pier right
+  TRAN KNOT #spt+1000 DZ #dzmovs[m]         DNR 2000                             $ top    of pier
+  KNOT #spt+7000 NR1 #spt+1000 NR2 999 NR3 'S' X #dhmovs[m]                      $ horizontal movs node
+  GRUP 0 ; STAB - KA #spt+1000+4000 KE #spt+1000+2000 QNR 91 $ pier left
+          STAB - KA #spt+2000+4000 KE #spt+2000+2000 QNR 91 $ pier right
+  GRUP 11 ; FEDE #no KA #spt+1000+2000 DZ -1 CP 1E6          $ main vertical moving spring left
+  GRUP 12 ; FEDE #no KA #spt+2000+2000 DZ -1 CP 1E6          $ main vertical moving spring rigth
+  GRUP 13 ; FEDE #no KA #spt+7000 KE #spt+1000 CP 1E3        $ main horizontal moving spring - weak , because rail is a polygon !!!!
+  KNOT #spt+7000 NR1 #spt+3000 FIX KF
+#enddef
+#include pier
+sto#no 2 ; let#spt #node(2) ; let#heigth 6.50
+#include pier
+sto#no 3 ; let#spt #node(3) ; let#heigth 7.50
+#include pier
+sto#no 4 ; let#spt #node(4) ; let#heigth 8.50
+#include pier
+sto#no 5 ; let#spt #node(5) ; let#heigth 6.50
+#include pier
+sto#no 6 ; let#spt #node(6) ; let#heigth 3.50
+#include pier
+
+
+$ create supports in launching bed:
+loop#i0 #nbed $ number of nodes in launching bed
+  let#i1 #i0+1
+  sto#no #no+1 ; let#spt #i1 ; let#heigth 1.00
+    #include pier
+endloop
+
+$ create longitudinal moving spring - only at some points:
+GRUP 14
+sto#nlong 1 ; let#spt #node(1) ; let#phi 50/#r*180/3.1416 $ at 1. pier (50m)
+  FEDE #nlong KA #spt+3000 DX cos(#phi) DY sin(#phi) CP 1E5        $ longitudinal moving spring
+sto#nlong 2 ; let#spt 11       ; let#phi 20/#r*180/3.1416   $ 20 m inside launching bed (in case of first stage not yet reached 1. pier)
+  FEDE #nlong KA #spt+3000 DX cos(#phi) DY sin(#phi) CP 1E3        $ longitudinal moving spring in launching bed
+
+$ Gruppenbezeichnung für WINGRAF:
+GRUP 11 BEZ 'moving spring vertical left'
+GRUP 12 BEZ 'moving spring vertical right'
+GRUP 13 BEZ 'moving spring horizontal'
+GRUP 14 BEZ 'moving spring longitudinal'
+
+ENDE
+
++PROG AQUA URS:5
+KOPF Create interpolated sections
+INTE ALL
+ENDE
+
+!#!Kapitel Loading
++PROG SOFILOAD URS:4
+KOPF Einwirkungen und Lasten
+UNIT 5 $ Einheiten: Querschnitte in mm, Geometrie+Lasten in m
+ACT G_1                                                              BEZ 'Ständige Lasten'
+ACT G_2                                                              BEZ 'Ständige Lasten'
+ACT P                                                            BEZ 'Vorspannung'
+ACT C                                                                BEZ 'Kriechen+Schwinden'
+
+LF 2 BEZ 'G_2'  TYP none
+  STAB GRP 1,2,3,4,5 TYP PG PA 25
+ENDE
+
++PROG ASE URS:6
+KOPF Define Moving springs - Remain active up to next MOVS blank input
+MOVS GRP 11 TYP BGRP VON 101 BIS 109 L0 #dzmovs[m]  ! main vertical moving spring left
+MOVS GRP 12 TYP BGRP VON 201 BIS 209 L0 #dzmovs[m]  ! main vertical moving spring rigth
+
+MOVS GRP 13 TYP BGRP VON 101 BIS 109 L0 #dhmovs[m]  ! horizontal    moving spring
+MOVS GRP 14 TYP BGRP VON 101 BIS 109 L0 QUER  ! longitudinal stabilisation
+$ L0 TRAN (L0 QUER)   defines a moving spring, that looks to the contact nodes
+$ transvers to the dx,dy,dz direction of the spring !
+ENDE
+
++PROG ASE URS:2
+KOPF Test the system
+GRUP -
+GRUP 9,109,209 NEIN $ launching nose
+LF 900 FAKG 1 BEZ 'Test G_1 X 0[m]'
+ENDE
+
++PROG ASE URS:9
+KOPF Test the system
+$ step 1 dt 10 $ to test in case of instability
+#define grplaun=1,2,3,4,5,9,101,102,103,104,105,109,201,202,203,204,205,209
+
+let#s -242.00 ; TAKT GRP $(grplaun) XM 0 YM 0 PHI +#s/#R
+GRUP -
+GRUP 2,102,202 NEIN $ some superstructure construction phases
+GRUP 3,103,203 NEIN $ some superstructure construction phases
+GRUP 4,104,204 NEIN $ some superstructure construction phases
+GRUP 5,105,205 NEIN $ some superstructure construction phases
+LF 901 FAKG 1 BEZ 'Test phase 1 on bed s=#s[m]'
+ENDE
+
+let#s -190.00 ; TAKT GRP $(grplaun) XM 0 YM 0 PHI +#s/#R
+GRUP -
+GRUP 3,103,203 NEIN $ some superstructure construction phases
+GRUP 4,104,204 NEIN $ some superstructure construction phases
+GRUP 5,105,205 NEIN $ some superstructure construction phases
+LF 902 FAKG 1 BEZ 'Test phase 2 on bed s=#s[m]'
+ENDE
+
+let#s -138.00 ; TAKT GRP $(grplaun) XM 0 YM 0 PHI +#s/#R
+GRUP -
+GRUP 4,104,204 NEIN $ some superstructure construction phases
+GRUP 5,105,205 NEIN $ some superstructure construction phases
+LF 903 FAKG 1 BEZ 'Test phase 3 on bed s=#s[m]'
+ENDE
+
+let#s -87.00 ; TAKT GRP $(grplaun) XM 0 YM 0 PHI +#s/#R
+GRUP -
+GRUP 5,105,205 NEIN $ some superstructure construction phases
+LF 904 FAKG 1 BEZ 'Test phase 4 on bed s=#s[m]'
+ENDE
+
+let#s -49.00 ; TAKT GRP $(grplaun) XM 0 YM 0 PHI +#s/#R
+GRUP -
+LF 905 FAKG 1 BEZ 'Test phase 5 on bed s=#s[m]'
+ENDE
+
++PROG CSM urs:7
+KOPF Incremental launching
+STEU KRAG 2
+$ If you get instability, first activate the following STEU/CTRL ASE TEXT 'step 1 dt 10'
+$ and check the activation of groups in the produced 4000-loadcases (animator)
+$ CTRL ASE TEXT 'step 1 dt 10' $ to check instabilities during system-modelling !!!!!!!
+$ You can also first check the launching with STEU/CTRL ASE TEXT 'STEU/CTRL SOLV 0'
+
+TAKT GRP $(grplaun)  XM 0 YM 0 PHI 1 $ Definition of moving parts
+sto#pos(1) -242.00 $ position for concreting phase 1 in launching bed
+sto#pos(2) -190.00 $                               2
+sto#pos(3) -138.00 $                               3
+sto#pos(4)  -87.00 $                               4
+sto#pos(5)  -49.00 $                               5
+sto#pos(6)    0
+sto#pos(7)    0
+$
+let#s #pos(1.00) ; let#print #s-#pos(1) ; BA 110 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m] $ [m] because otherwise it is devided by 1000 (m/mm)
+loop#i0 10
+  let#s #pos(1.10+0.1*#i0) ; let#print #s-#pos(1) ; BA 111+#i0 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m]
+  let#s #pos(2.10+0.1*#i0) ; let#print #s-#pos(1) ; BA 121+#i0 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m]
+  let#s #pos(3.10+0.1*#i0) ; let#print #s-#pos(1) ; BA 131+#i0 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m]
+  let#s #pos(4.10+0.1*#i0) ; let#print #s-#pos(1) ; BA 141+#i0 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m]
+  let#s #pos(5.10+0.1*#i0) ; let#print #s-#pos(1) ; BA 151+#i0 TYP G_1 BEZ 'launching s #print[m]' TAKT #s/#R[m]
+endloop
+BA 200 TYP G_1 BEZ 'remove launching nose' TAKT 0
+BA 210 TYP G_2 BEZ 'additional G_2'        TAKT 0
+
+GRUP  NR        IBA1 WBIS   T0=7 PHIF=0.00
+      -           1
+    1,101,201     1
+    2,102,202   120
+    3,103,203   130
+    4,104,204   140
+    5,105,205   150
+    9,109,209     1  160
+LF 2 IBA1 210
+STEU SPEI 0 ; SCAL AQ_S 0 $ no AQB check print
+ENDE
+
++apply "$(NAME)_csm.dat"
+
+<TEXT>
+Hier hängen die Querschnitte des Vorbauschnabels von der Bezugsspur des Überbauquerschnittes weit nach unten.
+Es werden zwei separate Verschubschienen an der Unterkante des Überbaus angekoppelt.
+Die Ankopplung ist mit steifen Stäben ausgeführt, da der Verschub im Kreis erfolgt
+und Kopplungen keine TAKT-Verdrehung mitmachen.
+Der Nachteil dieser untenliegenden Hilfsschienen ist, dass auch das Einhängemoment im
+Stabinneren aus einem Kontakt im Stabinneren nur unten an der Schiene eingehängt wird
+und nicht im oberen Überbau, wo es dann für die Bemessung fehlt
+ - also in diesem Fall kurze Stäbe verwenden!
+
+</TEXT>
+
+$ Bitte beachten Sie auch : CSM Handbuch:  Theoretische Grundlagen - Taktschieben Schulung
+
+$ Dateiordner aufräumen:
++sys del $(project).$d?
+
+

@@ -52,6 +52,14 @@ export class EditorAPI {
     }
 
     // ── Calculation ────────────────────────────────────────
+    async meshOnly(modelJson) {
+        const res = await this._fetch('/api/editor/mesh-only', {
+            method: 'POST',
+            body: JSON.stringify(modelJson),
+        });
+        return res.json(); // { success, nodes, quads, n_nodes, n_quads, errors?, log? }
+    }
+
     async calculate(modelJson) {
         const res = await this._fetch('/api/editor/calculate', {
             method: 'POST',
@@ -90,24 +98,28 @@ export class EditorAPI {
     }
 
     // ── Fetch results for deformation display ────────────
-    async fetchResults(sqliteName) {
+    async fetchResults(sqliteName, lcNr = 1) {
         // Switch DB first
         await this._fetch(`/api/databases/switch?name=${encodeURIComponent(sqliteName)}`, {
             method: 'POST',
         });
-        // Fetch nodes, displacements, beam forces, quad forces, and element connectivity
-        const [nodesRes, dispsRes, beamRes, quadRes, elemsRes] = await Promise.all([
+        // Fetch nodes, displacements, beam forces, quad forces, element connectivity, load cases
+        const [nodesRes, dispsRes, beamRes, quadRes, elemsRes, lcsRes, reactRes] = await Promise.all([
             this._fetch('/api/model/nodes'),
-            this._fetch('/api/results/node-displacements?lc=1'),
-            this._fetch('/api/results/beam-forces?lc=1').catch(() => null),
-            this._fetch('/api/results/quad-forces?lc=1').catch(() => null),
+            this._fetch(`/api/results/node-displacements?lc=${lcNr}`).catch(() => null),
+            this._fetch(`/api/results/beam-forces?lc=${lcNr}`).catch(() => null),
+            this._fetch(`/api/results/quad-forces?lc=${lcNr}`).catch(() => null),
             this._fetch('/api/model/elements').catch(() => null),
+            this._fetch('/api/model/loadcases').catch(() => null),
+            this._fetch(`/api/results/support-reactions?lc=${lcNr}`).catch(() => null),
         ]);
         const nodesData = await nodesRes.json();
-        const dispsData = await dispsRes.json();
+        const dispsData = dispsRes ? await dispsRes.json() : { data: [] };
         const beamData = beamRes ? await beamRes.json() : { data: [] };
         const quadData = quadRes ? await quadRes.json() : { data: [] };
         const elemsData = elemsRes ? await elemsRes.json() : {};
+        const lcsData  = lcsRes  ? await lcsRes.json()  : [];
+        const reactData = reactRes ? await reactRes.json() : { data: [] };
         return {
             allNodes: nodesData.map(n => ({ id: n.nr, x: n.x, y: n.y, z: n.z })),
             nodes: dispsData.data.map(d => ({
@@ -125,6 +137,11 @@ export class EditorAPI {
             })),
             beamElements: (elemsData.beams || []).map(b => ({
                 nr: b.nr, nodeStart: b.node_start, nodeEnd: b.node_end, length: b.length,
+            })),
+            loadcases: lcsData.map(lc => ({ nr: lc.nr, name: lc.name || '' })),
+            reactions: (reactData.data || []).map(r => ({
+                nodeId: r.node_nr, px: r.px, py: r.py, pz: r.pz,
+                mx: r.mx, my: r.my, mz: r.mz,
             })),
         };
     }

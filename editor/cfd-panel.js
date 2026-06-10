@@ -29,15 +29,18 @@ export class CFDPanel {
         this._sectionPolygon = null;
     }
 
+    _url(path) { return (this.api?.baseUrl || '') + path; }
+
     show() {
         if (this.el) this.el.remove();
         this.el = document.createElement('div');
         this.el.id = 'cfd-panel';
         this.el.style.cssText = `
-            position: fixed; top: 60px; left: 60px; background: rgba(10,10,30,0.92);
-            border: 1px solid #445; border-radius: 8px; padding: 0;
-            z-index: 25; min-width: 220px; color: #c8d0e0; font-size: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4); max-width: 260px;
+            position: fixed; top: 60px; left: 60px; background: var(--bg-panel);
+            border: 1px solid var(--border-hi); border-radius: 8px; padding: 0;
+            z-index: 25; min-width: 220px; color: var(--text); font-size: 12px;
+            font-family: var(--font-ui);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 260px;
         `;
         this._minimized = false;
         this._render();
@@ -61,21 +64,21 @@ export class CFDPanel {
         const filteredCases = CFD_TEST_CASES.filter(tc => is3d ? tc.mode === '3d' : tc.mode !== '3d');
         const bH = this._solveResult?.building_height || this._selectedHeight || 40;
         this.el.innerHTML = `
-            <div id="cfd-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:grab;border-bottom:1px solid #334;user-select:none">
-                <span style="color:#7eb8ff;font-weight:600;font-size:13px">CFD Windanalyse</span>
+            <div id="cfd-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:grab;border-bottom:1px solid var(--border);user-select:none">
+                <span style="color:var(--accent);font-weight:600;font-size:13px">CFD Windanalyse</span>
                 <div style="display:flex;gap:4px">
-                    <button id="cfd-minimize" style="background:none;border:none;color:#8899aa;font-size:14px;cursor:pointer;padding:0 4px" title="${min ? 'Maximieren' : 'Minimieren'}">${min ? '▼' : '▲'}</button>
-                    <button id="cfd-close" style="background:none;border:none;color:#667;font-size:16px;cursor:pointer;padding:0 4px">&times;</button>
+                    <button id="cfd-minimize" style="background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;padding:0 4px" title="${min ? 'Maximieren' : 'Minimieren'}">${min ? '▼' : '▲'}</button>
+                    <button id="cfd-close" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>
                 </div>
             </div>
             <div id="cfd-body" style="padding:10px 14px;${min ? 'display:none' : ''}">
             <div style="margin-bottom:8px;display:flex;gap:4px">
-                <button id="cfd-mode-2d" style="flex:1;padding:4px;border-radius:4px;border:1px solid ${is3d ? '#334' : '#7eb8ff'};background:${is3d ? 'transparent' : 'rgba(126,184,255,0.2)'};color:${is3d ? '#667' : '#7eb8ff'};cursor:pointer;font-size:11px;font-weight:600">2D Querschnitt</button>
-                <button id="cfd-mode-3d" style="flex:1;padding:4px;border-radius:4px;border:1px solid ${is3d ? '#7eb8ff' : '#334'};background:${is3d ? 'rgba(126,184,255,0.2)' : 'transparent'};color:${is3d ? '#7eb8ff' : '#667'};cursor:pointer;font-size:11px;font-weight:600">3D Gebäude</button>
+                <button id="cfd-mode-2d" style="flex:1;padding:4px;border-radius:4px;border:1px solid ${is3d ? 'var(--border)' : 'var(--accent)'};background:${is3d ? 'transparent' : 'var(--accent-dim2)'};color:${is3d ? 'var(--text-dim)' : 'var(--accent)'};cursor:pointer;font-size:11px;font-weight:600">2D Querschnitt</button>
+                <button id="cfd-mode-3d" style="flex:1;padding:4px;border-radius:4px;border:1px solid ${is3d ? 'var(--accent)' : 'var(--border)'};background:${is3d ? 'var(--accent-dim2)' : 'transparent'};color:${is3d ? 'var(--accent)' : 'var(--text-dim)'};cursor:pointer;font-size:11px;font-weight:600">3D Gebäude</button>
             </div>
             <div style="margin-bottom:8px">
-                <label style="color:#8899aa;font-size:11px">Test-Case laden:</label>
-                <select id="cfd-testcase" style="width:100%;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:4px 6px;font-size:11px;margin-top:2px">
+                <label style="color:var(--text-dim);font-size:11px">Test-Case laden:</label>
+                <select id="cfd-testcase" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:4px 6px;font-size:11px;margin-top:2px">
                     <option value="">— ${is3d ? 'Gebäude' : 'Querschnitt'} wählen —</option>
                     ${filteredCases.map((tc) => {
                         const origIdx = CFD_TEST_CASES.indexOf(tc);
@@ -85,23 +88,23 @@ export class CFDPanel {
             </div>
             ${is3d ? `
             <div style="margin-bottom:8px">
-                <label style="color:#8899aa;font-size:11px">oder 3D-Modell laden (GLB/STL):</label>
+                <label style="color:var(--text-dim);font-size:11px">oder 3D-Modell laden (GLB/STL):</label>
                 <div style="display:flex;gap:4px;margin-top:3px">
-                    <button id="cfd-upload-glb" style="flex:1;padding:4px;border-radius:4px;border:1px solid #445;background:rgba(255,170,68,0.15);color:#ffaa44;cursor:pointer;font-size:11px">
+                    <button id="cfd-upload-glb" style="flex:1;padding:4px;border-radius:4px;border:1px solid var(--border-hi);background:rgba(255,170,68,0.15);color:#ffaa44;cursor:pointer;font-size:11px">
                         GLB/STL Upload
                     </button>
                     <input type="file" id="cfd-glb-input" accept=".glb,.stl" style="display:none">
                     <input type="number" id="cfd-scale" value="${this._stlScale || 1.0}" step="0.1" min="0.01" max="1000" title="Skalierungsfaktor (z.B. 0.001 für mm→m)"
-                        style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 4px;font-size:11px">
-                    <span style="color:#556;font-size:10px;align-self:center">Scale</span>
-                    <button id="cfd-scale-apply" style="padding:2px 6px;border-radius:3px;border:1px solid #445;background:rgba(68,170,255,0.15);color:#44aaff;cursor:pointer;font-size:10px"
+                        style="width:60px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;font-size:11px">
+                    <span style="color:var(--text-dim);opacity:0.6;font-size:10px;align-self:center">Scale</span>
+                    <button id="cfd-scale-apply" style="padding:2px 6px;border-radius:3px;border:1px solid var(--border-hi);background:rgba(68,170,255,0.15);color:var(--accent);cursor:pointer;font-size:10px"
                         title="Vorschau mit neuem Scale aktualisieren">↻</button>
                 </div>
                 <div style="display:flex;gap:3px;margin-top:3px;align-items:center">
-                    <button id="cfd-gizmo-toggle" style="padding:2px 6px;border-radius:3px;border:1px solid ${this._gizmoActive ? '#4fa' : '#445'};background:${this._gizmoActive ? 'rgba(68,255,136,0.2)' : 'rgba(68,170,255,0.1)'};color:${this._gizmoActive ? '#4fa' : '#8899aa'};cursor:pointer;font-size:10px"
+                    <button id="cfd-gizmo-toggle" style="padding:2px 6px;border-radius:3px;border:1px solid ${this._gizmoActive ? 'var(--mint)' : 'var(--border-hi)'};background:${this._gizmoActive ? 'rgba(0,229,176,0.15)' : 'var(--accent-dim)'};color:${this._gizmoActive ? 'var(--mint)' : 'var(--text-dim)'};cursor:pointer;font-size:10px"
                         title="Rotations-Gizmo ein/aus">⟳ Gizmo</button>
-                    <span id="cfd-rot-readout" style="color:#667;font-size:9px">${Math.round(this._stlRotX||0)}° ${Math.round(this._stlRotY||0)}° ${Math.round(this._stlRotZ||0)}°</span>
-                    <button id="cfd-rot-reset" style="padding:1px 4px;border-radius:3px;border:1px solid #334;background:none;color:#556;cursor:pointer;font-size:9px" title="Rotation zurücksetzen">0°</button>
+                    <span id="cfd-rot-readout" style="color:var(--text-dim);font-size:9px">${Math.round(this._stlRotX||0)}° ${Math.round(this._stlRotY||0)}° ${Math.round(this._stlRotZ||0)}°</span>
+                    <button id="cfd-rot-reset" style="padding:1px 4px;border-radius:3px;border:1px solid var(--border);background:none;color:var(--text-dim);opacity:0.6;cursor:pointer;font-size:9px" title="Rotation zurücksetzen">0°</button>
                 </div>
                 ${this._stlFileName && this._stlBounds ? (() => {
                     const s = this._stlScale || 1;
@@ -113,26 +116,26 @@ export class CFDPanel {
                 })() : this._stlFileName ? `<div style="font-size:10px;color:#44ff44;margin-top:2px">${this._stlFileName}</div>` : ''}
             </div>
             <div style="margin-bottom:6px">
-                <label style="color:#8899aa;font-size:11px">Gebäudehöhe [m]</label>
+                <label style="color:var(--text-dim);font-size:11px">Gebäudehöhe [m]</label>
                 <input type="number" id="cfd-height" value="${this._selectedHeight || 40}" step="5" min="5" max="500"
-                    style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 6px;font-size:12px">
+                    style="width:60px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 6px;font-size:12px">
             </div>
             <div style="margin-bottom:6px">
-                <label style="color:#8899aa;font-size:11px">Rauhigkeit z₀ [m]</label>
+                <label style="color:var(--text-dim);font-size:11px">Rauhigkeit z₀ [m]</label>
                 <input type="number" id="cfd-z0" value="${this._selectedZ0 || 0.1}" step="0.05" min="0.001" max="2"
-                    style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 6px;font-size:12px">
+                    style="width:60px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 6px;font-size:12px">
             </div>
             ` : ''}
             <div style="margin-bottom:6px">
-                <label style="color:#8899aa;font-size:11px">Berechnungsraum: <span id="cfd-domain-val" style="color:#c8d0e0">${this._domainSize || (is3d ? 3 : 15)}×</span></label>
+                <label style="color:var(--text-dim);font-size:11px">Berechnungsraum: <span id="cfd-domain-val" style="color:#c8d0e0">${this._domainSize || (is3d ? 3 : 15)}×</span></label>
                 <input type="range" id="cfd-domain-size" min="${is3d ? '2' : '8'}" max="${is3d ? '8' : '30'}" value="${this._domainSize || (is3d ? 3 : 15)}" step="1"
-                    style="width:100%;height:4px;accent-color:#7eb8ff;cursor:pointer">
+                    style="width:100%;height:4px;accent-color:var(--accent);cursor:pointer">
                 <div style="display:flex;justify-content:space-between;font-size:9px;color:#556">
                     <span>klein</span><span>groß</span>
                 </div>
             </div>
             <div style="margin-bottom:6px">
-                <label style="color:#8899aa;font-size:11px">Mesh-Dichte: <span id="cfd-mesh-val" style="color:#c8d0e0">${this._meshDensity || 50}%</span></label>
+                <label style="color:var(--text-dim);font-size:11px">Mesh-Dichte: <span id="cfd-mesh-val" style="color:#c8d0e0">${this._meshDensity || 50}%</span></label>
                 <input type="range" id="cfd-mesh-density" min="10" max="100" value="${this._meshDensity || 50}" step="5"
                     style="width:100%;height:4px;accent-color:#44ff44;cursor:pointer">
                 <div style="display:flex;justify-content:space-between;font-size:9px;color:#556">
@@ -141,38 +144,38 @@ export class CFDPanel {
             </div>
             <div style="display:flex;gap:8px;margin-bottom:6px">
                 <div>
-                    <label style="color:#8899aa;font-size:11px">Wind [m/s]</label>
+                    <label style="color:var(--text-dim);font-size:11px">Wind [m/s]</label>
                     <input type="number" id="cfd-windspeed" value="${this._windSpeed || 20}" step="5" min="1" max="200"
-                        style="width:55px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 6px;font-size:12px">
+                        style="width:55px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 6px;font-size:12px">
                 </div>
                 <div>
-                    <label style="color:#8899aa;font-size:11px">Richtung [°]</label>
+                    <label style="color:var(--text-dim);font-size:11px">Richtung [°]</label>
                     <input type="number" id="cfd-angle" value="0" step="5"
-                        style="width:55px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 6px;font-size:12px">
+                        style="width:55px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 6px;font-size:12px">
                 </div>
             </div>
             ${!is3d ? `
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
-                <input type="checkbox" id="cfd-transient" style="accent-color:#7eb8ff">
-                <label for="cfd-transient" style="color:#8899aa;font-size:11px">Transient (Wirbelablösung)</label>
+                <input type="checkbox" id="cfd-transient" style="accent-color:var(--accent)">
+                <label for="cfd-transient" style="color:var(--text-dim);font-size:11px">Transient (Wirbelablösung)</label>
             </div>
             <div id="cfd-transient-opts" style="display:none;margin-bottom:6px;padding-left:20px">
                 <div style="margin-bottom:4px">
-                    <label style="color:#667;font-size:10px">Endzeit [s]</label>
+                    <label style="color:var(--text-dim);font-size:10px">Endzeit [s]</label>
                     <input type="number" id="cfd-endtime" value="2" step="0.5" min="0.5" max="20"
-                        style="width:50px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 4px;font-size:11px">
+                        style="width:50px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;font-size:11px">
                 </div>
                 <div>
-                    <label style="color:#667;font-size:10px">Zeitschritt [s]</label>
+                    <label style="color:var(--text-dim);font-size:10px">Zeitschritt [s]</label>
                     <input type="number" id="cfd-dt" value="0.002" step="0.001" min="0.0001" max="0.1"
-                        style="width:60px;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:2px 4px;font-size:11px">
+                        style="width:60px;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;font-size:11px">
                 </div>
             </div>
             ` : ''}
-            ${!is3d ? `<button id="cfd-from-area" style="width:100%;padding:5px;background:rgba(126,184,255,0.15);border:1px solid #445;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;margin-bottom:4px">
+            ${!is3d ? `<button id="cfd-from-area" style="width:100%;padding:5px;background:var(--accent-dim);border:1px solid var(--border-hi);border-radius:4px;color:var(--accent);cursor:pointer;font-size:12px;margin-bottom:4px">
                 Querschnitt aus Fläche
             </button>
-            <button id="cfd-generate" style="width:100%;padding:5px;background:rgba(126,184,255,0.2);border:1px solid #7eb8ff;border-radius:4px;color:#7eb8ff;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:4px">
+            <button id="cfd-generate" style="width:100%;padding:5px;background:var(--accent-dim2);border:1px solid var(--accent);border-radius:4px;color:var(--accent);cursor:pointer;font-size:12px;font-weight:600;margin-bottom:4px">
                 CFD Mesh generieren
             </button>` : ''}
             <button id="cfd-solve" style="width:100%;padding:5px;background:rgba(68,255,68,0.15);border:1px solid #4a4;border-radius:4px;color:#4d4;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:8px">
@@ -180,8 +183,8 @@ export class CFDPanel {
             </button>
             ${this._solveResult ? `
             <div style="margin-bottom:6px">
-                <label style="color:#8899aa;font-size:11px">Ergebnis-Feld:</label>
-                <select id="cfd-field" style="width:100%;background:#16162b;border:1px solid #334;border-radius:3px;color:#c8d0e0;padding:3px 6px;font-size:11px;margin-top:2px">
+                <label style="color:var(--text-dim);font-size:11px">Ergebnis-Feld:</label>
+                <select id="cfd-field" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:3px 6px;font-size:11px;margin-top:2px">
                     <option value="pressure" ${this._activeField === 'pressure' ? 'selected' : ''}>Druck (p)</option>
                     <option value="speed" ${this._activeField === 'speed' ? 'selected' : ''}>Geschwindigkeit (|U|)</option>
                     ${!is3d ? `<option value="vorticity" ${this._activeField === 'vorticity' ? 'selected' : ''}>Vorticity (ωz)</option>` : ''}
@@ -189,45 +192,45 @@ export class CFDPanel {
                 </select>
             </div>` : ''}
             ${this._solveResult && is3d ? `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
-                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">Schnittebenen</div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                <div style="color:var(--accent);font-size:11px;font-weight:600;margin-bottom:4px">Schnittebenen</div>
                 <div style="margin-bottom:4px">
-                    <label style="color:#8899aa;font-size:10px">Horizontal z = <span id="cfd-slice-z-val">${Math.round(bH / 2)}</span> m</label>
+                    <label style="color:var(--text-dim);font-size:10px">Horizontal z = <span id="cfd-slice-z-val">${Math.round(bH / 2)}</span> m</label>
                     <input type="range" id="cfd-slice-z" min="1" max="${Math.round(bH * 1.5)}" value="${Math.round(bH / 2)}" step="1"
-                        style="width:100%;height:4px;accent-color:#7eb8ff;cursor:pointer">
+                        style="width:100%;height:4px;accent-color:var(--accent);cursor:pointer">
                 </div>
                 <div style="margin-bottom:4px">
-                    <label style="color:#8899aa;font-size:10px">Vertikal y = <span id="cfd-slice-y-val">0</span> m</label>
+                    <label style="color:var(--text-dim);font-size:10px">Vertikal y = <span id="cfd-slice-y-val">0</span> m</label>
                     <input type="range" id="cfd-slice-y" min="${Math.round(-bH * 2)}" max="${Math.round(bH * 2)}" value="0" step="1"
                         style="width:100%;height:4px;accent-color:#ffaa44;cursor:pointer">
                 </div>
                 <div style="display:flex;gap:4px;margin-bottom:4px">
-                    <button id="cfd-slice-hz" style="flex:1;padding:3px;border-radius:3px;border:1px solid #445;background:rgba(126,184,255,0.15);color:#7eb8ff;cursor:pointer;font-size:10px">Horizontal</button>
-                    <button id="cfd-slice-vt" style="flex:1;padding:3px;border-radius:3px;border:1px solid #445;background:rgba(255,170,68,0.15);color:#ffaa44;cursor:pointer;font-size:10px">Vertikal</button>
+                    <button id="cfd-slice-hz" style="flex:1;padding:3px;border-radius:3px;border:1px solid var(--border-hi);background:var(--accent-dim);color:var(--accent);cursor:pointer;font-size:10px">Horizontal</button>
+                    <button id="cfd-slice-vt" style="flex:1;padding:3px;border-radius:3px;border:1px solid var(--border-hi);background:rgba(255,170,68,0.15);color:#ffaa44;cursor:pointer;font-size:10px">Vertikal</button>
                 </div>
             </div>
             ` : ''}
             ${this._solveResult ? `
-            <div style="${is3d ? '' : 'border-top:1px solid #334;padding-top:6px;margin-top:4px;'}">
+            <div style="${is3d ? '' : 'border-top:1px solid var(--border);padding-top:6px;margin-top:4px;'}">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                     <input type="checkbox" id="cfd-vectors" ${this._showVectors ? 'checked' : ''} style="accent-color:#44ff44">
-                    <label for="cfd-vectors" style="color:#8899aa;font-size:10px">Geschwindigkeitsvektoren</label>
+                    <label for="cfd-vectors" style="color:var(--text-dim);font-size:10px">Geschwindigkeitsvektoren</label>
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
                     <input type="checkbox" id="cfd-streamlines-cb" ${this._showStreamlines ? 'checked' : ''} style="accent-color:#4fa">
-                    <label for="cfd-streamlines-cb" style="color:#8899aa;font-size:10px">Stromlinien</label>
+                    <label for="cfd-streamlines-cb" style="color:var(--text-dim);font-size:10px">Stromlinien</label>
                 </div>
                 <div id="cfd-streamline-opts" style="display:${this._showStreamlines ? 'block' : 'none'};margin-left:18px;margin-bottom:3px">
                     <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
-                        <label style="color:#667;font-size:9px;white-space:nowrap">Höhe:</label>
+                        <label style="color:var(--text-dim);font-size:9px;white-space:nowrap">Höhe:</label>
                         <input type="range" id="cfd-sl-zmin" min="0" max="100" value="${this._slZminPct || 0}" style="width:40px;accent-color:#4fa" title="Seed Z min">
                         <input type="range" id="cfd-sl-zmax" min="0" max="100" value="${this._slZmaxPct || 100}" style="width:40px;accent-color:#4fa" title="Seed Z max">
-                        <span id="cfd-sl-zlabel" style="color:#8899aa;font-size:9px">${this._slZminPct || 0}–${this._slZmaxPct || 100}%H</span>
+                        <span id="cfd-sl-zlabel" style="color:var(--text-dim);font-size:9px">${this._slZminPct || 0}–${this._slZmaxPct || 100}%H</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:4px">
-                        <label style="color:#667;font-size:9px;white-space:nowrap">Anzahl:</label>
+                        <label style="color:var(--text-dim);font-size:9px;white-space:nowrap">Anzahl:</label>
                         <input type="range" id="cfd-sl-nseeds" min="10" max="150" step="10" value="${this._slNSeeds || 40}" style="width:80px;accent-color:#4fa">
-                        <span id="cfd-sl-nlabel" style="color:#8899aa;font-size:9px">${this._slNSeeds || 40}</span>
+                        <span id="cfd-sl-nlabel" style="color:var(--text-dim);font-size:9px">${this._slNSeeds || 40}</span>
                     </div>
                 </div>
             </div>
@@ -268,7 +271,7 @@ export class CFDPanel {
                 const formData = new FormData();
                 formData.append('file', file);
                 try {
-                    const res = await fetch('/api/cfd/upload-model', { method: 'POST', body: formData });
+                    const res = await fetch(this._url('/api/cfd/upload-model'), { method: 'POST', body: formData });
                     if (!res.ok) throw new Error(await res.text());
                     const data = await res.json();
                     this._stlServerPath = data.path;
@@ -316,9 +319,9 @@ export class CFDPanel {
                     this._attachGizmo();
                 }
                 this._gizmoActive = !this._gizmoActive;
-                gizmoBtn.style.borderColor = this._gizmoActive ? '#4fa' : '#445';
+                gizmoBtn.style.borderColor = this._gizmoActive ? 'var(--mint)' : 'var(--border-hi)';
                 gizmoBtn.style.background = this._gizmoActive ? 'rgba(68,255,136,0.2)' : 'rgba(68,170,255,0.1)';
-                gizmoBtn.style.color = this._gizmoActive ? '#4fa' : '#8899aa';
+                gizmoBtn.style.color = this._gizmoActive ? 'var(--mint)' : 'var(--text-dim)';
             };
         }
 
@@ -495,7 +498,7 @@ export class CFDPanel {
         const fc = this._solveResult?.force_coefficients;
         if (!fc) return '<div style="color:#ff6644;font-size:11px;margin-top:4px">Keine Koeffizienten (Solver-Fehler?)</div>';
         return `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
                 <div style="color:#44ff44;font-size:11px;font-weight:600;margin-bottom:4px">Windlast-Koeffizienten</div>
                 <div style="font-size:12px;color:#c8d0e0">c<sub>D</sub> = ${fc.Cd?.toFixed(4) || '—'}</div>
                 <div style="font-size:12px;color:#c8d0e0">c<sub>L</sub> = ${fc.Cl?.toFixed(4) || '—'}</div>
@@ -512,13 +515,13 @@ export class CFDPanel {
         const nFields = 6;
         const dof = nCells * nFields;
         return `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
-                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">Mesh-Statistik</div>
-                <div style="font-size:11px;color:#8899aa">Knoten: ${s.n_nodes?.toLocaleString()}</div>
-                <div style="font-size:11px;color:#8899aa">Zellen: ${(nCells || s.n_elements)?.toLocaleString()} (${s.n_triangles} Tri, ${s.n_quads} Quad)</div>
-                ${dof ? `<div style="font-size:11px;color:#c8d0e0;font-weight:600">DOF: ${dof.toLocaleString()} (${nCells.toLocaleString()} × ${nFields} Felder)</div>` : ''}
-                <div style="font-size:11px;color:#8899aa">Oberfläche: ${s.n_section_nodes} Knoten</div>
-                <div style="font-size:11px;color:#8899aa">Far-Field: R = ${s.far_field_r} m</div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                <div style="color:var(--accent);font-size:11px;font-weight:600;margin-bottom:4px">Mesh-Statistik</div>
+                <div style="font-size:11px;color:var(--text-dim)">Knoten: ${s.n_nodes?.toLocaleString()}</div>
+                <div style="font-size:11px;color:var(--text-dim)">Zellen: ${(nCells || s.n_elements)?.toLocaleString()} (${s.n_triangles} Tri, ${s.n_quads} Quad)</div>
+                ${dof ? `<div style="font-size:11px;color:var(--text);font-weight:600">DOF: ${dof.toLocaleString()} (${nCells.toLocaleString()} × ${nFields} Felder)</div>` : ''}
+                <div style="font-size:11px;color:var(--text-dim)">Oberfläche: ${s.n_section_nodes} Knoten</div>
+                <div style="font-size:11px;color:var(--text-dim)">Far-Field: R = ${s.far_field_r} m</div>
             </div>
         `;
     }
@@ -629,7 +632,7 @@ export class CFDPanel {
         if (status) status.textContent = `Mesh: Größe=${meshSize.toFixed(2)}m, Far-Field=${ffFactor}×`;
 
         try {
-            const res = await fetch('/api/cfd/mesh', {
+            const res = await fetch(this._url('/api/cfd/mesh'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -659,6 +662,7 @@ export class CFDPanel {
         const meshSize = 0.02 + (100 - density) * 0.005;
         const ffFactor = this._domainSize || 15;
         const angle = parseFloat(this.el?.querySelector('#cfd-angle')?.value || '0');
+        this._windAngle = angle;
 
         const transient = this.el?.querySelector('#cfd-transient')?.checked || false;
         const endTime = parseFloat(this.el?.querySelector('#cfd-endtime')?.value || '2');
@@ -677,7 +681,7 @@ export class CFDPanel {
         this._startLogStream();
 
         try {
-            const res = await fetch('/api/cfd/solve', {
+            const res = await fetch(this._url('/api/cfd/solve'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -734,9 +738,9 @@ export class CFDPanel {
         }
 
         return `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
-                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">c<sub>L</sub>(t) — Wirbelablösung</div>
-                <svg width="${w}" height="${h}" style="background:#16162b;border-radius:4px">
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                <div style="color:var(--accent);font-size:11px;font-weight:600;margin-bottom:4px">c<sub>L</sub>(t) — Wirbelablösung</div>
+                <svg width="${w}" height="${h}" style="background:var(--bg-input);border-radius:4px">
                     <path d="${path}" fill="none" stroke="#44ff44" stroke-width="1.5"/>
                     <text x="2" y="10" fill="#667" font-size="8">${clMax.toFixed(3)}</text>
                     <text x="2" y="${h - 2}" fill="#667" font-size="8">${clMin.toFixed(3)}</text>
@@ -753,13 +757,13 @@ export class CFDPanel {
             term.id = 'cfd-terminal';
             term.style.cssText = `
                 position: fixed; bottom: 40px; left: 60px; right: 280px;
-                height: 150px; background: #0a0a14; border: 1px solid #334;
+                height: 150px; background: var(--bg); border: 1px solid var(--border);
                 border-radius: 6px; font-family: 'Consolas','Monaco',monospace;
                 font-size: 11px; color: #44ff44; padding: 8px; overflow-y: auto;
                 z-index: 25; box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
                 white-space: pre-wrap; line-height: 1.4;
             `;
-            term.innerHTML = '<span style="color:#7eb8ff">OpenFOAM Terminal</span>\n';
+            term.innerHTML = '<span style="color:var(--accent)">OpenFOAM Terminal</span>\n';
             document.body.appendChild(term);
         }
         return term;
@@ -775,10 +779,10 @@ export class CFDPanel {
         const term = document.getElementById('cfd-terminal');
         if (!term) return;
 
-        this._logEventSource = new EventSource('/api/cfd/log-stream');
+        this._logEventSource = new EventSource(this._url('/api/cfd/log-stream'));
         this._logEventSource.onmessage = (e) => {
             if (e.data === '__DONE__') {
-                term.innerHTML += '\n<span style="color:#7eb8ff">--- Berechnung abgeschlossen ---</span>\n';
+                term.innerHTML += '\n<span style="color:var(--accent)">--- Berechnung abgeschlossen ---</span>\n';
                 this._logEventSource.close();
                 this._logEventSource = null;
                 // Auto-hide terminal after 3 seconds
@@ -793,7 +797,7 @@ export class CFDPanel {
                 } else if (line.includes('FOAM FATAL') || line.includes('Error')) {
                     line = `<span style="color:#ff4444">${line}</span>`;
                 } else if (line.includes('===')) {
-                    line = `<span style="color:#7eb8ff">${line}</span>`;
+                    line = `<span style="color:var(--accent)">${line}</span>`;
                 } else if (line.includes('Time =')) {
                     line = `<span style="color:#667">${line}</span>`;
                 }
@@ -810,14 +814,14 @@ export class CFDPanel {
     _renderAnimationControls() {
         const ts = this._solveResult?.field?.time_steps || [];
         return `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
-                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">Animation (${ts.length} Zeitschritte)</div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                <div style="color:var(--accent);font-size:11px;font-weight:600;margin-bottom:4px">Animation (${ts.length} Zeitschritte)</div>
                 <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
-                    <button id="cfd-anim-play" style="background:#16162b;border:1px solid #445;border-radius:3px;color:#44ff44;cursor:pointer;padding:2px 8px;font-size:14px">▶</button>
-                    <button id="cfd-anim-stop" style="background:#16162b;border:1px solid #445;border-radius:3px;color:#ff4444;cursor:pointer;padding:2px 8px;font-size:14px">⏹</button>
+                    <button id="cfd-anim-play" style="background:var(--bg-input);border:1px solid var(--border-hi);border-radius:3px;color:#44ff44;cursor:pointer;padding:2px 8px;font-size:14px">▶</button>
+                    <button id="cfd-anim-stop" style="background:var(--bg-input);border:1px solid var(--border-hi);border-radius:3px;color:#ff4444;cursor:pointer;padding:2px 8px;font-size:14px">⏹</button>
                     <input type="range" id="cfd-anim-slider" min="0" max="${ts.length - 1}" value="0"
-                        style="flex:1;height:4px;accent-color:#7eb8ff;cursor:pointer">
-                    <span id="cfd-anim-time" style="color:#8899aa;font-size:10px;min-width:40px">t=0</span>
+                        style="flex:1;height:4px;accent-color:var(--accent);cursor:pointer">
+                    <span id="cfd-anim-time" style="color:var(--text-dim);font-size:10px;min-width:40px">t=0</span>
                 </div>
             </div>
         `;
@@ -862,7 +866,11 @@ export class CFDPanel {
             const time = timeSteps[i];
             this.el.querySelector('#cfd-anim-time').textContent = `t=${time.toFixed(3)}`;
             await this._showFrame(caseDir, time);
-            await new Promise(r => setTimeout(r, 50)); // ~20 fps
+            // Hold each frame for its actual simulation dt (real-time playback)
+            const dt = i + 1 < timeSteps.length
+                ? timeSteps[i + 1] - timeSteps[i]
+                : (i > 0 ? timeSteps[i] - timeSteps[i - 1] : 0.05);
+            await new Promise(r => setTimeout(r, Math.max(50, dt * 1000)));
         }
         this._animPlaying = false;
         const playBtn = this.el?.querySelector('#cfd-anim-play');
@@ -874,7 +882,7 @@ export class CFDPanel {
         const key = `${time.toFixed(4)}_${field}`;
         if (!this._animFrames[key]) {
             try {
-                const res = await fetch('/api/cfd/timestep', {
+                const res = await fetch(this._url('/api/cfd/timestep'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ caseDir, time, field }),
@@ -1054,6 +1062,9 @@ export class CFDPanel {
         // 2D streamlines
         if (this._showStreamlines) this._render2dStreamlines();
 
+        // Wind direction arrow
+        this._draw2dWindArrow(field);
+
         // Frame camera on section with correct orientation
         if (this._sectionPolygon) {
             this._frameCFDView(this._sectionPolygon);
@@ -1061,6 +1072,74 @@ export class CFDPanel {
 
         // Color legend (hide when streamlines active)
         if (!this._showStreamlines) this._showColorLegend(cfg.label, vMin, vMax, cfg.cmap);
+    }
+
+    _draw2dWindArrow(field) {
+        // Remove previous wind arrow
+        const old = this.cfdGroup.getObjectByName('windArrow');
+        if (old) { old.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); }); this.cfdGroup.remove(old); }
+
+        const poly = this._sectionPolygon;
+        if (!poly || poly.length < 2) return;
+
+        const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1);
+
+        // Far field radius from stats
+        const ffR = this._solveResult?.stats?.far_field_r || this._solveResult?.field?.stats?.far_field_r || span * (this._domainSize || 15) / 2;
+
+        const angleRad = THREE.MathUtils.degToRad(this._windAngle ?? 0);
+        // Wind flows in direction (cos, sin) — arrow comes from upstream
+        const dx = Math.cos(angleRad), dy = Math.sin(angleRad);
+
+        // Arrow: from upstream far-field edge toward section
+        const arrowLen = span * 0.6;
+        const startX = cx - dx * ffR * 0.75;
+        const startY = cy - dy * ffR * 0.75;
+        const endX = startX + dx * arrowLen;
+        const endY = startY + dy * arrowLen;
+
+        const group = new THREE.Group();
+        group.name = 'windArrow';
+
+        // Shaft
+        const shaftGeo = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(startX, startY, 0.01),
+            new THREE.Vector3(endX, endY, 0.01),
+        ]);
+        group.add(new THREE.Line(shaftGeo, new THREE.LineBasicMaterial({ color: 0x44aaff, linewidth: 2 })));
+
+        // Arrowhead (cone rotated to point in wind direction)
+        const headLen = span * 0.12;
+        const headRadius = span * 0.045;
+        const coneGeo = new THREE.ConeGeometry(headRadius, headLen, 8);
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x44aaff });
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        cone.position.set(endX + dx * headLen / 2, endY + dy * headLen / 2, 0.01);
+        cone.rotation.z = -Math.PI / 2 + angleRad;
+        group.add(cone);
+
+        // Label via sprite
+        const canvas2 = document.createElement('canvas');
+        canvas2.width = 256; canvas2.height = 64;
+        const ctx = canvas2.getContext('2d');
+        ctx.fillStyle = 'rgba(0,0,0,0)';
+        ctx.fillRect(0, 0, 256, 64);
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillStyle = '#44aaff';
+        ctx.textAlign = 'center';
+        const angleTxt = `${Math.round(this._windAngle ?? 0)}°`;
+        ctx.fillText(`Wind  ${angleTxt}`, 128, 40);
+        const tex = new THREE.CanvasTexture(canvas2);
+        const spriteMat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.position.set(startX - dx * span * 0.15, startY - dy * span * 0.15, 0.02);
+        sprite.scale.set(span * 0.6, span * 0.15, 1);
+        group.add(sprite);
+
+        this.cfdGroup.add(group);
     }
 
     _redraw2dOverlays() {
@@ -1487,7 +1566,7 @@ export class CFDPanel {
                 payload.height = Math.max(...blds.map(b => b.height));
                 console.log(`CFD 3D: sending ${blds.length} buildings, H_max=${payload.height}`);
             }
-            const res = await fetch('/api/cfd/solve3d', {
+            const res = await fetch(this._url('/api/cfd/solve3d'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -1532,7 +1611,7 @@ export class CFDPanel {
         this._startLogStream();
 
         try {
-            const res = await fetch('/api/cfd/solve3d-stl', {
+            const res = await fetch(this._url('/api/cfd/solve3d-stl'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1580,7 +1659,7 @@ export class CFDPanel {
         this._sliceCache = this._sliceCache || {};
         if (!this._sliceCache[key]) {
             try {
-                const res = await fetch('/api/cfd/slice3d', {
+                const res = await fetch(this._url('/api/cfd/slice3d'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ caseDir, plane, value, field }),
@@ -1730,9 +1809,9 @@ export class CFDPanel {
         const legend = document.createElement('div');
         legend.id = 'cfd-legend';
         legend.style.cssText = `
-            position:fixed; bottom:20px; right:20px; background:rgba(10,10,30,0.85);
-            border:1px solid #445; border-radius:6px; padding:8px 12px;
-            z-index:30; font-size:11px; color:#c8d0e0; min-width:40px;
+            position:fixed; bottom:20px; right:20px; background:var(--bg-panel);
+            border:1px solid var(--border-hi); border-radius:6px; padding:8px 12px;
+            z-index:30; font-size:11px; color:var(--text); min-width:40px;
         `;
 
         // Generate gradient CSS from colormap
@@ -1751,7 +1830,7 @@ export class CFDPanel {
             <div style="display:flex;align-items:stretch;gap:6px">
                 <div style="width:16px;height:120px;border-radius:2px;
                     background:linear-gradient(to bottom,${stops.reverse().join(',')})"></div>
-                <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:10px;color:#8899aa">
+                <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:10px;color:var(--text-dim)">
                     <span>${fmt(vMax)}</span>
                     <span>${fmt((vMin+vMax)/2)}</span>
                     <span>${fmt(vMin)}</span>
@@ -2123,7 +2202,7 @@ export class CFDPanel {
             const zMinPct = (this._slZminPct || 0) / 100;
             const zMaxPct = (this._slZmaxPct ?? 100) / 100;
             const nSeeds = this._slNSeeds || 40;
-            const res = await fetch('/api/cfd/streamlines3d', {
+            const res = await fetch(this._url('/api/cfd/streamlines3d'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ caseDir, nSeeds, seedZmin: zMinPct, seedZmax: zMaxPct }),
@@ -2242,12 +2321,12 @@ export class CFDPanel {
         const nFields = 7;
         const dof = nCells * nFields;
         return `
-            <div style="border-top:1px solid #334;padding-top:8px;margin-top:4px">
-                <div style="color:#7eb8ff;font-size:11px;font-weight:600;margin-bottom:4px">3D Mesh</div>
-                <div style="font-size:11px;color:#8899aa">Knoten: ${ms.n_nodes?.toLocaleString()}</div>
-                <div style="font-size:11px;color:#8899aa">Zellen: ${nCells.toLocaleString()}</div>
-                ${dof ? `<div style="font-size:11px;color:#c8d0e0;font-weight:600">DOF: ${dof.toLocaleString()} (${nCells.toLocaleString()} × ${nFields} Felder)</div>` : ''}
-                <div style="font-size:11px;color:#8899aa">H = ${ms.building_height || ms.char_dim} m</div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                <div style="color:var(--accent);font-size:11px;font-weight:600;margin-bottom:4px">3D Mesh</div>
+                <div style="font-size:11px;color:var(--text-dim)">Knoten: ${ms.n_nodes?.toLocaleString()}</div>
+                <div style="font-size:11px;color:var(--text-dim)">Zellen: ${nCells.toLocaleString()}</div>
+                ${dof ? `<div style="font-size:11px;color:var(--text);font-weight:600">DOF: ${dof.toLocaleString()} (${nCells.toLocaleString()} × ${nFields} Felder)</div>` : ''}
+                <div style="font-size:11px;color:var(--text-dim)">H = ${ms.building_height || ms.char_dim} m</div>
             </div>
         `;
     }
@@ -2272,6 +2351,9 @@ export class CFDPanel {
             if (child.material) child.material.dispose();
             this.cfdGroup.remove(child);
         }
+        // Force full VAO re-setup on next render to prevent stale binding state
+        // after geometry disposal (WebGL buffer ID recycling can corrupt VAO bindings).
+        if (this.canvas?.renderer) this.canvas.renderer.resetState();
     }
 
     _clearModelGroup() {

@@ -28,9 +28,15 @@ SPS_EXE = os.path.join(SOFISTIK_DIR, "sps.exe")
 
 def sync_geometry(cdb_path: str, sqlite_path: str):
     """Run sync_cdb_to_db to create SQLite with geometry."""
-    # Remove existing sqlite to get clean state
+    # Remove existing sqlite to get clean state.
+    # On Windows the server may hold a shared lock on the file — retry briefly.
     if os.path.exists(sqlite_path):
-        os.remove(sqlite_path)
+        for attempt in range(5):
+            try:
+                os.remove(sqlite_path)
+                break
+            except PermissionError:
+                time.sleep(0.4)
 
     result = subprocess.run(
         [SYNC_EXE, "-f", cdb_path, "--scope", "full"],
@@ -88,7 +94,11 @@ PAGE UNII 0
 LC ALL
 QUAD TYPE SXU,SYU,TXYU,SXL,SYL,TXYL REPR DLST
 END
+
 """
+# Note: Support reactions are parsed from the ASE "Knotenverschiebungen und Kräfte"
+# section in the main .erg rather than via a separate RESULTS export, because
+# NODE TYPE PX,PY,PZ,MX,MY,MZ causes Warnung 409 + STOP for RAHM (2D) models.
 
 
 def export_results(cdb_path: str, work_dir: str) -> str | None:
@@ -144,6 +154,7 @@ def parse_erg(erg_path: str):
     quad_forces = []
     beam_forces = []
     quad_stresses = []
+    support_reactions = []
 
     current_lc = None
     current_beam = None
@@ -155,6 +166,20 @@ def parse_erg(erg_path: str):
         # Detect section headers (order matters: beam before quad)
         # Support both German and English output
         line_lower = line.lower()
+
+        # ASE "Knotenverschiebungen und Kräfte  Lastfall N" — combined disp+reactions block.
+        # Must be checked BEFORE the generic node_disp check (shares "knotenverschiebung" + "lastfall").
+        # Distinguish from RESULTS "Knotenverschiebungen  Lastfall N" by requiring "und" before "lastfall"
+        # (only the ASE section has "und Kräfte"; RESULTS sections do not).
+        lf_idx = line_lower.find("lastfall")
+        _has_und_before_lf = lf_idx > 0 and "und" in line_lower[:lf_idx]
+        if "knotenverschiebung" in line_lower and lf_idx >= 0 and _has_und_before_lf:
+            mode = "ase_forces"
+            m = re.search(r'lastfall\s+(\d+)', line_lower)
+            if m:
+                current_lc = int(m.group(1))
+            continue
+
         if "knotenverschiebung" in line_lower or "node displacements" in line_lower:
             mode = "node_disp"
             current_lc = None
@@ -171,6 +196,12 @@ def parse_erg(erg_path: str):
             continue
         if "chnittkr" in line_lower or "quad elements forces" in line_lower:
             mode = "quad_force"
+            current_lc = None
+            continue
+        if "auflagerkraft" in line_lower or "support reaction" in line_lower or \
+           "knotenlasten" in line_lower or \
+           ("knotenla" in line_lower and "reaktion" in line_lower):
+            mode = "support_reaction"
             current_lc = None
             continue
 
@@ -282,26 +313,77 @@ def parse_erg(erg_path: str):
                     vals[3], vals[4], vals[5],
                 ))
 
-    return node_disps, quad_forces, beam_forces, quad_stresses
+        elif mode == "support_reaction":
+            # Format: node_nr PX PY PZ MX MY MZ (6 values, kN / kNm)
+            m = re.search(
+                r"(\d+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+"
+                r"([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*$", line)
+            if m:
+                node_nr = int(m.group(1))
+                vals = [float(m.group(i)) for i in range(2, 8)]
+                # Skip rows where all reactions are zero (unsupported nodes)
+                if any(abs(v) > 1e-6 for v in vals):
+                    support_reactions.append((
+                        current_lc, node_nr,
+                        vals[0], vals[1], vals[2],   # PX, PY, PZ [kN]
+                        vals[3], vals[4], vals[5],   # MX, MY, MZ [kNm]
+                    ))
+
+        elif mode == "ase_forces":
+            # ASE "Knotenverschiebungen und Kräfte" block.
+            # Format per node:
+            #   with moment reaction:    node uX uY phiZ PX PY MZ  (7 values)
+            #   pinned support:          node uX uY phiZ PX PY     (6 values, MZ column blank)
+            #   without reactions:       node uX uY phiZ            (4 values, force cols blank)
+            # Reactions are in kN / kNm — same units as the RESULTS export.
+            # Lines with 9+ parts are ASE beam-section lines (grp elem x N Vy Vz Mt My Mz)
+            # that must be excluded to prevent spurious node-0 entries.
+            parts = line.split()
+            if 6 <= len(parts) <= 7:
+                try:
+                    node_nr = int(parts[0])
+                    px = float(parts[4])
+                    py = float(parts[5])
+                    mz = float(parts[6]) if len(parts) >= 7 else 0.0
+                    if any(abs(v) > 1e-6 for v in [px, py, mz]):
+                        support_reactions.append((
+                            current_lc, node_nr,
+                            px, 0.0, py,   # PX=horizontal, PZ=vertical (SOFIMSHA-Y→pz for canvas)
+                            0.0, 0.0, mz,  # MX, MY, MZ
+                        ))
+                except (ValueError, IndexError):
+                    pass
+
+    return node_disps, quad_forces, beam_forces, quad_stresses, support_reactions
 
 
-def inject(sqlite_path: str, node_disps, quad_forces, beam_forces, quad_stresses):
+def inject(sqlite_path: str, node_disps, quad_forces, beam_forces, quad_stresses, support_reactions=None):
     """Insert parsed results into SQLite."""
     conn = sqlite3.connect(sqlite_path)
     cur = conn.cursor()
 
+    # Detect schema variant: new sync_cdb_to_db uses load_case_id/element_id,
+    # older versions use load_case_no/node_no/beam_no/quad_no.
+    cols = {r[1] for r in cur.execute(
+        "PRAGMA table_info(fe_result_node_displacement)"
+    ).fetchall()}
+    lc  = "load_case_id" if "load_case_id" in cols else "load_case_no"
+    nid = "element_id"   if "element_id"   in cols else "node_no"
+    bid = "element_id"   if "element_id"   in cols else "beam_no"
+    qid = "element_id"   if "element_id"   in cols else "quad_no"
+
     if node_disps:
         cur.executemany(
-            "INSERT OR REPLACE INTO fe_result_node_displacement "
-            "(load_case_id, element_id, uX, uY, uZ, phiX, phiY, phiZ, phiw) "
+            f"INSERT OR REPLACE INTO fe_result_node_displacement "
+            f"({lc}, {nid}, uX, uY, uZ, phiX, phiY, phiZ, phiw) "
             "VALUES (?,?,?,?,?,?,?,?,0)",
             node_disps,
         )
 
     if quad_forces:
         cur.executemany(
-            "INSERT OR REPLACE INTO fe_result_quad_internal_force "
-            "(load_case_id, element_id, node_no, mxx, myy, mxy, vx, vy, nx, ny, nxy, "
+            f"INSERT OR REPLACE INTO fe_result_quad_internal_force "
+            f"({lc}, {qid}, node_no, mxx, myy, mxy, vx, vy, nx, ny, nxy, "
             " vx_v, vy_v, fy) "
             "VALUES (?,?,0, ?,?,?,?,?,?,?,?, 0,0,0)",
             quad_forces,
@@ -309,8 +391,8 @@ def inject(sqlite_path: str, node_disps, quad_forces, beam_forces, quad_stresses
 
     if beam_forces:
         cur.executemany(
-            "INSERT OR REPLACE INTO fe_result_beam_internal_force "
-            "(load_case_id, element_id, x, N, Vy, Vz, Mt, My, Mz) "
+            f"INSERT OR REPLACE INTO fe_result_beam_internal_force "
+            f"({lc}, {bid}, x, N, Vy, Vz, Mt, My, Mz) "
             "VALUES (?,?,?,?,?,?,?,?,?)",
             beam_forces,
         )
@@ -332,9 +414,26 @@ def inject(sqlite_path: str, node_disps, quad_forces, beam_forces, quad_stresses
             quad_stresses,
         )
 
+    if support_reactions:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS fe_result_support_reaction (
+                load_case_id INTEGER,
+                node_id INTEGER,
+                px REAL, py REAL, pz REAL,
+                mx REAL, my REAL, mz REAL,
+                PRIMARY KEY (load_case_id, node_id)
+            )
+        """)
+        cur.executemany(
+            "INSERT OR REPLACE INTO fe_result_support_reaction "
+            "(load_case_id, node_id, px, py, pz, mx, my, mz) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            support_reactions,
+        )
+
     conn.commit()
     conn.close()
-    return len(node_disps), len(quad_forces), len(beam_forces), len(quad_stresses)
+    return len(node_disps), len(quad_forces), len(beam_forces), len(quad_stresses), len(support_reactions or [])
 
 
 # ─── Step 4: Parse CSM .dat for construction stages ──────────────────────────
@@ -355,7 +454,11 @@ def find_csm_dat(cdb_path: str) -> str | None:
 def parse_csm_dat(csm_path: str) -> list[dict]:
     """Parse CSM .dat to extract construction stages with active groups.
 
-    Returns list of {stage_nr, name, new_groups, all_groups} sorted by stage_nr.
+    Handles two construction types:
+    - Freivorbau (cantilever): groups added incrementally via PLF 0
+    - Taktschieben (incremental launching): all groups active from start, moved via TAKT GRP
+
+    Returns list of {stage_nr, name, load_case_nr, new_groups, active_groups}.
     """
     with open(csm_path, "r", encoding="latin-1") as f:
         text = f.read()
@@ -367,16 +470,17 @@ def parse_csm_dat(csm_path: str) -> list[dict]:
         m = re.search(r"Construction Stage\s+(\d+)", line)
         if m:
             current_stage = int(m.group(1))
-            stages.setdefault(current_stage, {"name": "", "new_groups": [], "all_groups": []})
+            stages.setdefault(current_stage, {"name": "", "load_case_nr": None, "new_groups": [], "all_groups": []})
             continue
 
         if current_stage is None:
             continue
 
-        # Stage name from LF line
-        m = re.search(r'LF\s+\d+\s+TYP\s+\S+\s+BEZ\s+"([^"]+)"', line)
+        # Load case number and name from LF line
+        m = re.search(r'LF\s+(\d+)\s+TYP\s+\S+\s+BEZ\s+"([^"]+)"', line)
         if m:
-            stages[current_stage]["name"] = m.group(1).strip()
+            stages[current_stage]["load_case_nr"] = int(m.group(1))
+            stages[current_stage]["name"] = m.group(2).strip()
             continue
 
         # Group activation
@@ -384,39 +488,31 @@ def parse_csm_dat(csm_path: str) -> list[dict]:
         if m:
             grp = int(m.group(1))
             rest = m.group(2)
-            if grp == 0:
-                # Group 0 (pylon) — track in first stage
-                if current_stage not in stages:
-                    continue
-                if 0 not in stages[current_stage]["all_groups"]:
-                    stages[current_stage]["all_groups"].append(0)
-                continue
-            stages[current_stage]["all_groups"].append(grp)
-            if "PLF 0" in rest:  # erste Aktivierung
+            if grp not in stages[current_stage]["all_groups"]:
+                stages[current_stage]["all_groups"].append(grp)
+            if "PLF 0" in rest:  # erste Aktivierung (Freivorbau)
                 stages[current_stage]["new_groups"].append(grp)
 
-    # Build result: cumulative active groups per stage
     sorted_nrs = sorted(stages.keys())
-    cumulative = {0}  # group 0 (pylon) always starts active
+
+    # active_groups = exactly the groups listed in each stage's GRUP lines.
+    # new_groups = groups appearing for the first time vs. previous stage.
+    # This handles both Freivorbau (incremental) and Taktschieben (sliding)
+    # as well as hybrid models.
+    prev_all: set[int] = set()
     result = []
     for sn in sorted_nrs:
         s = stages[sn]
-        # Add new groups
-        cumulative.update(s["new_groups"])
-        # Check for removed groups (present in prev stage but absent here)
         current_all = set(s["all_groups"])
-        # Groups that were cumulative but not listed anymore → removed
-        removed = cumulative - current_all - {0}  # group 0 is implicit
-        # Only remove if this stage actually lists groups (non-empty)
-        if current_all:
-            cumulative -= removed
-
+        new_groups = sorted(current_all - prev_all)
         result.append({
             "stage_nr": sn,
             "name": s["name"],
-            "new_groups": sorted(s["new_groups"]),
-            "active_groups": sorted(cumulative),
+            "load_case_nr": s["load_case_nr"],
+            "new_groups": new_groups,
+            "active_groups": sorted(current_all),
         })
+        prev_all = current_all
 
     return result
 
@@ -431,14 +527,15 @@ def inject_csm_stages(sqlite_path: str, stages: list[dict]):
         CREATE TABLE construction_stage (
             stage_nr INTEGER PRIMARY KEY,
             name TEXT,
+            load_case_nr INTEGER,
             new_groups TEXT,
             active_groups TEXT
         )
     """)
     for s in stages:
         cur.execute(
-            "INSERT INTO construction_stage (stage_nr, name, new_groups, active_groups) VALUES (?,?,?,?)",
-            (s["stage_nr"], s["name"], json.dumps(s["new_groups"]), json.dumps(s["active_groups"])),
+            "INSERT INTO construction_stage (stage_nr, name, load_case_nr, new_groups, active_groups) VALUES (?,?,?,?,?)",
+            (s["stage_nr"], s["name"], s.get("load_case_nr"), json.dumps(s["new_groups"]), json.dumps(s["active_groups"])),
         )
     conn.commit()
     conn.close()
@@ -475,15 +572,22 @@ def main():
     if not sync_geometry(cdb_path, sqlite_path):
         sys.exit(1)
 
-    # Step 2: Export results
+    # Step 2: Export results — prefer the main .erg (same name as CDB) if it exists,
+    # since it contains both RESULTS blocks AND the ASE "Knotenverschiebungen und Kräfte"
+    # section needed for support reactions.
     print("[2/3] Exporting results via SPS...")
-    erg_path = export_results(cdb_path, work_dir)
+    main_erg = str(Path(cdb_path).with_suffix(".erg"))
+    if os.path.exists(main_erg) and os.path.getsize(main_erg) > 100:
+        erg_path = main_erg
+        print(f"  Using existing .erg: {os.path.basename(erg_path)}")
+    else:
+        erg_path = export_results(cdb_path, work_dir)
     if not erg_path:
         print("  WARNING: No results exported. SQLite has geometry only.")
     else:
         # Step 3: Parse and inject
         print("[3/3] Parsing and injecting results...")
-        node_disps, quad_forces, beam_forces, quad_stresses = parse_erg(erg_path)
+        node_disps, quad_forces, beam_forces, quad_stresses, support_reactions = parse_erg(erg_path)
 
         lcs = sorted(set(
             [d[0] for d in node_disps] +
@@ -492,11 +596,12 @@ def main():
             [s[0] for s in quad_stresses]
         ))
 
-        n_nd, n_qf, n_bf, n_qs = inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses)
+        n_nd, n_qf, n_bf, n_qs, n_sr = inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses, support_reactions)
         print(f"  Node displacements: {n_nd} rows")
         print(f"  Quad forces:        {n_qf} rows")
         print(f"  Beam forces:        {n_bf} rows")
         print(f"  Quad stresses:      {n_qs} rows")
+        print(f"  Support reactions:  {n_sr} rows")
         print(f"  Load cases:         {lcs}")
 
         # Cleanup temp files

@@ -1,0 +1,30 @@
+$ infraFEM — Vernetzung (ohne Berechnung)
+
+PROG AQUA urs:1
+KOPF Material und Querschnitte
+NORM EN 199X-200X
+MATE 1 30000 GAM 25
+QB 1 MNR 1 B 0.250[m] H 0.250[m]
+ENDE
+
++prog sofimshc urs:2
+HEAD Tragwerk
+SYST SPAC GDIR NEGZ
+CTRL MESH 1
+CTRL HMIN 1.00
+
+$ Structural Points
+SPT NO       X         Y         Z         FIX
+       1     0.000     0.000     0.000     
+       2     5.000     0.000     0.000     
+       3     5.000     5.000     0.000     
+       4     0.000     5.000     0.000     
+
+SLN 1  1  2 ; SLNS FIX PP
+SLN 2  2  3
+SLN 3  3  4
+SLN 4  4  1
+
+SAR 1  T 250[mm] GRP 1 MNO 1
+SARB OUT 1,2,3,4
+END

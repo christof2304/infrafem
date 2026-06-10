@@ -192,7 +192,7 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
         if lc_node_loads or lc_area_loads or lc_beam_loads:
             sofiload_lines.append(f"LC {lc['id']}")
             for nid, fx, fz in lc_node_loads:
-                sofiload_lines.append(f"  KNOT {nid} TYP PP P1 {fx:.3f} P2 {fz:.3f}")
+                sofiload_lines.append(f"  KNOT {nid} P1 {fx:.3f} P2 {fz:.3f}")
             for grp, direction, value in lc_area_loads:
                 sofiload_lines.append(f"  QUAD GRP {grp} TYPE {direction} P {value:.3f}")
             for sln_id, direction, p1, p2 in lc_beam_loads:
@@ -240,6 +240,14 @@ def _generate_dat_with_areas(model: dict, meta: dict, lines: list, node_map: dic
         lines.append("LC ALL")
         lines.append("QUAD TYPE MX,MY,MXY,VX,VY,NX,NY,NXY REPR DLST")
         lines.append("END")
+        lines.append("")
+
+    lines.append("+PROG RESULTS urs:102")
+    lines.append("HEAD Export Support Reactions")
+    lines.append("PAGE UNII 0")
+    lines.append("LC ALL")
+    lines.append("NODE TYPE PX,PY,PZ,MX,MY,MZ REPR DLST")
+    lines.append("END")
 
     return "\n".join(lines)
 
@@ -259,10 +267,11 @@ def generate_dat(model: dict) -> str:
 
     for mat in model.get("materials", []):
         if mat["type"] == "BETO":
-            # Use MATE with E-modulus and unit weight for Trial license compatibility
             lines.append(f"MATE {mat['id']} 30000 GAM 25")
         elif mat["type"] == "STAH":
-            lines.append(f"MATE {mat['id']} 210000 GAM 78.5")
+            # STAH (not MATE) required for QNR+PROF TYP catalog profiles.
+            # No norm keywords (S355/EC3) to stay Trial-license compatible.
+            lines.append(f"STAH {mat['id']} S")
 
     for sec in model.get("sections", []):
         mat_ref = f"MNR {sec['materialId']}"
@@ -283,6 +292,10 @@ def generate_dat(model: dict) -> str:
                 f"D {sec['params']['D']:.3f}[m] "
                 f"T {sec['params']['T'] * 1000:.1f}[mm]"
             )
+        elif sec["type"] == "QPRO":
+            profile = sec.get("profile", "")  # e.g. "HEM 700", "IPE 500"
+            lines.append(f"QNR {sec['id']} {mat_ref}")
+            lines.append(f"PROF TYP {profile}")
 
     lines.append("ENDE")
     lines.append("")
@@ -350,8 +363,9 @@ def generate_dat(model: dict) -> str:
     next_node = max_node_id + 1000  # start intermediate nodes at high offset
     next_beam = max_beam_id + 1000
 
-    # Track node chain for each original beam (for load distribution)
+    # Track node chain and sub-beam IDs for each original beam
     beam_node_chain = {}  # original_beam_id → [node_start, mid1, mid2, ..., node_end]
+    beam_subelems = {}    # original_beam_id → [sub_beam_id1, ..., sub_beam_idN]
 
     lines.append("")
 
@@ -366,6 +380,7 @@ def generate_dat(model: dict) -> str:
             continue
 
         chain = [beam_start]
+        sub_ids = []
         prev_node_id = beam_start
 
         for i in range(1, N_DIV):
@@ -379,6 +394,7 @@ def generate_dat(model: dict) -> str:
 
             sb_id = next_beam
             next_beam += 1
+            sub_ids.append(sb_id)
             lines.append(
                 f"STAB {sb_id:>4} {prev_node_id:>4} {mid_id:>4} "
                 f"QNR {beam['sectionId']}"
@@ -389,11 +405,13 @@ def generate_dat(model: dict) -> str:
         chain.append(beam_end)
         sb_id = next_beam
         next_beam += 1
+        sub_ids.append(sb_id)
         lines.append(
             f"STAB {sb_id:>4} {prev_node_id:>4} {beam_end:>4} "
             f"QNR {beam['sectionId']}"
         )
         beam_node_chain[beam["id"]] = chain
+        beam_subelems[beam["id"]] = sub_ids
 
     # Hinge springs (stiff translation coupling, no rotation → moment hinge)
     for nodeA, nodeB in hinge_springs:
@@ -407,86 +425,56 @@ def generate_dat(model: dict) -> str:
     lines.append("ENDE")
     lines.append("")
 
-    # ── SOFILOAD — all loads as equivalent node forces
-    # SOFILOAD works on structural level (SLN, SAR), but we use KNOT+STAB directly.
-    # Convert beam line loads to equivalent node forces.
-    all_node_forces = []  # (lc_id, node_id, fx, fz, my)
+    # ── SOFILOAD — node forces + beam line loads
+    # SOFILOAD STAB syntax: STAB nr TYP PYY value  (SYST RAHM: vertical = Y axis)
+    from collections import defaultdict
+    sofiload_lc_data = defaultdict(lambda: {"node": [], "beam": []})
+
     for lc in model.get("loadcases", []):
         for load in lc.get("loads", []):
             if load["type"] == "NODE_FORCE":
-                direction = load["direction"]
-                value = load["value"]
                 nid = load["nodeId"]
-                # RAHM: P1=UX (horizontal), P2=UY (vertical in RAHM = Z in editor)
-                if direction in ("PZ", "PZZ"):
-                    all_node_forces.append((lc["id"], nid, 0, value, 0))  # fz → P2
-                elif direction in ("PX", "PXX"):
-                    all_node_forces.append((lc["id"], nid, value, 0, 0))  # fx → P1
+                fx = load["value"] if load["direction"] in ("PX", "PXX") else 0.0
+                fz = load["value"] if load["direction"] in ("PZ", "PZZ") else 0.0
+                sofiload_lc_data[lc["id"]]["node"].append((nid, fx, fz))
             elif load["type"] == "BEAM_LINE":
-                # Distribute line load as equivalent nodal forces on sub-beams
-                beam = None
-                for b in model.get("beams", []):
-                    if b["id"] == load["elementId"]:
-                        beam = b
-                        break
-                if not beam:
+                subs = beam_subelems.get(load["elementId"], [])
+                if not subs:
                     continue
-                n1 = node_map.get(beam["nodeStart"])
-                n2 = node_map.get(beam["nodeEnd"])
-                if not n1 or not n2:
-                    continue
-                L_total = ((n2["x"] - n1["x"])**2 + (n2["z"] - n1["z"])**2)**0.5
-                L_sub = L_total / N_DIV
-                q = (load["p1"] + load["p2"]) / 2
-                direction = load["direction"]
+                # SYST RAHM: vertical=Y → PYY for gravity loads; PXX for horizontal
+                type_code = "PYY" if load["direction"] in ("PZ", "PZZ") else "PXX"
+                p1 = load["p1"]
+                p2 = load.get("p2", p1)
+                n = len(subs)
+                for idx, sub_id in enumerate(subs):
+                    t = idx / (n - 1) if n > 1 else 0
+                    pe = p1 + t * (p2 - p1)
+                    sofiload_lc_data[lc["id"]]["beam"].append((sub_id, type_code, pe))
 
-                # Distribute q over the node chain using tributary lengths
-                chain = beam_node_chain.get(beam["id"], [beam["nodeStart"], beam["nodeEnd"]])
-                for i, nid in enumerate(chain):
-                    if i == 0 or i == len(chain) - 1:
-                        F = q * L_sub / 2  # end nodes: half tributary
-                    else:
-                        F = q * L_sub  # interior nodes: full tributary
-
-                    if direction in ("PZZ", "PZ"):
-                        all_node_forces.append((lc["id"], nid, 0, F, 0))
-                    elif direction in ("PXX", "PX"):
-                        all_node_forces.append((lc["id"], nid, F, 0, 0))
-
-    if all_node_forces:
-        # Aggregate forces per (lc, node)
-        from collections import defaultdict
-        agg = defaultdict(lambda: [0, 0, 0])  # (lc, node) → [fx, fz, my]
-        for lc_id, nid, fx, fz, my in all_node_forces:
-            key = (lc_id, nid)
-            agg[key][0] += fx
-            agg[key][1] += fz
-            agg[key][2] += my
-
+    if any(d["node"] or d["beam"] for d in sofiload_lc_data.values()):
         lines.append("PROG SOFILOAD urs:3")
         lines.append("KOPF Lasten")
-        current_lc = None
-        for (lc_id, nid), (fx, fz, my) in sorted(agg.items()):
-            if lc_id != current_lc:
-                lines.append(f"LF {lc_id}")
-                current_lc = lc_id
-            # RAHM: KNOT TYP PP P1=horizontal P2=vertical
-            # Note: moments from equivalent nodal forces are omitted (SOFILOAD
-            # RAHM does not support TYP MM). This means distributed loads are
-            # approximated as point forces at nodes — accurate for reactions
-            # but moment distribution differs from exact solution.
-            if abs(fx) > 1e-10 or abs(fz) > 1e-10:
-                lines.append(f"  KNOT {nid} TYP PP P1 {fx:.3f} P2 {fz:.3f}")
+        for lc_id in sorted(sofiload_lc_data):
+            lc_data = sofiload_lc_data[lc_id]
+            if not lc_data["node"] and not lc_data["beam"]:
+                continue
+            lines.append(f"LF {lc_id}")
+            for nid, fx, fz in lc_data["node"]:
+                if abs(fx) > 1e-10 or abs(fz) > 1e-10:
+                    lines.append(f"  KNOT {nid} TYP PP P1 {fx:.3f} P2 {fz:.3f}")
+            for sub_id, type_code, pe in lc_data["beam"]:
+                lines.append(f"  STAB {sub_id} TYP {type_code} {pe:.3f}")
         lines.append("ENDE")
         lines.append("")
 
-    # ── ASE — load case definitions (FAKG for self-weight)
-    analysis = model.get("analysisSettings", {})
+    # ── ASE — load case list only (loads are in SOFILOAD)
     lines.append("PROG ASE urs:4")
     lines.append("KOPF Berechnung")
+    lines.append("STEU WARN 398")
 
     for lc in model.get("loadcases", []):
-        fakg = "FAKG 1.0" if lc.get("name", "").lower() in ("eigengewicht", "dead load", "g") else ""
+        # SOFIMSHA RAHM: default gravity direction is EG-YY (+Y = upward) → -1.0 flips to downward.
+        fakg = "FAKG -1.0" if lc.get("name", "").lower() in ("eigengewicht", "dead load", "g") else ""
         lines.append(f"LF {lc['id']} {fakg}".strip())
 
     lines.append("ENDE")
@@ -508,6 +496,11 @@ def generate_dat(model: dict) -> str:
         lines.append("LC ALL")
         lines.append("BEAM TYPE N,VY,VZ,MT,MY,MZ REPR DLST")
         lines.append("END")
+        lines.append("")
+
+    # Support reactions for RAHM are parsed from the ASE "Knotenverschiebungen und Kraefte"
+    # block by parse_erg(). NODE TYPE PX/PY/MZ via RESULTS causes Warnung 409 + STOP in
+    # SYST RAHM — omit the RESULTS block and rely on the ASE output parsing instead.
 
     return "\n".join(lines)
 
@@ -535,18 +528,22 @@ def run_calculation(model_json: dict, output_name: str, output_dir: str = None) 
     print(f"[1/4] .dat written: {dat_path}")
 
     # 2. Run SPS to create .cdb
-    # Remove ALL old output files to prevent SPS from reusing/renaming
+    # Remove ALL old output files so SPS starts fresh (CDB vor Neuberechnung löschen).
+    # sync_cdb_to_db.exe may hold a Windows file lock briefly after exit — retry up to 5s.
     import glob as _glob
     import time as _time
     for old in _glob.glob(os.path.join(output_dir, f"{output_name}.*")):
         if old.endswith(".dat"):
             continue  # keep the .dat we just wrote
-        for attempt in range(3):
+        for attempt in range(10):
             try:
                 os.remove(old)
                 break
             except OSError:
-                _time.sleep(0.5)  # wait for lock release
+                if attempt < 9:
+                    _time.sleep(0.5)
+                else:
+                    print(f"[2/4] Warning: could not delete {old} (locked)")
 
     result = subprocess.run(
         [SPS_EXE, "-B", dat_path],
@@ -577,24 +574,229 @@ def run_calculation(model_json: dict, output_name: str, output_dir: str = None) 
 
     # 4. Parse .erg results (RESULTS blocks are included in generated .dat)
     erg_path = os.path.join(output_dir, f"{output_name}.erg")
-    if os.path.exists(erg_path) and os.path.getsize(erg_path) > 100:
-        node_disps, quad_forces, beam_forces, quad_stresses = parse_erg(erg_path)
-        inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses)
-        print(f"[4/4] Results injected from: {erg_path}")
-    else:
-        # Fallback: separate RESULTS export via export_results()
-        erg_path2 = export_results(cdb_path, output_dir)
-        if erg_path2:
-            node_disps, quad_forces, beam_forces, quad_stresses = parse_erg(erg_path2)
-            inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses)
-            print(f"[4/4] Results injected from: {erg_path2}")
+    try:
+        if os.path.exists(erg_path) and os.path.getsize(erg_path) > 100:
+            node_disps, quad_forces, beam_forces, quad_stresses, support_reactions = parse_erg(erg_path)
+            inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses, support_reactions)
+            print(f"[4/4] Results injected from: {erg_path} "
+                  f"(nd={len(node_disps)}, bf={len(beam_forces)}, sr={len(support_reactions)})")
         else:
-            print(f"[4/4] No results exported (geometry only)")
+            # Fallback: separate RESULTS export via export_results()
+            erg_path2 = export_results(cdb_path, output_dir)
+            if erg_path2:
+                node_disps, quad_forces, beam_forces, quad_stresses, support_reactions = parse_erg(erg_path2)
+                inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses, support_reactions)
+                print(f"[4/4] Results injected from: {erg_path2} "
+                      f"(nd={len(node_disps)}, bf={len(beam_forces)}, sr={len(support_reactions)})")
+            else:
+                print(f"[4/4] No results exported (geometry only)")
+    except Exception as e:
+        print(f"[4/4] Warning: result parse/inject failed: {e}")
+        import traceback; traceback.print_exc()
 
     return {
         "success": True,
         "sqlite": f"{output_name}.sqlite",
         "dat_path": dat_path,
+        "log": log,
+    }
+
+
+# ─── Mesh-only pipeline ─────────────────────────────────────────────────────
+
+def run_mesh_only(model_json: dict, output_name: str, output_dir: str = None) -> dict:
+    """
+    Mesh-only pipeline: model JSON → .dat (AQUA + SOFIMSHC) → SPS → CDB → SQLite.
+    Returns dict with success, nodes, quads as lists of dicts.
+    """
+    if output_dir is None:
+        output_dir = str(Path(__file__).resolve().parent.parent / "examples")
+    output_dir = str(Path(output_dir).resolve())
+
+    has_areas = len(model_json.get("areas", [])) > 0
+    if not has_areas:
+        return {"success": False, "errors": ["Vernetzung nur für Plattenmodelle (areas) möglich"]}
+
+    # ── Build mesh-only .dat ──────────────────────────────────
+    lines = []
+    lines.append("$ infraFEM — Vernetzung (ohne Berechnung)")
+    lines.append("")
+
+    # AQUA
+    lines.append("PROG AQUA urs:1")
+    lines.append("KOPF Material und Querschnitte")
+    lines.append("NORM EN 199X-200X")
+    for mat in model_json.get("materials", []):
+        if mat["type"] == "BETO":
+            lines.append(f"MATE {mat['id']} 30000 GAM 25")
+        elif mat["type"] == "STAH":
+            lines.append(f"STAH {mat['id']} S")
+    for sec in model_json.get("sections", []):
+        mat_ref = f"MNR {sec['materialId']}"
+        if sec["type"] == "SREC":
+            lines.append(f"QB {sec['id']} {mat_ref} B {sec['params']['B']:.3f}[m] H {sec['params']['H']:.3f}[m]")
+        elif sec["type"] == "SCIR":
+            lines.append(f"QC {sec['id']} {mat_ref} D {sec['params']['D']:.3f}[m]")
+        elif sec["type"] == "TUBE":
+            lines.append(f"QC {sec['id']} {mat_ref} D {sec['params']['D']:.3f}[m] T {sec['params']['T'] * 1000:.1f}[mm]")
+        elif sec["type"] == "QPRO":
+            profile = sec.get("profile", "")
+            lines.append(f"QNR {sec['id']} {mat_ref}")
+            lines.append(f"PROF TYP {profile}")
+    lines.append("ENDE")
+    lines.append("")
+
+    # SOFIMSHC
+    hmin = model_json.get("meshSettings", {}).get("hmin", 0.5)
+    lines.append("+prog sofimshc urs:2")
+    lines.append("HEAD Tragwerk")
+    lines.append("SYST SPAC GDIR NEGZ")
+    lines.append("CTRL MESH 1")
+    lines.append(f"CTRL HMIN {hmin:.2f}")
+    lines.append("")
+    lines.append("$ Structural Points")
+    lines.append("SPT NO       X         Y         Z         FIX")
+    for node in model_json.get("nodes", []):
+        support = node.get("support", "NONE")
+        if support == "SPRING":
+            lines.append(f"    {node['id']:>4}{node['x']:>10.3f}{node['z']:>10.3f}{'0.000':>10}     PZ")
+            lines.append(f"SPT {node['id']} FIX PZ CA {node.get('springStiffness', 1e6):.0f}")
+        else:
+            fix = SUPPORT_FIX.get(support, "")
+            lines.append(f"    {node['id']:>4}{node['x']:>10.3f}{node['z']:>10.3f}{'0.000':>10}     {fix}")
+    lines.append("")
+
+    edge_fix_map = {"NONE": "", "FIXED": "F", "PINNED": "PP", "ROLLER_X": "XP", "ROLLER_Z": "PX"}
+    next_sln_id = 1
+    area_sln_map = {}
+    opening_sln_map = {}
+
+    for area in model_json.get("areas", []):
+        sln_ids = []
+        boundary = area["boundaryNodeIds"]
+        edge_supports = area.get("edgeSupports", [])
+        for i in range(len(boundary)):
+            n1 = boundary[i]
+            n2 = boundary[(i + 1) % len(boundary)]
+            sln_id = next_sln_id; next_sln_id += 1
+            edge_sup = edge_supports[i] if i < len(edge_supports) else "NONE"
+            fix_code = edge_fix_map.get(edge_sup, "")
+            sln_line = f"SLN {sln_id}  {n1}  {n2}"
+            if fix_code:
+                sln_line += f" ; SLNS FIX {fix_code}"
+            lines.append(sln_line)
+            sln_ids.append(sln_id)
+        area_sln_map[area["id"]] = sln_ids
+
+    for opening in model_json.get("openings", []):
+        sln_ids = []
+        boundary = opening["boundaryNodeIds"]
+        for i in range(len(boundary)):
+            n1 = boundary[i]; n2 = boundary[(i + 1) % len(boundary)]
+            sln_id = next_sln_id; next_sln_id += 1
+            lines.append(f"SLN {sln_id}  {n1}  {n2}")
+            sln_ids.append(sln_id)
+        opening_sln_map[opening["id"]] = sln_ids
+
+    # Beams as SLN structural lines
+    boundary_edges = set()
+    for area in model_json.get("areas", []):
+        bnd = area["boundaryNodeIds"]
+        for i in range(len(bnd)):
+            boundary_edges.add(tuple(sorted([bnd[i], bnd[(i + 1) % len(bnd)]])))
+    for opening in model_json.get("openings", []):
+        bnd = opening["boundaryNodeIds"]
+        for i in range(len(bnd)):
+            boundary_edges.add(tuple(sorted([bnd[i], bnd[(i + 1) % len(bnd)]])))
+    for beam in model_json.get("beams", []):
+        edge = tuple(sorted([beam["nodeStart"], beam["nodeEnd"]]))
+        if edge in boundary_edges:
+            continue
+        sln_id = next_sln_id; next_sln_id += 1
+        if beam.get("isStructLine"):
+            lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}")
+        else:
+            lines.append(f"SLN {sln_id}  {beam['nodeStart']}  {beam['nodeEnd']}  SNO {beam.get('sectionId', 1)} STYP B")
+    lines.append("")
+
+    for area in model_json.get("areas", []):
+        sln_ids = area_sln_map.get(area["id"], [])
+        lines.append(
+            f"SAR {area['id']}  T {area['thickness'] * 1000:.0f}[mm] "
+            f"GRP {area.get('groupId', 0)} MNO {area.get('materialId', 1)}"
+        )
+        area_openings = [o for o in model_json.get("openings", []) if o.get("areaId") == area["id"]]
+        lines.append(f"SARB OUT {','.join(str(s) for s in sln_ids)}")
+        for o in area_openings:
+            o_slns = opening_sln_map.get(o["id"], [])
+            if o_slns:
+                lines.append(f"SARB IN {','.join(str(s) for s in o_slns)}")
+    lines.append("END")
+
+    dat_text = "\n".join(lines)
+    mesh_name = f"_mesh_{output_name}"
+    dat_path = os.path.join(output_dir, f"{mesh_name}.dat")
+    cdb_path = os.path.join(output_dir, f"{mesh_name}.cdb")
+    sqlite_path = os.path.join(output_dir, f"{mesh_name}.sqlite")
+
+    with open(dat_path, "w", encoding="utf-8") as f:
+        f.write(dat_text)
+
+    import glob as _glob
+    import time as _time
+    for old in _glob.glob(os.path.join(output_dir, f"{mesh_name}.*")):
+        if old.endswith(".dat"):
+            continue
+        for attempt in range(3):
+            try:
+                os.remove(old)
+                break
+            except OSError:
+                _time.sleep(0.5)
+
+    result = subprocess.run(
+        [SPS_EXE, "-B", dat_path],
+        capture_output=True,
+        cwd=output_dir,
+    )
+    log = (result.stdout or b"").decode("latin-1") + (result.stderr or b"").decode("latin-1")
+
+    if not os.path.exists(cdb_path):
+        return {"success": False, "errors": ["SPS Vernetzung fehlgeschlagen — CDB nicht erstellt"], "log": log}
+
+    ok = sync_geometry(cdb_path, sqlite_path)
+    if not ok:
+        return {"success": False, "errors": ["sync_cdb_to_db fehlgeschlagen"], "log": log}
+
+    # Read mesh from SQLite
+    import sqlite3 as _sqlite3
+    try:
+        conn = _sqlite3.connect(sqlite_path)
+        conn.row_factory = _sqlite3.Row
+        node_rows = conn.execute(
+            "SELECT number, position_x, position_y FROM fe_node ORDER BY number"
+        ).fetchall()
+        quad_rows = conn.execute(
+            "SELECT number, node_numbers_0, node_numbers_1, node_numbers_2, node_numbers_3 "
+            "FROM fe_quad ORDER BY number"
+        ).fetchall()
+        conn.close()
+    except Exception as e:
+        return {"success": False, "errors": [f"SQLite Lesefehler: {e}"], "log": log}
+
+    nodes_out = [{"id": r["number"], "x": r["position_x"], "y": r["position_y"]} for r in node_rows]
+    quads_out = [
+        {"id": r["number"], "nodes": [r["node_numbers_0"], r["node_numbers_1"],
+                                       r["node_numbers_2"], r["node_numbers_3"]]}
+        for r in quad_rows
+    ]
+
+    return {
+        "success": True,
+        "nodes": nodes_out,
+        "quads": quads_out,
+        "n_nodes": len(nodes_out),
+        "n_quads": len(quads_out),
         "log": log,
     }
 

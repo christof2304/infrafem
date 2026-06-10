@@ -1,0 +1,1586 @@
+$ Tabelle der im CSM fuer AQB verwendeten Lastfälle:
+LF 5110  TYP "G_1 "  QT  110 REF TEIL SUP PERM
+LF 5111  TYP "G_1 "  QT  111 REF TEIL SUP PERM
+LF 5112  TYP "G_1 "  QT  112 REF TEIL SUP PERM
+LF 5113  TYP "G_1 "  QT  113 REF TEIL SUP PERM
+LF 5114  TYP "G_1 "  QT  114 REF TEIL SUP PERM
+LF 5115  TYP "G_1 "  QT  115 REF TEIL SUP PERM
+LF 5116  TYP "G_1 "  QT  116 REF TEIL SUP PERM
+LF 5117  TYP "G_1 "  QT  117 REF TEIL SUP PERM
+LF 5118  TYP "G_1 "  QT  118 REF TEIL SUP PERM
+LF 5119  TYP "G_1 "  QT  119 REF TEIL SUP PERM
+LF 5120  TYP "G_1 "  QT  120 REF TEIL SUP PERM
+LF 5121  TYP "G_1 "  QT  121 REF TEIL SUP PERM
+LF 5122  TYP "G_1 "  QT  122 REF TEIL SUP PERM
+LF 5123  TYP "G_1 "  QT  123 REF TEIL SUP PERM
+LF 5124  TYP "G_1 "  QT  124 REF TEIL SUP PERM
+LF 5125  TYP "G_1 "  QT  125 REF TEIL SUP PERM
+LF 5126  TYP "G_1 "  QT  126 REF TEIL SUP PERM
+LF 5127  TYP "G_1 "  QT  127 REF TEIL SUP PERM
+LF 5128  TYP "G_1 "  QT  128 REF TEIL SUP PERM
+LF 5129  TYP "G_1 "  QT  129 REF TEIL SUP PERM
+LF 5130  TYP "G_1 "  QT  130 REF TEIL SUP PERM
+LF 5131  TYP "G_1 "  QT  131 REF TEIL SUP PERM
+LF 5132  TYP "G_1 "  QT  132 REF TEIL SUP PERM
+LF 5133  TYP "G_1 "  QT  133 REF TEIL SUP PERM
+LF 5134  TYP "G_1 "  QT  134 REF TEIL SUP PERM
+LF 5135  TYP "G_1 "  QT  135 REF TEIL SUP PERM
+LF 5136  TYP "G_1 "  QT  136 REF TEIL SUP PERM
+LF 5137  TYP "G_1 "  QT  137 REF TEIL SUP PERM
+LF 5138  TYP "G_1 "  QT  138 REF TEIL SUP PERM
+LF 5139  TYP "G_1 "  QT  139 REF TEIL SUP PERM
+LF 5140  TYP "G_1 "  QT  140 REF TEIL SUP PERM
+LF 5141  TYP "G_1 "  QT  141 REF TEIL SUP PERM
+LF 5142  TYP "G_1 "  QT  142 REF TEIL SUP PERM
+LF 5143  TYP "G_1 "  QT  143 REF TEIL SUP PERM
+LF 5144  TYP "G_1 "  QT  144 REF TEIL SUP PERM
+LF 5145  TYP "G_1 "  QT  145 REF TEIL SUP PERM
+LF 5146  TYP "G_1 "  QT  146 REF TEIL SUP PERM
+LF 5147  TYP "G_1 "  QT  147 REF TEIL SUP PERM
+LF 5148  TYP "G_1 "  QT  148 REF TEIL SUP PERM
+LF 5149  TYP "G_1 "  QT  149 REF TEIL SUP PERM
+LF 5150  TYP "G_1 "  QT  150 REF TEIL SUP PERM
+LF 5151  TYP "G_1 "  QT  151 REF TEIL SUP PERM
+LF 5152  TYP "G_1 "  QT  152 REF TEIL SUP PERM
+LF 5153  TYP "G_1 "  QT  153 REF TEIL SUP PERM
+LF 5154  TYP "G_1 "  QT  154 REF TEIL SUP PERM
+LF 5155  TYP "G_1 "  QT  155 REF TEIL SUP PERM
+LF 5156  TYP "G_1 "  QT  156 REF TEIL SUP PERM
+LF 5157  TYP "G_1 "  QT  157 REF TEIL SUP PERM
+LF 5158  TYP "G_1 "  QT  158 REF TEIL SUP PERM
+LF 5159  TYP "G_1 "  QT  159 REF TEIL SUP PERM
+LF 5160  TYP "G_1 "  QT  160 REF TEIL SUP PERM
+LF 5200  TYP "G_1 "  QT  200 REF TEIL SUP PERM
+LF 5210  TYP "G_2 "  QT  210 REF TEIL SUP PERM
+$ --------------------- Ende AQB-LF Liste ------------
+$
+$ *************************************************************
+$
+$ Block der STAB BA Definition:
+$    Zu verwenden als Folgezeile nach STAB Eingabe $$:
+$    STAB NR 10001 $$
+$    include aqb_beam_cs
+$
+#define aqb_beam_cs
+ BA - $ Querschnitte ohne Bauabschnitte
+#enddef
+$ *************************************************************
+$
+$ MAXIMA-Block fuer Einwirkung ACT GPC (5000-er Lastfälle):
+$ Zu verwenden im MAXIMA z.B.:
+$     [$(project)_csmlf.dat ist vor MAXIMA zu includieren]
+$     [damit die max_act_g Blöcke definiert sind,]
+$     [am besten nach einem zweifachen "ENDE"
+$                                      "ENDE"
+$      vgl. csm.dat\deutsch\more\csm31_design_maxi.dat ]:
+$
+$ ENDE
+$ ENDE
+$ #include "$(project)_csmlf.dat"
+$ PROG MAXIMA
+$ KOPF
+$   KOMB  .. desi BASE ..
+$     ACT G
+$       #include max_act_g
+$                (oder getrennt G_1 G_2 verwendbar)
+$     ACT P
+$       #include max_act_p  $ or   m_p_infsup
+$     ACT C
+$       #include max_act_c
+$
+#define max_act_g
+      LF  5110 ;  5111 ;  5112 ;  5113 ;  5114 ;  5115 ;  5116 ;  5117 ;  5118
+      LF  5119 ;  5120 ;  5121 ;  5122 ;  5123 ;  5124 ;  5125 ;  5126 ;  5127
+      LF  5128 ;  5129 ;  5130 ;  5131 ;  5132 ;  5133 ;  5134 ;  5135 ;  5136
+      LF  5137 ;  5138 ;  5139 ;  5140 ;  5141 ;  5142 ;  5143 ;  5144 ;  5145
+      LF  5146 ;  5147 ;  5148 ;  5149 ;  5150 ;  5151 ;  5152 ;  5153 ;  5154
+      LF  5155 ;  5156 ;  5157 ;  5158 ;  5159 ;  5160 ;  5200 ;  5210
+#enddef
+$
+$                 getrennt G_1 G_2 ... :
+#define maxactg_1
+      LF  5110 ;  5111 ;  5112 ;  5113 ;  5114 ;  5115 ;  5116 ;  5117 ;  5118
+      LF  5119 ;  5120 ;  5121 ;  5122 ;  5123 ;  5124 ;  5125 ;  5126 ;  5127
+      LF  5128 ;  5129 ;  5130 ;  5131 ;  5132 ;  5133 ;  5134 ;  5135 ;  5136
+      LF  5137 ;  5138 ;  5139 ;  5140 ;  5141 ;  5142 ;  5143 ;  5144 ;  5145
+      LF  5146 ;  5147 ;  5148 ;  5149 ;  5150 ;  5151 ;  5152 ;  5153 ;  5154
+      LF  5155 ;  5156 ;  5157 ;  5158 ;  5159 ;  5160 ;  5200
+#enddef
+$
+#define maxactg_2
+      LF  5210
+#enddef
+$
+#define max_act_p
+#enddef
+$
+#define m_p_infsup
+#enddef
+$
+#define max_act_c
+#enddef
+$ *************************************************************
+$
+#define csmgrp110
+$ ----------------------------------- Construction Stage 110  ----------------
+GRUP   0 BA 110
+GRUP   1 BA 110
+GRUP   9 BA 110
+GRUP  11 BA 110
+GRUP  12 BA 110
+GRUP  13 BA 110
+GRUP  14 BA 110
+GRUP 101 BA 110
+GRUP 109 BA 110
+GRUP 201 BA 110
+GRUP 209 BA 110
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.795647
+#enddef
+#define csmgrp111
+$ ----------------------------------- Construction Stage 111  ----------------
+GRUP   0 BA 111
+GRUP   1 BA 111
+GRUP   9 BA 111
+GRUP  11 BA 111
+GRUP  12 BA 111
+GRUP  13 BA 111
+GRUP  14 BA 111
+GRUP 101 BA 111
+GRUP 109 BA 111
+GRUP 201 BA 111
+GRUP 209 BA 111
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.778550
+#enddef
+#define csmgrp112
+$ ----------------------------------- Construction Stage 112  ----------------
+GRUP   0 BA 112
+GRUP   1 BA 112
+GRUP   9 BA 112
+GRUP  11 BA 112
+GRUP  12 BA 112
+GRUP  13 BA 112
+GRUP  14 BA 112
+GRUP 101 BA 112
+GRUP 109 BA 112
+GRUP 201 BA 112
+GRUP 209 BA 112
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.761454
+#enddef
+#define csmgrp113
+$ ----------------------------------- Construction Stage 113  ----------------
+GRUP   0 BA 113
+GRUP   1 BA 113
+GRUP   9 BA 113
+GRUP  11 BA 113
+GRUP  12 BA 113
+GRUP  13 BA 113
+GRUP  14 BA 113
+GRUP 101 BA 113
+GRUP 109 BA 113
+GRUP 201 BA 113
+GRUP 209 BA 113
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.744357
+#enddef
+#define csmgrp114
+$ ----------------------------------- Construction Stage 114  ----------------
+GRUP   0 BA 114
+GRUP   1 BA 114
+GRUP   9 BA 114
+GRUP  11 BA 114
+GRUP  12 BA 114
+GRUP  13 BA 114
+GRUP  14 BA 114
+GRUP 101 BA 114
+GRUP 109 BA 114
+GRUP 201 BA 114
+GRUP 209 BA 114
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.727261
+#enddef
+#define csmgrp115
+$ ----------------------------------- Construction Stage 115  ----------------
+GRUP   0 BA 115
+GRUP   1 BA 115
+GRUP   9 BA 115
+GRUP  11 BA 115
+GRUP  12 BA 115
+GRUP  13 BA 115
+GRUP  14 BA 115
+GRUP 101 BA 115
+GRUP 109 BA 115
+GRUP 201 BA 115
+GRUP 209 BA 115
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.710164
+#enddef
+#define csmgrp116
+$ ----------------------------------- Construction Stage 116  ----------------
+GRUP   0 BA 116
+GRUP   1 BA 116
+GRUP   9 BA 116
+GRUP  11 BA 116
+GRUP  12 BA 116
+GRUP  13 BA 116
+GRUP  14 BA 116
+GRUP 101 BA 116
+GRUP 109 BA 116
+GRUP 201 BA 116
+GRUP 209 BA 116
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.693068
+#enddef
+#define csmgrp117
+$ ----------------------------------- Construction Stage 117  ----------------
+GRUP   0 BA 117
+GRUP   1 BA 117
+GRUP   9 BA 117
+GRUP  11 BA 117
+GRUP  12 BA 117
+GRUP  13 BA 117
+GRUP  14 BA 117
+GRUP 101 BA 117
+GRUP 109 BA 117
+GRUP 201 BA 117
+GRUP 209 BA 117
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.675971
+#enddef
+#define csmgrp118
+$ ----------------------------------- Construction Stage 118  ----------------
+GRUP   0 BA 118
+GRUP   1 BA 118
+GRUP   9 BA 118
+GRUP  11 BA 118
+GRUP  12 BA 118
+GRUP  13 BA 118
+GRUP  14 BA 118
+GRUP 101 BA 118
+GRUP 109 BA 118
+GRUP 201 BA 118
+GRUP 209 BA 118
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.658875
+#enddef
+#define csmgrp119
+$ ----------------------------------- Construction Stage 119  ----------------
+GRUP   0 BA 119
+GRUP   1 BA 119
+GRUP   9 BA 119
+GRUP  11 BA 119
+GRUP  12 BA 119
+GRUP  13 BA 119
+GRUP  14 BA 119
+GRUP 101 BA 119
+GRUP 109 BA 119
+GRUP 201 BA 119
+GRUP 209 BA 119
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.641778
+#enddef
+#define csmgrp120
+$ ----------------------------------- Construction Stage 120  ----------------
+GRUP   0 BA 120
+GRUP   1 BA 120
+GRUP   2 BA 120
+GRUP   9 BA 120
+GRUP  11 BA 120
+GRUP  12 BA 120
+GRUP  13 BA 120
+GRUP  14 BA 120
+GRUP 101 BA 120
+GRUP 102 BA 120
+GRUP 109 BA 120
+GRUP 201 BA 120
+GRUP 202 BA 120
+GRUP 209 BA 120
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.624681
+#enddef
+#define csmgrp121
+$ ----------------------------------- Construction Stage 121  ----------------
+GRUP   0 BA 121
+GRUP   1 BA 121
+GRUP   2 BA 121
+GRUP   9 BA 121
+GRUP  11 BA 121
+GRUP  12 BA 121
+GRUP  13 BA 121
+GRUP  14 BA 121
+GRUP 101 BA 121
+GRUP 102 BA 121
+GRUP 109 BA 121
+GRUP 201 BA 121
+GRUP 202 BA 121
+GRUP 209 BA 121
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.607585
+#enddef
+#define csmgrp122
+$ ----------------------------------- Construction Stage 122  ----------------
+GRUP   0 BA 122
+GRUP   1 BA 122
+GRUP   2 BA 122
+GRUP   9 BA 122
+GRUP  11 BA 122
+GRUP  12 BA 122
+GRUP  13 BA 122
+GRUP  14 BA 122
+GRUP 101 BA 122
+GRUP 102 BA 122
+GRUP 109 BA 122
+GRUP 201 BA 122
+GRUP 202 BA 122
+GRUP 209 BA 122
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.590488
+#enddef
+#define csmgrp123
+$ ----------------------------------- Construction Stage 123  ----------------
+GRUP   0 BA 123
+GRUP   1 BA 123
+GRUP   2 BA 123
+GRUP   9 BA 123
+GRUP  11 BA 123
+GRUP  12 BA 123
+GRUP  13 BA 123
+GRUP  14 BA 123
+GRUP 101 BA 123
+GRUP 102 BA 123
+GRUP 109 BA 123
+GRUP 201 BA 123
+GRUP 202 BA 123
+GRUP 209 BA 123
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.573392
+#enddef
+#define csmgrp124
+$ ----------------------------------- Construction Stage 124  ----------------
+GRUP   0 BA 124
+GRUP   1 BA 124
+GRUP   2 BA 124
+GRUP   9 BA 124
+GRUP  11 BA 124
+GRUP  12 BA 124
+GRUP  13 BA 124
+GRUP  14 BA 124
+GRUP 101 BA 124
+GRUP 102 BA 124
+GRUP 109 BA 124
+GRUP 201 BA 124
+GRUP 202 BA 124
+GRUP 209 BA 124
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.556295
+#enddef
+#define csmgrp125
+$ ----------------------------------- Construction Stage 125  ----------------
+GRUP   0 BA 125
+GRUP   1 BA 125
+GRUP   2 BA 125
+GRUP   9 BA 125
+GRUP  11 BA 125
+GRUP  12 BA 125
+GRUP  13 BA 125
+GRUP  14 BA 125
+GRUP 101 BA 125
+GRUP 102 BA 125
+GRUP 109 BA 125
+GRUP 201 BA 125
+GRUP 202 BA 125
+GRUP 209 BA 125
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.539199
+#enddef
+#define csmgrp126
+$ ----------------------------------- Construction Stage 126  ----------------
+GRUP   0 BA 126
+GRUP   1 BA 126
+GRUP   2 BA 126
+GRUP   9 BA 126
+GRUP  11 BA 126
+GRUP  12 BA 126
+GRUP  13 BA 126
+GRUP  14 BA 126
+GRUP 101 BA 126
+GRUP 102 BA 126
+GRUP 109 BA 126
+GRUP 201 BA 126
+GRUP 202 BA 126
+GRUP 209 BA 126
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.522102
+#enddef
+#define csmgrp127
+$ ----------------------------------- Construction Stage 127  ----------------
+GRUP   0 BA 127
+GRUP   1 BA 127
+GRUP   2 BA 127
+GRUP   9 BA 127
+GRUP  11 BA 127
+GRUP  12 BA 127
+GRUP  13 BA 127
+GRUP  14 BA 127
+GRUP 101 BA 127
+GRUP 102 BA 127
+GRUP 109 BA 127
+GRUP 201 BA 127
+GRUP 202 BA 127
+GRUP 209 BA 127
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.505006
+#enddef
+#define csmgrp128
+$ ----------------------------------- Construction Stage 128  ----------------
+GRUP   0 BA 128
+GRUP   1 BA 128
+GRUP   2 BA 128
+GRUP   9 BA 128
+GRUP  11 BA 128
+GRUP  12 BA 128
+GRUP  13 BA 128
+GRUP  14 BA 128
+GRUP 101 BA 128
+GRUP 102 BA 128
+GRUP 109 BA 128
+GRUP 201 BA 128
+GRUP 202 BA 128
+GRUP 209 BA 128
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.487909
+#enddef
+#define csmgrp129
+$ ----------------------------------- Construction Stage 129  ----------------
+GRUP   0 BA 129
+GRUP   1 BA 129
+GRUP   2 BA 129
+GRUP   9 BA 129
+GRUP  11 BA 129
+GRUP  12 BA 129
+GRUP  13 BA 129
+GRUP  14 BA 129
+GRUP 101 BA 129
+GRUP 102 BA 129
+GRUP 109 BA 129
+GRUP 201 BA 129
+GRUP 202 BA 129
+GRUP 209 BA 129
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.470813
+#enddef
+#define csmgrp130
+$ ----------------------------------- Construction Stage 130  ----------------
+GRUP   0 BA 130
+GRUP   1 BA 130
+GRUP   2 BA 130
+GRUP   3 BA 130
+GRUP   9 BA 130
+GRUP  11 BA 130
+GRUP  12 BA 130
+GRUP  13 BA 130
+GRUP  14 BA 130
+GRUP 101 BA 130
+GRUP 102 BA 130
+GRUP 103 BA 130
+GRUP 109 BA 130
+GRUP 201 BA 130
+GRUP 202 BA 130
+GRUP 203 BA 130
+GRUP 209 BA 130
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.453716
+#enddef
+#define csmgrp131
+$ ----------------------------------- Construction Stage 131  ----------------
+GRUP   0 BA 131
+GRUP   1 BA 131
+GRUP   2 BA 131
+GRUP   3 BA 131
+GRUP   9 BA 131
+GRUP  11 BA 131
+GRUP  12 BA 131
+GRUP  13 BA 131
+GRUP  14 BA 131
+GRUP 101 BA 131
+GRUP 102 BA 131
+GRUP 103 BA 131
+GRUP 109 BA 131
+GRUP 201 BA 131
+GRUP 202 BA 131
+GRUP 203 BA 131
+GRUP 209 BA 131
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.436948
+#enddef
+#define csmgrp132
+$ ----------------------------------- Construction Stage 132  ----------------
+GRUP   0 BA 132
+GRUP   1 BA 132
+GRUP   2 BA 132
+GRUP   3 BA 132
+GRUP   9 BA 132
+GRUP  11 BA 132
+GRUP  12 BA 132
+GRUP  13 BA 132
+GRUP  14 BA 132
+GRUP 101 BA 132
+GRUP 102 BA 132
+GRUP 103 BA 132
+GRUP 109 BA 132
+GRUP 201 BA 132
+GRUP 202 BA 132
+GRUP 203 BA 132
+GRUP 209 BA 132
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.420180
+#enddef
+#define csmgrp133
+$ ----------------------------------- Construction Stage 133  ----------------
+GRUP   0 BA 133
+GRUP   1 BA 133
+GRUP   2 BA 133
+GRUP   3 BA 133
+GRUP   9 BA 133
+GRUP  11 BA 133
+GRUP  12 BA 133
+GRUP  13 BA 133
+GRUP  14 BA 133
+GRUP 101 BA 133
+GRUP 102 BA 133
+GRUP 103 BA 133
+GRUP 109 BA 133
+GRUP 201 BA 133
+GRUP 202 BA 133
+GRUP 203 BA 133
+GRUP 209 BA 133
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.403413
+#enddef
+#define csmgrp134
+$ ----------------------------------- Construction Stage 134  ----------------
+GRUP   0 BA 134
+GRUP   1 BA 134
+GRUP   2 BA 134
+GRUP   3 BA 134
+GRUP   9 BA 134
+GRUP  11 BA 134
+GRUP  12 BA 134
+GRUP  13 BA 134
+GRUP  14 BA 134
+GRUP 101 BA 134
+GRUP 102 BA 134
+GRUP 103 BA 134
+GRUP 109 BA 134
+GRUP 201 BA 134
+GRUP 202 BA 134
+GRUP 203 BA 134
+GRUP 209 BA 134
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.386645
+#enddef
+#define csmgrp135
+$ ----------------------------------- Construction Stage 135  ----------------
+GRUP   0 BA 135
+GRUP   1 BA 135
+GRUP   2 BA 135
+GRUP   3 BA 135
+GRUP   9 BA 135
+GRUP  11 BA 135
+GRUP  12 BA 135
+GRUP  13 BA 135
+GRUP  14 BA 135
+GRUP 101 BA 135
+GRUP 102 BA 135
+GRUP 103 BA 135
+GRUP 109 BA 135
+GRUP 201 BA 135
+GRUP 202 BA 135
+GRUP 203 BA 135
+GRUP 209 BA 135
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.369877
+#enddef
+#define csmgrp136
+$ ----------------------------------- Construction Stage 136  ----------------
+GRUP   0 BA 136
+GRUP   1 BA 136
+GRUP   2 BA 136
+GRUP   3 BA 136
+GRUP   9 BA 136
+GRUP  11 BA 136
+GRUP  12 BA 136
+GRUP  13 BA 136
+GRUP  14 BA 136
+GRUP 101 BA 136
+GRUP 102 BA 136
+GRUP 103 BA 136
+GRUP 109 BA 136
+GRUP 201 BA 136
+GRUP 202 BA 136
+GRUP 203 BA 136
+GRUP 209 BA 136
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.353109
+#enddef
+#define csmgrp137
+$ ----------------------------------- Construction Stage 137  ----------------
+GRUP   0 BA 137
+GRUP   1 BA 137
+GRUP   2 BA 137
+GRUP   3 BA 137
+GRUP   9 BA 137
+GRUP  11 BA 137
+GRUP  12 BA 137
+GRUP  13 BA 137
+GRUP  14 BA 137
+GRUP 101 BA 137
+GRUP 102 BA 137
+GRUP 103 BA 137
+GRUP 109 BA 137
+GRUP 201 BA 137
+GRUP 202 BA 137
+GRUP 203 BA 137
+GRUP 209 BA 137
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.336342
+#enddef
+#define csmgrp138
+$ ----------------------------------- Construction Stage 138  ----------------
+GRUP   0 BA 138
+GRUP   1 BA 138
+GRUP   2 BA 138
+GRUP   3 BA 138
+GRUP   9 BA 138
+GRUP  11 BA 138
+GRUP  12 BA 138
+GRUP  13 BA 138
+GRUP  14 BA 138
+GRUP 101 BA 138
+GRUP 102 BA 138
+GRUP 103 BA 138
+GRUP 109 BA 138
+GRUP 201 BA 138
+GRUP 202 BA 138
+GRUP 203 BA 138
+GRUP 209 BA 138
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.319574
+#enddef
+#define csmgrp139
+$ ----------------------------------- Construction Stage 139  ----------------
+GRUP   0 BA 139
+GRUP   1 BA 139
+GRUP   2 BA 139
+GRUP   3 BA 139
+GRUP   9 BA 139
+GRUP  11 BA 139
+GRUP  12 BA 139
+GRUP  13 BA 139
+GRUP  14 BA 139
+GRUP 101 BA 139
+GRUP 102 BA 139
+GRUP 103 BA 139
+GRUP 109 BA 139
+GRUP 201 BA 139
+GRUP 202 BA 139
+GRUP 203 BA 139
+GRUP 209 BA 139
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.302806
+#enddef
+#define csmgrp140
+$ ----------------------------------- Construction Stage 140  ----------------
+GRUP   0 BA 140
+GRUP   1 BA 140
+GRUP   2 BA 140
+GRUP   3 BA 140
+GRUP   4 BA 140
+GRUP   9 BA 140
+GRUP  11 BA 140
+GRUP  12 BA 140
+GRUP  13 BA 140
+GRUP  14 BA 140
+GRUP 101 BA 140
+GRUP 102 BA 140
+GRUP 103 BA 140
+GRUP 104 BA 140
+GRUP 109 BA 140
+GRUP 201 BA 140
+GRUP 202 BA 140
+GRUP 203 BA 140
+GRUP 204 BA 140
+GRUP 209 BA 140
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.286038
+#enddef
+#define csmgrp141
+$ ----------------------------------- Construction Stage 141  ----------------
+GRUP   0 BA 141
+GRUP   1 BA 141
+GRUP   2 BA 141
+GRUP   3 BA 141
+GRUP   4 BA 141
+GRUP   9 BA 141
+GRUP  11 BA 141
+GRUP  12 BA 141
+GRUP  13 BA 141
+GRUP  14 BA 141
+GRUP 101 BA 141
+GRUP 102 BA 141
+GRUP 103 BA 141
+GRUP 104 BA 141
+GRUP 109 BA 141
+GRUP 201 BA 141
+GRUP 202 BA 141
+GRUP 203 BA 141
+GRUP 204 BA 141
+GRUP 209 BA 141
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.273545
+#enddef
+#define csmgrp142
+$ ----------------------------------- Construction Stage 142  ----------------
+GRUP   0 BA 142
+GRUP   1 BA 142
+GRUP   2 BA 142
+GRUP   3 BA 142
+GRUP   4 BA 142
+GRUP   9 BA 142
+GRUP  11 BA 142
+GRUP  12 BA 142
+GRUP  13 BA 142
+GRUP  14 BA 142
+GRUP 101 BA 142
+GRUP 102 BA 142
+GRUP 103 BA 142
+GRUP 104 BA 142
+GRUP 109 BA 142
+GRUP 201 BA 142
+GRUP 202 BA 142
+GRUP 203 BA 142
+GRUP 204 BA 142
+GRUP 209 BA 142
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.261051
+#enddef
+#define csmgrp143
+$ ----------------------------------- Construction Stage 143  ----------------
+GRUP   0 BA 143
+GRUP   1 BA 143
+GRUP   2 BA 143
+GRUP   3 BA 143
+GRUP   4 BA 143
+GRUP   9 BA 143
+GRUP  11 BA 143
+GRUP  12 BA 143
+GRUP  13 BA 143
+GRUP  14 BA 143
+GRUP 101 BA 143
+GRUP 102 BA 143
+GRUP 103 BA 143
+GRUP 104 BA 143
+GRUP 109 BA 143
+GRUP 201 BA 143
+GRUP 202 BA 143
+GRUP 203 BA 143
+GRUP 204 BA 143
+GRUP 209 BA 143
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.248557
+#enddef
+#define csmgrp144
+$ ----------------------------------- Construction Stage 144  ----------------
+GRUP   0 BA 144
+GRUP   1 BA 144
+GRUP   2 BA 144
+GRUP   3 BA 144
+GRUP   4 BA 144
+GRUP   9 BA 144
+GRUP  11 BA 144
+GRUP  12 BA 144
+GRUP  13 BA 144
+GRUP  14 BA 144
+GRUP 101 BA 144
+GRUP 102 BA 144
+GRUP 103 BA 144
+GRUP 104 BA 144
+GRUP 109 BA 144
+GRUP 201 BA 144
+GRUP 202 BA 144
+GRUP 203 BA 144
+GRUP 204 BA 144
+GRUP 209 BA 144
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.236064
+#enddef
+#define csmgrp145
+$ ----------------------------------- Construction Stage 145  ----------------
+GRUP   0 BA 145
+GRUP   1 BA 145
+GRUP   2 BA 145
+GRUP   3 BA 145
+GRUP   4 BA 145
+GRUP   9 BA 145
+GRUP  11 BA 145
+GRUP  12 BA 145
+GRUP  13 BA 145
+GRUP  14 BA 145
+GRUP 101 BA 145
+GRUP 102 BA 145
+GRUP 103 BA 145
+GRUP 104 BA 145
+GRUP 109 BA 145
+GRUP 201 BA 145
+GRUP 202 BA 145
+GRUP 203 BA 145
+GRUP 204 BA 145
+GRUP 209 BA 145
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.223570
+#enddef
+#define csmgrp146
+$ ----------------------------------- Construction Stage 146  ----------------
+GRUP   0 BA 146
+GRUP   1 BA 146
+GRUP   2 BA 146
+GRUP   3 BA 146
+GRUP   4 BA 146
+GRUP   9 BA 146
+GRUP  11 BA 146
+GRUP  12 BA 146
+GRUP  13 BA 146
+GRUP  14 BA 146
+GRUP 101 BA 146
+GRUP 102 BA 146
+GRUP 103 BA 146
+GRUP 104 BA 146
+GRUP 109 BA 146
+GRUP 201 BA 146
+GRUP 202 BA 146
+GRUP 203 BA 146
+GRUP 204 BA 146
+GRUP 209 BA 146
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.211077
+#enddef
+#define csmgrp147
+$ ----------------------------------- Construction Stage 147  ----------------
+GRUP   0 BA 147
+GRUP   1 BA 147
+GRUP   2 BA 147
+GRUP   3 BA 147
+GRUP   4 BA 147
+GRUP   9 BA 147
+GRUP  11 BA 147
+GRUP  12 BA 147
+GRUP  13 BA 147
+GRUP  14 BA 147
+GRUP 101 BA 147
+GRUP 102 BA 147
+GRUP 103 BA 147
+GRUP 104 BA 147
+GRUP 109 BA 147
+GRUP 201 BA 147
+GRUP 202 BA 147
+GRUP 203 BA 147
+GRUP 204 BA 147
+GRUP 209 BA 147
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.198583
+#enddef
+#define csmgrp148
+$ ----------------------------------- Construction Stage 148  ----------------
+GRUP   0 BA 148
+GRUP   1 BA 148
+GRUP   2 BA 148
+GRUP   3 BA 148
+GRUP   4 BA 148
+GRUP   9 BA 148
+GRUP  11 BA 148
+GRUP  12 BA 148
+GRUP  13 BA 148
+GRUP  14 BA 148
+GRUP 101 BA 148
+GRUP 102 BA 148
+GRUP 103 BA 148
+GRUP 104 BA 148
+GRUP 109 BA 148
+GRUP 201 BA 148
+GRUP 202 BA 148
+GRUP 203 BA 148
+GRUP 204 BA 148
+GRUP 209 BA 148
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.186089
+#enddef
+#define csmgrp149
+$ ----------------------------------- Construction Stage 149  ----------------
+GRUP   0 BA 149
+GRUP   1 BA 149
+GRUP   2 BA 149
+GRUP   3 BA 149
+GRUP   4 BA 149
+GRUP   9 BA 149
+GRUP  11 BA 149
+GRUP  12 BA 149
+GRUP  13 BA 149
+GRUP  14 BA 149
+GRUP 101 BA 149
+GRUP 102 BA 149
+GRUP 103 BA 149
+GRUP 104 BA 149
+GRUP 109 BA 149
+GRUP 201 BA 149
+GRUP 202 BA 149
+GRUP 203 BA 149
+GRUP 204 BA 149
+GRUP 209 BA 149
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.173596
+#enddef
+#define csmgrp150
+$ ----------------------------------- Construction Stage 150  ----------------
+GRUP   0 BA 150
+GRUP   1 BA 150
+GRUP   2 BA 150
+GRUP   3 BA 150
+GRUP   4 BA 150
+GRUP   5 BA 150
+GRUP   9 BA 150
+GRUP  11 BA 150
+GRUP  12 BA 150
+GRUP  13 BA 150
+GRUP  14 BA 150
+GRUP 101 BA 150
+GRUP 102 BA 150
+GRUP 103 BA 150
+GRUP 104 BA 150
+GRUP 105 BA 150
+GRUP 109 BA 150
+GRUP 201 BA 150
+GRUP 202 BA 150
+GRUP 203 BA 150
+GRUP 204 BA 150
+GRUP 205 BA 150
+GRUP 209 BA 150
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.161102
+#enddef
+#define csmgrp151
+$ ----------------------------------- Construction Stage 151  ----------------
+GRUP   0 BA 151
+GRUP   1 BA 151
+GRUP   2 BA 151
+GRUP   3 BA 151
+GRUP   4 BA 151
+GRUP   5 BA 151
+GRUP   9 BA 151
+GRUP  11 BA 151
+GRUP  12 BA 151
+GRUP  13 BA 151
+GRUP  14 BA 151
+GRUP 101 BA 151
+GRUP 102 BA 151
+GRUP 103 BA 151
+GRUP 104 BA 151
+GRUP 105 BA 151
+GRUP 109 BA 151
+GRUP 201 BA 151
+GRUP 202 BA 151
+GRUP 203 BA 151
+GRUP 204 BA 151
+GRUP 205 BA 151
+GRUP 209 BA 151
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.144992
+#enddef
+#define csmgrp152
+$ ----------------------------------- Construction Stage 152  ----------------
+GRUP   0 BA 152
+GRUP   1 BA 152
+GRUP   2 BA 152
+GRUP   3 BA 152
+GRUP   4 BA 152
+GRUP   5 BA 152
+GRUP   9 BA 152
+GRUP  11 BA 152
+GRUP  12 BA 152
+GRUP  13 BA 152
+GRUP  14 BA 152
+GRUP 101 BA 152
+GRUP 102 BA 152
+GRUP 103 BA 152
+GRUP 104 BA 152
+GRUP 105 BA 152
+GRUP 109 BA 152
+GRUP 201 BA 152
+GRUP 202 BA 152
+GRUP 203 BA 152
+GRUP 204 BA 152
+GRUP 205 BA 152
+GRUP 209 BA 152
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.128882
+#enddef
+#define csmgrp153
+$ ----------------------------------- Construction Stage 153  ----------------
+GRUP   0 BA 153
+GRUP   1 BA 153
+GRUP   2 BA 153
+GRUP   3 BA 153
+GRUP   4 BA 153
+GRUP   5 BA 153
+GRUP   9 BA 153
+GRUP  11 BA 153
+GRUP  12 BA 153
+GRUP  13 BA 153
+GRUP  14 BA 153
+GRUP 101 BA 153
+GRUP 102 BA 153
+GRUP 103 BA 153
+GRUP 104 BA 153
+GRUP 105 BA 153
+GRUP 109 BA 153
+GRUP 201 BA 153
+GRUP 202 BA 153
+GRUP 203 BA 153
+GRUP 204 BA 153
+GRUP 205 BA 153
+GRUP 209 BA 153
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.112771
+#enddef
+#define csmgrp154
+$ ----------------------------------- Construction Stage 154  ----------------
+GRUP   0 BA 154
+GRUP   1 BA 154
+GRUP   2 BA 154
+GRUP   3 BA 154
+GRUP   4 BA 154
+GRUP   5 BA 154
+GRUP   9 BA 154
+GRUP  11 BA 154
+GRUP  12 BA 154
+GRUP  13 BA 154
+GRUP  14 BA 154
+GRUP 101 BA 154
+GRUP 102 BA 154
+GRUP 103 BA 154
+GRUP 104 BA 154
+GRUP 105 BA 154
+GRUP 109 BA 154
+GRUP 201 BA 154
+GRUP 202 BA 154
+GRUP 203 BA 154
+GRUP 204 BA 154
+GRUP 205 BA 154
+GRUP 209 BA 154
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0966612
+#enddef
+#define csmgrp155
+$ ----------------------------------- Construction Stage 155  ----------------
+GRUP   0 BA 155
+GRUP   1 BA 155
+GRUP   2 BA 155
+GRUP   3 BA 155
+GRUP   4 BA 155
+GRUP   5 BA 155
+GRUP   9 BA 155
+GRUP  11 BA 155
+GRUP  12 BA 155
+GRUP  13 BA 155
+GRUP  14 BA 155
+GRUP 101 BA 155
+GRUP 102 BA 155
+GRUP 103 BA 155
+GRUP 104 BA 155
+GRUP 105 BA 155
+GRUP 109 BA 155
+GRUP 201 BA 155
+GRUP 202 BA 155
+GRUP 203 BA 155
+GRUP 204 BA 155
+GRUP 205 BA 155
+GRUP 209 BA 155
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0805510
+#enddef
+#define csmgrp156
+$ ----------------------------------- Construction Stage 156  ----------------
+GRUP   0 BA 156
+GRUP   1 BA 156
+GRUP   2 BA 156
+GRUP   3 BA 156
+GRUP   4 BA 156
+GRUP   5 BA 156
+GRUP   9 BA 156
+GRUP  11 BA 156
+GRUP  12 BA 156
+GRUP  13 BA 156
+GRUP  14 BA 156
+GRUP 101 BA 156
+GRUP 102 BA 156
+GRUP 103 BA 156
+GRUP 104 BA 156
+GRUP 105 BA 156
+GRUP 109 BA 156
+GRUP 201 BA 156
+GRUP 202 BA 156
+GRUP 203 BA 156
+GRUP 204 BA 156
+GRUP 205 BA 156
+GRUP 209 BA 156
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0644408
+#enddef
+#define csmgrp157
+$ ----------------------------------- Construction Stage 157  ----------------
+GRUP   0 BA 157
+GRUP   1 BA 157
+GRUP   2 BA 157
+GRUP   3 BA 157
+GRUP   4 BA 157
+GRUP   5 BA 157
+GRUP   9 BA 157
+GRUP  11 BA 157
+GRUP  12 BA 157
+GRUP  13 BA 157
+GRUP  14 BA 157
+GRUP 101 BA 157
+GRUP 102 BA 157
+GRUP 103 BA 157
+GRUP 104 BA 157
+GRUP 105 BA 157
+GRUP 109 BA 157
+GRUP 201 BA 157
+GRUP 202 BA 157
+GRUP 203 BA 157
+GRUP 204 BA 157
+GRUP 205 BA 157
+GRUP 209 BA 157
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0483306
+#enddef
+#define csmgrp158
+$ ----------------------------------- Construction Stage 158  ----------------
+GRUP   0 BA 158
+GRUP   1 BA 158
+GRUP   2 BA 158
+GRUP   3 BA 158
+GRUP   4 BA 158
+GRUP   5 BA 158
+GRUP   9 BA 158
+GRUP  11 BA 158
+GRUP  12 BA 158
+GRUP  13 BA 158
+GRUP  14 BA 158
+GRUP 101 BA 158
+GRUP 102 BA 158
+GRUP 103 BA 158
+GRUP 104 BA 158
+GRUP 105 BA 158
+GRUP 109 BA 158
+GRUP 201 BA 158
+GRUP 202 BA 158
+GRUP 203 BA 158
+GRUP 204 BA 158
+GRUP 205 BA 158
+GRUP 209 BA 158
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0322204
+#enddef
+#define csmgrp159
+$ ----------------------------------- Construction Stage 159  ----------------
+GRUP   0 BA 159
+GRUP   1 BA 159
+GRUP   2 BA 159
+GRUP   3 BA 159
+GRUP   4 BA 159
+GRUP   5 BA 159
+GRUP   9 BA 159
+GRUP  11 BA 159
+GRUP  12 BA 159
+GRUP  13 BA 159
+GRUP  14 BA 159
+GRUP 101 BA 159
+GRUP 102 BA 159
+GRUP 103 BA 159
+GRUP 104 BA 159
+GRUP 105 BA 159
+GRUP 109 BA 159
+GRUP 201 BA 159
+GRUP 202 BA 159
+GRUP 203 BA 159
+GRUP 204 BA 159
+GRUP 205 BA 159
+GRUP 209 BA 159
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0161102
+#enddef
+#define csmgrp160
+$ ----------------------------------- Construction Stage 160  ----------------
+GRUP   0 BA 160
+GRUP   1 BA 160
+GRUP   2 BA 160
+GRUP   3 BA 160
+GRUP   4 BA 160
+GRUP   5 BA 160
+GRUP   9 BA 160
+GRUP  11 BA 160
+GRUP  12 BA 160
+GRUP  13 BA 160
+GRUP  14 BA 160
+GRUP 101 BA 160
+GRUP 102 BA 160
+GRUP 103 BA 160
+GRUP 104 BA 160
+GRUP 105 BA 160
+GRUP 109 BA 160
+GRUP 201 BA 160
+GRUP 202 BA 160
+GRUP 203 BA 160
+GRUP 204 BA 160
+GRUP 205 BA 160
+GRUP 209 BA 160
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+#enddef
+#define csmgrp200
+$ ----------------------------------- Construction Stage 200  ----------------
+GRUP   0 BA 200
+GRUP   1 BA 200
+GRUP   2 BA 200
+GRUP   3 BA 200
+GRUP   4 BA 200
+GRUP   5 BA 200
+GRUP  11 BA 200
+GRUP  12 BA 200
+GRUP  13 BA 200
+GRUP  14 BA 200
+GRUP 101 BA 200
+GRUP 102 BA 200
+GRUP 103 BA 200
+GRUP 104 BA 200
+GRUP 105 BA 200
+GRUP 201 BA 200
+GRUP 202 BA 200
+GRUP 203 BA 200
+GRUP 204 BA 200
+GRUP 205 BA 200
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+#enddef
+#define csmgrp210
+$ ----------------------------------- Construction Stage 210  ----------------
+GRUP   0 BA 210
+GRUP   1 BA 210
+GRUP   2 BA 210
+GRUP   3 BA 210
+GRUP   4 BA 210
+GRUP   5 BA 210
+GRUP  11 BA 210
+GRUP  12 BA 210
+GRUP  13 BA 210
+GRUP  14 BA 210
+GRUP 101 BA 210
+GRUP 102 BA 210
+GRUP 103 BA 210
+GRUP 104 BA 210
+GRUP 105 BA 210
+GRUP 201 BA 210
+GRUP 202 BA 210
+GRUP 203 BA 210
+GRUP 204 BA 210
+GRUP 205 BA 210
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+#enddef
+$ *************************************************************
+#define stage_design
+$ Tabelle fuer Bemessung in Bauzustaenden - Beispiel siehe  csm34_stage_design.dat
+$ Anwendung: Variable cs_design setzen, z.B. sto#cs_design 120
+$ dann die GAMU defines setzen, z.B.:
+$    #define GAMU_G_1=GAMU 1.35 GAMF 1.00   $  dead load       take sum of all effects of G_1 with 1.35 or 1.00
+$    #define GAMU_G_2=GAMU 1.35 GAMF 1.00   $  add.dead        take sum of all effects of G_2 with 1.35 or 1.00
+$    #define GAMU_P=GAMU 1.00 GAMF 1.00   $  prestress
+$     creep is already defined in the #include stage_design
+$ dann #include stage_design    setzen.
+$ -> es werden damit nur die Lastfaelle gesetzt, die zu diesem Bauzustand gehoeren.
+$    Diese koennen dann einfach mit z.B. KOMB ... LF1 G LF2 P LF3 C verwendet werden.
+$    Dabei werden die entsprechenden Sicherheits- und psi-Beiwerte  gesetzt.
+$
+LET#LOOPSIZE 4999
+$
+if $(cs_design)>=110 ; LF 5110  TYP "G_1 "  QT  110 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=111 ; LF 5111  TYP "G_1 "  QT  111 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=112 ; LF 5112  TYP "G_1 "  QT  112 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=113 ; LF 5113  TYP "G_1 "  QT  113 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=114 ; LF 5114  TYP "G_1 "  QT  114 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=115 ; LF 5115  TYP "G_1 "  QT  115 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=116 ; LF 5116  TYP "G_1 "  QT  116 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=117 ; LF 5117  TYP "G_1 "  QT  117 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=118 ; LF 5118  TYP "G_1 "  QT  118 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=119 ; LF 5119  TYP "G_1 "  QT  119 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=120 ; LF 5120  TYP "G_1 "  QT  120 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=121 ; LF 5121  TYP "G_1 "  QT  121 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=122 ; LF 5122  TYP "G_1 "  QT  122 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=123 ; LF 5123  TYP "G_1 "  QT  123 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=124 ; LF 5124  TYP "G_1 "  QT  124 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=125 ; LF 5125  TYP "G_1 "  QT  125 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=126 ; LF 5126  TYP "G_1 "  QT  126 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=127 ; LF 5127  TYP "G_1 "  QT  127 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=128 ; LF 5128  TYP "G_1 "  QT  128 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=129 ; LF 5129  TYP "G_1 "  QT  129 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=130 ; LF 5130  TYP "G_1 "  QT  130 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=131 ; LF 5131  TYP "G_1 "  QT  131 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=132 ; LF 5132  TYP "G_1 "  QT  132 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=133 ; LF 5133  TYP "G_1 "  QT  133 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=134 ; LF 5134  TYP "G_1 "  QT  134 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=135 ; LF 5135  TYP "G_1 "  QT  135 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=136 ; LF 5136  TYP "G_1 "  QT  136 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=137 ; LF 5137  TYP "G_1 "  QT  137 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=138 ; LF 5138  TYP "G_1 "  QT  138 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=139 ; LF 5139  TYP "G_1 "  QT  139 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=140 ; LF 5140  TYP "G_1 "  QT  140 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=141 ; LF 5141  TYP "G_1 "  QT  141 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=142 ; LF 5142  TYP "G_1 "  QT  142 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=143 ; LF 5143  TYP "G_1 "  QT  143 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=144 ; LF 5144  TYP "G_1 "  QT  144 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=145 ; LF 5145  TYP "G_1 "  QT  145 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=146 ; LF 5146  TYP "G_1 "  QT  146 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=147 ; LF 5147  TYP "G_1 "  QT  147 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=148 ; LF 5148  TYP "G_1 "  QT  148 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=149 ; LF 5149  TYP "G_1 "  QT  149 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=150 ; LF 5150  TYP "G_1 "  QT  150 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=151 ; LF 5151  TYP "G_1 "  QT  151 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=152 ; LF 5152  TYP "G_1 "  QT  152 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=153 ; LF 5153  TYP "G_1 "  QT  153 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=154 ; LF 5154  TYP "G_1 "  QT  154 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=155 ; LF 5155  TYP "G_1 "  QT  155 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=156 ; LF 5156  TYP "G_1 "  QT  156 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=157 ; LF 5157  TYP "G_1 "  QT  157 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=158 ; LF 5158  TYP "G_1 "  QT  158 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=159 ; LF 5159  TYP "G_1 "  QT  159 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=160 ; LF 5160  TYP "G_1 "  QT  160 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=200 ; LF 5200  TYP "G_1 "  QT  200 REF TEIL SUP PERM $(GAMU_G_1) ; endif
+if $(cs_design)>=210 ; LF 5210  TYP "G_2 "  QT  210 REF TEIL SUP PERM $(GAMU_G_2) ; endif
+$ --------------------- Ende AQB Bemessung in Bauzustaenden - siehe  csm34_stage_design.dat ------------
+#enddef
+$ *************************************************************
+$

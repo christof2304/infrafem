@@ -67,11 +67,17 @@ export class EditorCanvas {
         this.dxfGroup.renderOrder = -1; // render behind everything
         this._dxfSegments = []; // DXF line segments for snapping
         this._dxfPoints = [];   // DXF endpoints for snapping
+        this.meshGroup = new THREE.Group();           // FE mesh overlay (wireframe)
+        this.edgeHighlightGroup = new THREE.Group();  // hovered area edge highlight
+        this.reactionGroup = new THREE.Group();       // support reaction arrows
+        this._meshVisible = false;
+        this._hoverEdgeInfo = null; // {areaId, edgeIndex}
 
         // Diagram display state
         this._diagramData = null;
         this._diagramTypes = new Set(); // 'My', 'Vz', 'N'
         this._diagramScale = 0.5;
+        this._loadScale = 1.0;
 
         // Display options
         this._showSections = false; // show extruded cross-sections on beams
@@ -116,8 +122,8 @@ export class EditorCanvas {
         this.rebuild();
 
         // Listen to model changes
-        this.model.bus.on('model:changed', () => this.rebuild());
-        this.model.bus.on('model:loaded', () => { this._fitCamera(); this.rebuild(); });
+        this.model.bus.on('model:changed', () => { this.clearMeshOverlay(); this.rebuild(); });
+        this.model.bus.on('model:loaded', () => { this.clearMeshOverlay(); this.applyViewControls(); this._fitCamera(); this.rebuild(); });
         this.model.bus.on('selection:changed', () => this._updateSelectionVisuals());
         this.model.bus.on('loadcase:changed', () => this._rebuildLoads());
         this.model.bus.on('mode:changed', (mode) => this._onModeChanged(mode));
@@ -144,13 +150,12 @@ export class EditorCanvas {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.container.appendChild(this.renderer.domElement);
 
-        // OrbitControls — XY plane view
+        // OrbitControls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.12;
         this.controls.target.set(5, 3, 0);
-        // Lock to 2D view for RAHM: disable rotation, allow pan + zoom
-        this._set2DControls();
+        this.applyViewControls();
 
         // Lights
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -171,6 +176,9 @@ export class EditorCanvas {
         this.scene.add(this.quadResultGroup);
         this.scene.add(this.snapGroup);
         this.scene.add(this.dxfGroup);
+        this.scene.add(this.meshGroup);
+        this.scene.add(this.edgeHighlightGroup);
+        this.scene.add(this.reactionGroup);
 
         // Resize handler
         this._onResize = () => {
@@ -191,18 +199,26 @@ export class EditorCanvas {
         animate();
     }
 
-    _set2DControls() {
-        // Left = pan, Middle = zoom, Right = 3D orbit
-        this.controls.enableRotate = true;
-        this.controls.mouseButtons = {
-            LEFT: THREE.MOUSE.PAN,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.ROTATE,
-        };
-        this.controls.touches = {
-            ONE: THREE.TOUCH.PAN,
-            TWO: THREE.TOUCH.DOLLY_ROTATE,
-        };
+    applyViewControls() {
+        const is3D = this.model.data.meta.systemType === '3D';
+        this.controls.enableRotate = is3D;
+        if (is3D) {
+            this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+            this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+            this.controls.minPolarAngle = 0;
+            this.controls.maxPolarAngle = Math.PI;
+            this.controls.minAzimuthAngle = -Infinity;
+            this.controls.maxAzimuthAngle = Infinity;
+        } else {
+            this.controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+            this.controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+            // Snap camera back to straight-on view
+            const dist = this.camera.position.distanceTo(this.controls.target);
+            const t = this.controls.target;
+            this.camera.position.set(t.x, t.y, t.z + dist);
+            this.camera.up.set(0, 1, 0);
+            this.controls.update();
+        }
     }
 
     _fitCamera() {
@@ -602,9 +618,15 @@ export class EditorCanvas {
     }
 
     // ── Load Arrows ────────────────────────────────────────
+    setLoadScale(s) {
+        this._loadScale = s;
+        this._rebuildLoads();
+    }
+
     _rebuildLoads() {
         this._clearGroup(this.loadGroup);
         const loads = this.model.getActiveLoads();
+        const s = this._loadScale;
 
         for (const load of loads) {
             if (load.type === 'NODE_FORCE') {
@@ -613,13 +635,12 @@ export class EditorCanvas {
                 const origin = new THREE.Vector3(node.x, node.z, 0);
                 const dir = this._loadDirection(load.direction);
                 const mag = Math.abs(load.value);
-                const arrowLen = Math.min(Math.max(mag / 20, 0.5), 3);
+                const arrowLen = Math.max((mag / 20) * s, 0.2);
                 const sign = load.value >= 0 ? 1 : -1;
                 const arrowDir = dir.clone().multiplyScalar(sign);
                 const arrow = new THREE.ArrowHelper(arrowDir, origin.clone().sub(arrowDir.clone().multiplyScalar(arrowLen)), arrowLen, LOAD_COLOR, arrowLen * 0.25, arrowLen * 0.15);
                 this.loadGroup.add(arrow);
-                // Label
-                this._addLoadLabel(origin.clone().sub(arrowDir.clone().multiplyScalar(arrowLen * 0.5)), `${load.value} kN`);
+                this._addLoadLabel(origin.clone().sub(arrowDir.clone().multiplyScalar(arrowLen + 0.1)), `${load.value} kN`);
             } else if (load.type === 'BEAM_LINE') {
                 const beam = this.model.getBeam(load.elementId);
                 if (!beam) continue;
@@ -636,14 +657,25 @@ export class EditorCanvas {
                     const origin = new THREE.Vector3(px, py, 0);
                     const val = load.p1 + t * (load.p2 - load.p1);
                     const mag = Math.abs(val);
-                    const arrowLen = Math.min(Math.max(mag / 20, 0.3), 2);
+                    const arrowLen = Math.max((mag / 20) * s, 0.15);
                     const sign = val >= 0 ? 1 : -1;
                     const arrowDir = dir.clone().multiplyScalar(sign);
                     const arrow = new THREE.ArrowHelper(arrowDir, origin.clone().sub(arrowDir.clone().multiplyScalar(arrowLen)), arrowLen, LOAD_COLOR, arrowLen * 0.2, arrowLen * 0.1);
                     this.loadGroup.add(arrow);
                 }
+                // Labels at start and end of beam
+                const startPt = new THREE.Vector3(n1.x, n1.z, 0);
+                const endPt   = new THREE.Vector3(n2.x, n2.z, 0);
+                const startLen = Math.max((Math.abs(load.p1) / 20) * s, 0.15);
+                const endLen   = Math.max((Math.abs(load.p2) / 20) * s, 0.15);
+                const sign1 = load.p1 >= 0 ? 1 : -1;
+                const sign2 = load.p2 >= 0 ? 1 : -1;
+                this._addLoadLabel(startPt.clone().sub(dir.clone().multiplyScalar(sign1 * (startLen + 0.1))), `${load.p1} kN/m`);
+                if (Math.abs(load.p2 - load.p1) > 0.01) {
+                    this._addLoadLabel(endPt.clone().sub(dir.clone().multiplyScalar(sign2 * (endLen + 0.1))), `${load.p2} kN/m`);
+                }
                 // Fill polygon between arrows
-                this._addDistributedLoadFill(n1, n2, load, dir);
+                this._addDistributedLoadFill(n1, n2, load, dir, s);
             }
         }
     }
@@ -671,7 +703,7 @@ export class EditorCanvas {
         this.loadGroup.add(sprite);
     }
 
-    _addDistributedLoadFill(n1, n2, load, dir) {
+    _addDistributedLoadFill(n1, n2, load, dir, s = 1.0) {
         // Semi-transparent fill between load arrows
         const nPts = 6;
         const points = [];
@@ -680,9 +712,9 @@ export class EditorCanvas {
             const px = n1.x + t * (n2.x - n1.x);
             const py = n1.z + t * (n2.z - n1.z);
             const val = load.p1 + t * (load.p2 - load.p1);
-            const len = val / 20; // scale
+            const len = (val / 20) * s;
             points.push(new THREE.Vector3(px, py, 0));
-            points.push(new THREE.Vector3(px + dir.x * len, py + dir.y * len, 0));
+            points.push(new THREE.Vector3(px - dir.x * len, py - dir.y * len, 0));
         }
         // Build triangles
         const positions = [];
@@ -926,6 +958,92 @@ export class EditorCanvas {
         this._clearSnapIndicator();
     }
 
+    // ── FE Mesh Overlay ────────────────────────────────────
+    showMeshOverlay(nodes, quads) {
+        this._clearGroup(this.meshGroup);
+        const nodeMap = {};
+        for (const n of nodes) nodeMap[n.id] = n;
+
+        // Build edge list, deduplicating shared edges
+        const edgeSet = new Set();
+        const positions = [];
+        for (const q of quads) {
+            const ns = q.nodes.filter(id => id && nodeMap[id]);
+            const count = ns.length;
+            for (let i = 0; i < count; i++) {
+                const a = ns[i], b = ns[(i + 1) % count];
+                const key = a < b ? `${a}_${b}` : `${b}_${a}`;
+                if (!edgeSet.has(key)) {
+                    edgeSet.add(key);
+                    const na = nodeMap[a], nb = nodeMap[b];
+                    // FE node coords: position_x → canvas x, position_y → canvas y
+                    positions.push(na.x, na.y, 0.02);
+                    positions.push(nb.x, nb.y, 0.02);
+                }
+            }
+        }
+
+        if (positions.length === 0) return;
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        const mat = new THREE.LineBasicMaterial({
+            color: 0xffffff, transparent: true, opacity: 0.45,
+        });
+        this.meshGroup.add(new THREE.LineSegments(geo, mat));
+        this._meshVisible = true;
+    }
+
+    clearMeshOverlay() {
+        this._clearGroup(this.meshGroup);
+        this._meshVisible = false;
+    }
+
+    isMeshVisible() { return this._meshVisible; }
+
+    // ── Area Edge Detection ────────────────────────────────
+    _findEdgeAt(worldX, worldZ, thresholdWorld = 0.35) {
+        for (const area of (this.model.data.areas || [])) {
+            const bnd = area.boundaryNodeIds;
+            for (let i = 0; i < bnd.length; i++) {
+                const n1 = this.model.getNode(bnd[i]);
+                const n2 = this.model.getNode(bnd[(i + 1) % bnd.length]);
+                if (!n1 || !n2) continue;
+                const dx = n2.x - n1.x, dz = n2.z - n1.z;
+                const len2 = dx * dx + dz * dz;
+                if (len2 < 0.0001) continue;
+                const t = Math.max(0, Math.min(1,
+                    ((worldX - n1.x) * dx + (worldZ - n1.z) * dz) / len2));
+                const px = n1.x + t * dx, pz = n1.z + t * dz;
+                const dist = Math.sqrt((worldX - px) ** 2 + (worldZ - pz) ** 2);
+                if (dist < thresholdWorld) {
+                    return { areaId: area.id, edgeIndex: i, n1Id: bnd[i], n2Id: bnd[(i + 1) % bnd.length] };
+                }
+            }
+        }
+        return null;
+    }
+
+    _updateEdgeHighlight(edgeInfo) {
+        this._clearGroup(this.edgeHighlightGroup);
+        if (!edgeInfo) { this._hoverEdgeInfo = null; return; }
+        const { areaId, edgeIndex } = edgeInfo;
+        const area = this.model.data.areas?.find(a => a.id === areaId);
+        if (!area) return;
+        const bnd = area.boundaryNodeIds;
+        const n1 = this.model.getNode(bnd[edgeIndex]);
+        const n2 = this.model.getNode(bnd[(edgeIndex + 1) % bnd.length]);
+        if (!n1 || !n2) return;
+        const pts = [
+            new THREE.Vector3(n1.x, n1.z, 0.05),
+            new THREE.Vector3(n2.x, n2.z, 0.05),
+        ];
+        const geo = new THREE.BufferGeometry().setFromPoints(pts);
+        const mat = new THREE.LineBasicMaterial({ color: 0xffee44, linewidth: 3 });
+        this.edgeHighlightGroup.add(new THREE.Line(geo, mat));
+        this._hoverEdgeInfo = edgeInfo;
+    }
+
     // ── Raycasting / Picking ───────────────────────────────
     _updateMouse(event) {
         const rect = this.renderer.domElement.getBoundingClientRect();
@@ -1159,7 +1277,7 @@ export class EditorCanvas {
         if ((flags & SNAP.CENTER) && this.model.data.areas) {
             let closestDist = 20;
             for (const area of this.model.data.areas) {
-                const pts = area.nodeIds.map(id => this.model.getNode(id)).filter(Boolean);
+                const pts = area.boundaryNodeIds.map(id => this.model.getNode(id)).filter(Boolean);
                 if (pts.length < 3) continue;
                 let cx = 0, cz = 0;
                 for (const p of pts) { cx += p.x; cz += p.z; }
@@ -1387,6 +1505,14 @@ export class EditorCanvas {
                     this.controls.enabled = false;
                 }
             } else {
+                // Check for area edge proximity click
+                const world = this._getWorldPos(event);
+                const edgeHit = world ? this._findEdgeAt(world._editorX, world._editorZ) : null;
+                if (edgeHit && !event.shiftKey) {
+                    this.model.select('area', edgeHit.areaId);
+                    this.model.bus.emit('area:edge-clicked', edgeHit);
+                    return; // don't start sel rect
+                }
                 // Empty space click: start selection rectangle drag
                 if (!event.shiftKey) {
                     this.model.deselect();
@@ -1890,6 +2016,17 @@ export class EditorCanvas {
             this.clearGhost();
         }
 
+        // Edge hover highlight in SELECT mode
+        if (mode === 'SELECT' && (this.model.data.areas || []).length > 0) {
+            const edgeInfo = this._findEdgeAt(pos.x, pos.z);
+            const prev = this._hoverEdgeInfo;
+            if (edgeInfo?.areaId !== prev?.areaId || edgeInfo?.edgeIndex !== prev?.edgeIndex) {
+                this._updateEdgeHighlight(edgeInfo || null);
+            }
+        } else if (this._hoverEdgeInfo) {
+            this._updateEdgeHighlight(null);
+        }
+
         // Emit cursor position + snap type for status bar
         const snapLabels = {
             1: '', 2: 'Endpunkt', 4: 'Mittelpunkt', 8: 'Lot',
@@ -2133,6 +2270,133 @@ export class EditorCanvas {
     }
 
     // ── Deformation Display ──────────────────────────────────
+    /**
+     * Show support reaction arrows.
+     * @param {Object} resultData - { reactions: [{nodeId, px, py, pz, mx, my, mz}] }
+     */
+    showReactions(resultData) {
+        this._clearGroup(this.reactionGroup);
+        const reactions = resultData.reactions || [];
+        if (reactions.length === 0) return;
+
+        const REACT_COLOR = 0xff8800;
+        const allNodes = {};
+        for (const n of this.model.data.nodes) allNodes[n.id] = n;
+
+        const maxForce = reactions.reduce((m, r) => {
+            return Math.max(m, Math.abs(r.px), Math.abs(r.pz), Math.abs(r.py));
+        }, 1);
+        const modelSpan = this._estimateModelSpan();
+        const arrowScale = Math.min(Math.max(modelSpan * 0.15 / maxForce, 0.01), 3);
+        const momentR = modelSpan * 0.10; // fixed radius for moment arc symbol
+
+        for (const r of reactions) {
+            const node = allNodes[r.nodeId];
+            if (!node) continue;
+            const origin = new THREE.Vector3(node.x, node.z, 0);
+
+            // PX — horizontal reaction
+            if (Math.abs(r.px) > 1e-4) {
+                const len = Math.abs(r.px) * arrowScale;
+                const dir = new THREE.Vector3(r.px > 0 ? 1 : -1, 0, 0);
+                this.reactionGroup.add(new THREE.ArrowHelper(dir, origin.clone().sub(dir.clone().multiplyScalar(len)), len, REACT_COLOR, len * 0.25, len * 0.15));
+                this._addReactionLabel(origin.clone().add(new THREE.Vector3(r.px > 0 ? -len - 0.3 : len + 0.3, 0, 0)), `${r.px.toFixed(1)} kN`);
+            }
+
+            // PZ — vertical reaction (structural Z = screen Y)
+            if (Math.abs(r.pz) > 1e-4) {
+                const len = Math.abs(r.pz) * arrowScale;
+                const dir = new THREE.Vector3(0, r.pz > 0 ? 1 : -1, 0);
+                this.reactionGroup.add(new THREE.ArrowHelper(dir, origin.clone().sub(dir.clone().multiplyScalar(len)), len, REACT_COLOR, len * 0.25, len * 0.15));
+                this._addReactionLabel(origin.clone().add(new THREE.Vector3(0.15, r.pz > 0 ? -len - 0.15 : len + 0.15, 0)), `${r.pz.toFixed(1)} kN`);
+            }
+
+            // PY — out-of-plane (rare in 2D)
+            if (Math.abs(r.py) > 1e-4) {
+                const len = Math.abs(r.py) * arrowScale;
+                const dir = new THREE.Vector3(0, r.py > 0 ? 1 : -1, 0);
+                const offsetOrigin = origin.clone().add(new THREE.Vector3(0.1, 0, 0));
+                this.reactionGroup.add(new THREE.ArrowHelper(dir, offsetOrigin.clone().sub(dir.clone().multiplyScalar(len)), len, 0xffcc44, len * 0.25, len * 0.15));
+            }
+
+            // MZ — moment reaction: curved arc with double arrowhead
+            if (Math.abs(r.mz || 0) > 1e-4) {
+                this._addMomentSymbol(origin, r.mz, momentR, REACT_COLOR);
+            }
+        }
+    }
+
+    // Curved arc + double-chevron arrowhead for moment reactions (mz).
+    // Arc sweeps 270°, tip at angle 0 (right side); double arrowhead indicates rotation sense.
+    _addMomentSymbol(origin, mz, R, color) {
+        const ccw = mz > 0; // positive mz = counterclockwise (right-hand rule about screen +Z)
+        const GAP = 0.30; // radians gap at tip
+
+        // Arc points: 270° sweep leaving gap at tip (angle 0)
+        const nSeg = 48;
+        const arcPts = [];
+        for (let i = 0; i <= nSeg; i++) {
+            const t = i / nSeg;
+            const a = ccw
+                ? GAP + t * (2 * Math.PI - 2 * GAP)          // CCW: angles from GAP → 2π-GAP
+                : -GAP - t * (2 * Math.PI - 2 * GAP);         // CW: angles from -GAP → -(2π-GAP)
+            arcPts.push(new THREE.Vector3(origin.x + R * Math.cos(a), origin.y + R * Math.sin(a), 0));
+        }
+        const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+        this.reactionGroup.add(new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color })));
+
+        // Tip point and tangent at angle 0
+        const tipPt = new THREE.Vector3(origin.x + R, origin.y, 0);
+        // CCW tangent at θ=0: d/dθ (cos θ, sin θ) = (-sin θ, cos θ) → (0, 1) = upward
+        // CW tangent at θ=0: going opposite → (0, -1) = downward
+        const tanDir = new THREE.Vector3(0, ccw ? 1 : -1, 0);
+
+        // Single arrowhead at tip (SOFiSTiK style)
+        const coneLen = R * 0.44;
+        const coneW   = R * 0.24;
+        this.reactionGroup.add(new THREE.ArrowHelper(
+            tanDir,
+            tipPt.clone().sub(tanDir.clone().multiplyScalar(coneLen)),
+            coneLen, color, coneLen, coneW
+        ));
+
+        // Label beside the tip
+        this._addReactionLabel(
+            tipPt.clone().add(new THREE.Vector3(0.15, ccw ? -0.18 : 0.18, 0)),
+            `${mz.toFixed(1)} kNm`
+        );
+    }
+
+    hideReactions() {
+        this._clearGroup(this.reactionGroup);
+    }
+
+    _estimateModelSpan() {
+        const nodes = this.model.data.nodes;
+        if (nodes.length < 2) return 5;
+        let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        for (const n of nodes) {
+            minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+            minZ = Math.min(minZ, n.z); maxZ = Math.max(maxZ, n.z);
+        }
+        return Math.max(maxX - minX, maxZ - minZ, 1);
+    }
+
+    _addReactionLabel(position, text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 160; canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ff8800';
+        ctx.font = '18px monospace';
+        ctx.fillText(text, 4, 22);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+        const sprite = new THREE.Sprite(mat);
+        sprite.position.copy(position);
+        sprite.scale.set(2.5, 0.5, 1);
+        this.reactionGroup.add(sprite);
+    }
+
     /**
      * Show deformed shape from calculation results.
      * @param {Object} resultData - { nodes: [{id, uX, uY}], beams: [{id, x, N, Vz, My}] }

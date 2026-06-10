@@ -32,11 +32,12 @@ function generateAQUA(model) {
         if (mat.type === 'BETO') {
             lines.push(`MATE ${mat.id} 30000 GAM 25`);
         } else if (mat.type === 'STAH') {
-            lines.push(`MATE ${mat.id} 210000 GAM 78.5`);
+            // STAH required for QNR+PROF TYP catalog profiles (no norm keywords = Trial-compatible)
+            lines.push(`STAH ${mat.id} S`);
         }
     }
 
-    // Sections — QB (Rechteck), QC (Kreis/Rohr) in m
+    // Sections — QB (Rechteck), QC (Kreis/Rohr), QST (Walzprofil) in m
     for (const sec of model.sections) {
         const matRef = `MNR ${sec.materialId}`;
         if (sec.type === 'SREC') {
@@ -45,6 +46,11 @@ function generateAQUA(model) {
             lines.push(`QC ${sec.id} ${matRef} D ${fmtNum(sec.params.D)}[m]`);
         } else if (sec.type === 'TUBE') {
             lines.push(`QC ${sec.id} ${matRef} D ${fmtNum(sec.params.D)}[m] T ${fmtNum(sec.params.T * 1000, 1)}[mm]`);
+        } else if (sec.type === 'QPRO') {
+            const d = sec.dims || {};
+            if (d.h) lines.push(`$ ${sec.profile} — h=${d.h}mm b=${d.b}mm`);
+            lines.push(`QNR ${sec.id} ${matRef}`);
+            lines.push(`PROF TYP ${sec.profile || ''}`);
         }
     }
 
@@ -152,7 +158,7 @@ function generateSOFIMSHC(model) {
     // SAR: structural areas with openings as inner boundaries
     for (const area of (model.areas || [])) {
         const slnIds = areaSlnMap[area.id] || [];
-        lines.push(`SAR ${area.id}  T ${fmtNum(area.thickness)} GRP ${area.groupId} MNO ${area.materialId}`);
+        lines.push(`SAR ${area.id}  T ${Math.round(area.thickness * 1000)}[mm] GRP ${area.groupId || 0} MNO ${area.materialId}`);
         // Collect opening SLN IDs for this area
         lines.push(`SARB OUT ${slnIds.join(',')}`);
         const areaOpenings = (model.openings || []).filter(o => o.areaId === area.id);
@@ -250,10 +256,19 @@ function generateSOFIMSHA(model) {
 // ─── SOFILOAD Block ─────────────────────────────────────────
 function generateSOFILOAD(model, beamSlnMap = {}) {
     const hasAreas = (model.areas || []).length > 0;
+    // SOFIMSHA (RAHM): PROG/KOPF/LF/ENDE, TYP PP on KNOT
+    // SOFIMSHC (SPAC): +PROG/HEAD/LC/END, no TYP on KNOT, beam loads via LINE SLN
+    const prog  = hasAreas ? '+PROG' : 'PROG';
+    const head  = hasAreas ? 'HEAD'  : 'KOPF';
+    const lcKey = hasAreas ? 'LC'    : 'LF';
+    const end   = hasAreas ? 'END'   : 'ENDE';
+
     const lcEntries = [];
     for (const lc of model.loadcases) {
         const nodeLoads = lc.loads.filter(l => l.type === 'NODE_FORCE');
         const areaLoads = lc.loads.filter(l => l.type === 'AREA_LOAD');
+        // SOFIMSHA: STAB loads in SOFILOAD (syntax: STAB nr TYP PZZ value)
+        // SOFIMSHC: LINE SLN loads in SOFILOAD
         const beamLoads = lc.loads.filter(l => l.type === 'BEAM_LINE');
         if (nodeLoads.length > 0 || areaLoads.length > 0 || beamLoads.length > 0) {
             lcEntries.push({ lc, nodeLoads, areaLoads, beamLoads });
@@ -262,54 +277,87 @@ function generateSOFILOAD(model, beamSlnMap = {}) {
     if (lcEntries.length === 0) return [];
 
     const lines = [];
-    lines.push('PROG SOFILOAD urs:3');
-    lines.push('KOPF Lasten');
+    lines.push(`${prog} SOFILOAD urs:3`);
+    lines.push(`${head} Lasten`);
 
     for (const { lc, nodeLoads, areaLoads, beamLoads } of lcEntries) {
-        lines.push(`LF ${lc.id}`);
+        lines.push(`${lcKey} ${lc.id}`);
         for (const load of nodeLoads) {
             const dir = load.direction;
             const val = fmtNum(load.value);
-            if (dir === 'PZ' || dir === 'PZZ') {
-                lines.push(`  KNOT ${load.nodeId} TYP PP P1 0 P2 ${val}`);
+            if (hasAreas) {
+                // SPAC: no TYP keyword
+                if (dir === 'PZ' || dir === 'PZZ') {
+                    lines.push(`  KNOT ${load.nodeId} P1 0 P2 ${val}`);
+                } else {
+                    lines.push(`  KNOT ${load.nodeId} P1 ${val} P2 0`);
+                }
             } else {
-                lines.push(`  KNOT ${load.nodeId} TYP PP P1 ${val} P2 0`);
+                // RAHM: TYP PP required
+                if (dir === 'PZ' || dir === 'PZZ') {
+                    lines.push(`  KNOT ${load.nodeId} TYP PP P1 0 P2 ${val}`);
+                } else {
+                    lines.push(`  KNOT ${load.nodeId} TYP PP P1 ${val} P2 0`);
+                }
             }
         }
         for (const load of areaLoads) {
             const area = (model.areas || []).find(a => a.id === load.areaId);
-            const grp = area ? area.groupId : 0;
+            const grp = area ? (area.groupId || 0) : 0;
             lines.push(`  QUAD GRP ${grp} TYPE ${load.direction} P ${fmtNum(load.value)}`);
         }
         for (const load of beamLoads) {
-            const slnId = beamSlnMap[load.elementId];
-            if (slnId) {
-                lines.push(`  LINE SLN ${slnId} TYPE ${load.direction} P1 ${fmtNum(load.p1)} P2 ${fmtNum(load.p2)}`);
+            if (hasAreas) {
+                // SOFIMSHC: beam loads via LINE SLN
+                const slnId = beamSlnMap[load.elementId];
+                if (slnId) {
+                    lines.push(`  LINE SLN ${slnId} TYPE ${load.direction} P1 ${fmtNum(load.p1)} P2 ${fmtNum(load.p2)}`);
+                }
+            } else {
+                // SOFIMSHA (RAHM): STAB loads — SYST RAHM vertical=Y → PYY for gravity
+                const typeCode = (load.direction === 'PZ' || load.direction === 'PZZ') ? 'PYY' : 'PXX';
+                const p2 = load.p2 !== undefined ? load.p2 : load.p1;
+                if (Math.abs(load.p1 - p2) < 1e-6) {
+                    lines.push(`  STAB ${load.elementId} TYP ${typeCode} ${fmtNum(load.p1)}`);
+                } else {
+                    lines.push(`  STAB ${load.elementId} TYP ${typeCode} ${fmtNum(load.p1)} ${fmtNum(p2)}`);
+                }
             }
         }
     }
 
-    lines.push('ENDE');
+    lines.push(end);
     return lines;
 }
 
-// ─── ASE Block (with beam loads via ELEM) ───────────────────
+// ─── ASE Block ──────────────────────────────────────────────
 function generateASE(model) {
+    const hasAreas = (model.areas || []).length > 0;
     const lines = [];
-    lines.push('PROG ASE urs:4');
-    lines.push('KOPF Berechnung');
 
-    for (const lc of model.loadcases) {
-        const beamLoads = lc.loads.filter(l => l.type === 'BEAM_LINE');
-        const name = (lc.name || '').toLowerCase();
-        const fakg = ['eigengewicht', 'dead load', 'g'].includes(name) ? ' FAKG 1.0' : '';
-        lines.push(`LF ${lc.id}${fakg}`);
-        for (const load of beamLoads) {
-            lines.push(`  ELEM ${load.elementId} TYP ${load.direction} P1 ${fmtNum(load.p1)} P2 ${fmtNum(load.p2)}`);
-        }
+    if (hasAreas) {
+        lines.push('+PROG ASE urs:4');
+        lines.push('HEAD Berechnung');
+    } else {
+        lines.push('PROG ASE urs:4');
+        lines.push('KOPF Berechnung');
+        lines.push('STEU WARN 398');  // allow empty load cases (RAHM only)
     }
 
-    lines.push('ENDE');
+    const lcKey = hasAreas ? 'LC' : 'LF';
+    for (const lc of model.loadcases) {
+        const name = (lc.name || '').toLowerCase();
+        // SOFIMSHA RAHM: default gravity is EG-YY (+Y = upward) → FAKG -1.0 flips to downward.
+        // SOFIMSHC SPAC: gravity set by GDIR NEGZ → FAKG 1.0 is correct.
+        const fakgFactor = hasAreas ? '1.0' : '-1.0';
+        const fakg = ['eigengewicht', 'dead load', 'g'].includes(name) ? ` FAKG ${fakgFactor}` : '';
+        lines.push(`${lcKey} ${lc.id}${fakg}`);
+
+        // Beam loads are in SOFILOAD (STAB TYP PZZ/PXX for RAHM, LINE SLN for SPAC)
+        // ASE LF block only accepts: ALLE ALL CONT TEST
+    }
+
+    lines.push(hasAreas ? 'END' : 'ENDE');
     return lines;
 }
 
@@ -345,7 +393,20 @@ function generateRESULTS(model) {
         lines.push('LC ALL');
         lines.push('QUAD TYPE MX,MY,MXY,VX,VY,NX,NY,NXY REPR DLST');
         lines.push('END');
+        lines.push('');
     }
+
+    if (hasAreas) {
+        // SPAC: support reactions available via RESULTS
+        lines.push('+PROG RESULTS urs:102');
+        lines.push('HEAD Export Support Reactions');
+        lines.push('PAGE UNII 0');
+        lines.push('LC ALL');
+        lines.push('NODE TYPE PX,PY,PZ,MX,MY,MZ REPR DLST');
+        lines.push('END');
+    }
+    // RAHM: support reactions parsed from ASE "Knotenverschiebungen und Kraefte" block.
+    // NODE TYPE PX/PY/MZ via RESULTS causes Warnung 409 + STOP for SYST RAHM — omitted.
 
     return lines;
 }

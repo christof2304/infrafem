@@ -35,10 +35,13 @@ app.add_middleware(
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EDITOR_DIR = PROJECT_ROOT / "editor"
 VIEWER_DIR = PROJECT_ROOT / "viewer"
+CFD_DIR    = PROJECT_ROOT / "cfd"
+CFD_DIR.mkdir(exist_ok=True)
 
-# Serve editor and viewer as static files
+# Serve editor, viewer, and standalone CFD app as static files
 app.mount("/editor", StaticFiles(directory=str(EDITOR_DIR), html=True), name="editor")
 app.mount("/viewer", StaticFiles(directory=str(VIEWER_DIR), html=True), name="viewer")
+app.mount("/cfd",    StaticFiles(directory=str(CFD_DIR),    html=True), name="cfd")
 
 # Serve uploaded models (GLB/STL) so the browser can load them
 UPLOADS_DIR = PROJECT_ROOT / "examples" / "_uploads"
@@ -193,6 +196,16 @@ class QuadForceOut(BaseModel):
     nxy: float
 
 
+class SupportReactionOut(BaseModel):
+    node_nr: int
+    px: float
+    py: float
+    pz: float
+    mx: float
+    my: float
+    mz: float
+
+
 class QuadStressOut(BaseModel):
     elem_nr: int
     thickness: float
@@ -277,12 +290,31 @@ def table_exists(table: str) -> bool:
         return r[0] > 0
 
 
+_schema_cache: dict = {}
+
+def _schema() -> dict:
+    """Return column name mapping for the current DB (handles both old and new sync_cdb_to_db schemas)."""
+    global _schema_cache
+    if _schema_cache.get("path") == DB_PATH:
+        return _schema_cache
+    with get_db() as db:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(fe_result_node_displacement)").fetchall()}
+    # Table absent (results not yet injected) or new schema → use load_case_id (what inject() creates)
+    if not cols or "load_case_id" in cols:
+        s = {"lc": "load_case_id", "node": "element_id", "beam": "element_id", "quad": "element_id"}
+    else:
+        s = {"lc": "load_case_no", "node": "node_no", "beam": "beam_no", "quad": "quad_no"}
+    _schema_cache = {**s, "path": DB_PATH}
+    return _schema_cache
+
+
 def available_lcs(table: str) -> list[int]:
     if not table_exists(table):
         return []
+    lc_col = _schema()["lc"]
     with get_db() as db:
         rows = db.execute(
-            f"SELECT DISTINCT load_case_id FROM [{table}] ORDER BY load_case_id"
+            f"SELECT DISTINCT [{lc_col}] FROM [{table}] ORDER BY [{lc_col}]"
         ).fetchall()
         return [r[0] for r in rows]
 
@@ -601,6 +633,7 @@ def get_tendons():
 class ConstructionStageOut(BaseModel):
     stage_nr: int
     name: str
+    load_case_nr: Optional[int]
     new_groups: list[int]
     active_groups: list[int]
 
@@ -612,13 +645,18 @@ def get_construction_stages():
     if not table_exists("construction_stage"):
         return []
     with get_db() as db:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(construction_stage)").fetchall()}
+        has_lc = "load_case_nr" in cols
         rows = db.execute(
-            "SELECT stage_nr, name, new_groups, active_groups FROM construction_stage ORDER BY stage_nr"
+            "SELECT stage_nr, name, new_groups, active_groups" +
+            (", load_case_nr" if has_lc else "") +
+            " FROM construction_stage ORDER BY stage_nr"
         ).fetchall()
     return [
         ConstructionStageOut(
             stage_nr=r["stage_nr"],
             name=r["name"] or "",
+            load_case_nr=r["load_case_nr"] if has_lc else None,
             new_groups=json.loads(r["new_groups"]),
             active_groups=json.loads(r["active_groups"]),
         )
@@ -650,12 +688,13 @@ def get_loadcases():
 @app.get("/api/results/node-displacements", response_model=ResultSummary)
 def get_node_displacements(lc: int = Query(..., description="Load case number")):
     """Node displacements for a given load case."""
+    s = _schema()
     with get_db() as db:
-        rows = db.execute("""
-            SELECT element_id, uX, uY, uZ, phiX, phiY, phiZ
+        rows = db.execute(f"""
+            SELECT [{s['node']}] AS elem_id, uX, uY, uZ, phiX, phiY, phiZ
             FROM fe_result_node_displacement
-            WHERE load_case_id = ?
-            ORDER BY element_id
+            WHERE [{s['lc']}] = ?
+            ORDER BY [{s['node']}]
         """, (lc,)).fetchall()
 
     if not rows:
@@ -667,7 +706,7 @@ def get_node_displacements(lc: int = Query(..., description="Load case number"))
 
     data = [
         NodeDisplacementOut(
-            node_nr=r["element_id"],
+            node_nr=r["elem_id"],
             ux=r["uX"], uy=r["uY"], uz=r["uZ"],
             phix=r["phiX"], phiy=r["phiY"], phiz=r["phiZ"],
         )
@@ -680,12 +719,13 @@ def get_node_displacements(lc: int = Query(..., description="Load case number"))
 @app.get("/api/results/beam-forces", response_model=ResultSummary)
 def get_beam_forces(lc: int = Query(..., description="Load case number")):
     """Beam internal forces for a given load case."""
+    s = _schema()
     with get_db() as db:
-        rows = db.execute("""
-            SELECT element_id, x, N, Vy, Vz, Mt, My, Mz
+        rows = db.execute(f"""
+            SELECT [{s['beam']}] AS elem_id, x, N, Vy, Vz, Mt, My, Mz
             FROM fe_result_beam_internal_force
-            WHERE load_case_id = ?
-            ORDER BY element_id, x
+            WHERE [{s['lc']}] = ?
+            ORDER BY [{s['beam']}], x
         """, (lc,)).fetchall()
 
     if not rows:
@@ -697,7 +737,7 @@ def get_beam_forces(lc: int = Query(..., description="Load case number")):
 
     data = [
         BeamForceOut(
-            elem_nr=r["element_id"],
+            elem_nr=r["elem_id"],
             x=r["x"],
             N=r["N"], Vy=r["Vy"], Vz=r["Vz"],
             Mt=r["Mt"], My=r["My"], Mz=r["Mz"],
@@ -711,12 +751,13 @@ def get_beam_forces(lc: int = Query(..., description="Load case number")):
 @app.get("/api/results/quad-forces", response_model=ResultSummary)
 def get_quad_forces(lc: int = Query(..., description="Load case number")):
     """Quad element internal forces (per node) for a given load case."""
+    s = _schema()
     with get_db() as db:
-        rows = db.execute("""
-            SELECT element_id, node_no, mxx, myy, mxy, vx, vy, nx, ny, nxy
+        rows = db.execute(f"""
+            SELECT [{s['quad']}] AS elem_id, node_no, mxx, myy, mxy, vx, vy, nx, ny, nxy
             FROM fe_result_quad_internal_force
-            WHERE load_case_id = ?
-            ORDER BY element_id, node_no
+            WHERE [{s['lc']}] = ?
+            ORDER BY [{s['quad']}], node_no
         """, (lc,)).fetchall()
 
     if not rows:
@@ -728,7 +769,7 @@ def get_quad_forces(lc: int = Query(..., description="Load case number")):
 
     data = [
         QuadForceOut(
-            elem_nr=r["element_id"],
+            elem_nr=r["elem_id"],
             node_nr=r["node_no"],
             mxx=r["mxx"], myy=r["myy"], mxy=r["mxy"],
             vx=r["vx"], vy=r["vy"],
@@ -749,23 +790,26 @@ def get_quad_stresses(
     if not table_exists("fe_result_quad_stress"):
         raise HTTPException(status_code=404, detail="No stress data available. Re-run cdb_to_sqlite.py.")
 
+    s = _schema()
+    qcol = s["quad"]
+    lccol = s["lc"]
     with get_db() as db:
         if elem is not None:
-            rows = db.execute("""
-                SELECT s.element_id, s.sxo, s.syo, s.sxyo, s.sxu, s.syu, s.sxyu,
+            rows = db.execute(f"""
+                SELECT s.[{qcol}] AS elem_id, s.sxo, s.syo, s.sxyo, s.sxu, s.syu, s.sxyu,
                        q.thickness_0
                 FROM fe_result_quad_stress s
-                JOIN fe_quad q ON q.number = s.element_id
-                WHERE s.load_case_id = ? AND s.element_id = ?
+                JOIN fe_quad q ON q.number = s.[{qcol}]
+                WHERE s.[{lccol}] = ? AND s.[{qcol}] = ?
             """, (lc, elem)).fetchall()
         else:
-            rows = db.execute("""
-                SELECT s.element_id, s.sxo, s.syo, s.sxyo, s.sxu, s.syu, s.sxyu,
+            rows = db.execute(f"""
+                SELECT s.[{qcol}] AS elem_id, s.sxo, s.syo, s.sxyo, s.sxu, s.syu, s.sxyu,
                        q.thickness_0
                 FROM fe_result_quad_stress s
-                JOIN fe_quad q ON q.number = s.element_id
-                WHERE s.load_case_id = ?
-                ORDER BY s.element_id
+                JOIN fe_quad q ON q.number = s.[{qcol}]
+                WHERE s.[{lccol}] = ?
+                ORDER BY s.[{qcol}]
             """, (lc,)).fetchall()
 
     if not rows:
@@ -777,7 +821,7 @@ def get_quad_stresses(
 
     data = [
         QuadStressOut(
-            elem_nr=r["element_id"],
+            elem_nr=r["elem_id"],
             thickness=r["thickness_0"],
             sxo=r["sxo"], syo=r["syo"], sxyo=r["sxyo"],
             sxu=r["sxu"], syu=r["syu"], sxyu=r["sxyu"],
@@ -785,6 +829,29 @@ def get_quad_stresses(
         for r in rows
     ]
 
+    return ResultSummary(loadcase=lc, count=len(data), data=data)
+
+
+@app.get("/api/results/support-reactions")
+def get_support_reactions(lc: int = Query(..., description="Load case number")):
+    """Support reactions (Auflagerkräfte) for a given load case."""
+    if not table_exists("fe_result_support_reaction"):
+        return ResultSummary(loadcase=lc, count=0, data=[])
+    with get_db() as db:
+        rows = db.execute("""
+            SELECT node_id, px, py, pz, mx, my, mz
+            FROM fe_result_support_reaction
+            WHERE load_case_id = ?
+            ORDER BY node_id
+        """, (lc,)).fetchall()
+    data = [
+        SupportReactionOut(
+            node_nr=r["node_id"],
+            px=r["px"], py=r["py"], pz=r["pz"],
+            mx=r["mx"], my=r["my"], mz=r["mz"],
+        )
+        for r in rows
+    ]
     return ResultSummary(loadcase=lc, count=len(data), data=data)
 
 
@@ -807,12 +874,96 @@ def list_databases():
 @app.post("/api/databases/switch")
 def switch_database(name: str = Query(..., description="SQLite filename")):
     """Switch to a different SQLite database."""
-    global DB_PATH
+    global DB_PATH, _schema_cache
     new_path = Path(DB_DIR) / name
     if not new_path.exists() or not name.endswith(".sqlite"):
         raise HTTPException(status_code=404, detail=f"File not found: {name}")
     DB_PATH = str(new_path.resolve())
+    _schema_cache = {}
     return {"ok": True, "db_path": DB_PATH}
+
+
+# ── Column Design Wizard endpoint ────────────────────────────────────────────
+
+@app.post("/api/columns/design")
+def column_design(body: dict):
+    """
+    Run SOFiSTiK COLUMN module check for one beam element.
+
+    Body: {elem_nr, lc, concrete, steel, cover_y, cover_z, beta_y, beta_z,
+           N_kN, My_kNm, Mz_kNm}   ← forces can be overridden manually
+    Returns: {success, eta, as_req_cm2, as_min_cm2, rho_pct,
+              n_design_kN, my_design_kNm, diagram, raw_erg, error}
+    """
+    from tools.column_wizard import (
+        generate_column_dat, run_column_check,
+        get_beam_info, get_beam_forces,
+        compute_interaction_diagram, FCK, FYK,
+    )
+
+    elem_nr  = body.get("elem_nr")
+    lc       = body.get("lc", 1)
+    concrete = body.get("concrete", "C30")
+    steel    = body.get("steel", "B500B")
+    cover_y  = int(body.get("cover_y", 50))
+    cover_z  = int(body.get("cover_z", 50))
+    beta_y   = float(body.get("beta_y", 1.0))
+    beta_z   = float(body.get("beta_z", 1.0))
+
+    # Get geometry from DB if elem_nr provided
+    section_b = float(body.get("section_b", 0.3))
+    section_h = float(body.get("section_h", 0.4))
+    col_len   = float(body.get("col_length", 3.0))
+
+    if elem_nr is not None:
+        info = get_beam_info(DB_PATH, int(elem_nr))
+        if info:
+            section_b = info["b"] if info["b"] > 0.05 else section_b
+            section_h = info["h"] if info["h"] > 0.05 else section_h
+            col_len   = info["length"] if info["length"] > 0.1 else col_len
+
+    # Forces: use manual override or read from DB
+    if "N_kN" in body:
+        N_kN   = float(body["N_kN"])
+        My_kNm = float(body.get("My_kNm", 0))
+        Mz_kNm = float(body.get("Mz_kNm", 0))
+    elif elem_nr is not None:
+        forces = get_beam_forces(DB_PATH, int(elem_nr), int(lc))
+        if not forces:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No forces for element {elem_nr} in LC {lc}. Run calculation first."
+            )
+        N_kN   = forces["N"]
+        My_kNm = forces["My"]
+        Mz_kNm = forces["Mz"]
+    else:
+        raise HTTPException(status_code=400, detail="Provide elem_nr or N_kN/My_kNm/Mz_kNm")
+
+    # Generate .dat and run COLUMN
+    dat = generate_column_dat(
+        section_b=section_b, section_h=section_h, col_length=col_len,
+        N_kN=N_kN, My_kNm=My_kNm, Mz_kNm=Mz_kNm,
+        concrete=concrete, steel=steel,
+        cover_y=cover_y, cover_z=cover_z,
+        beta_y=beta_y, beta_z=beta_z,
+    )
+
+    result = run_column_check(dat)
+
+    # Always add interaction diagram (Python-computed for visualization)
+    fck = FCK.get(concrete, 30)
+    diagram = compute_interaction_diagram(
+        b=section_b, h=section_h,
+        fck=fck, fyk=FYK,
+        cover=max(cover_y, cover_z),
+    )
+    result["diagram"] = diagram
+    result["design_point"] = {"N_kN": N_kN, "M_kNm": abs(My_kNm or Mz_kNm or 0)}
+    result["section"] = {"b": section_b, "h": section_h}
+    result["col_length"] = col_len
+
+    return result
 
 
 # ── Editor endpoints ──────────────────────────────────────────────────────
@@ -873,15 +1024,31 @@ def editor_generate_dat(model: dict):
     return PlainTextResponse(content=dat_text)
 
 
+@app.post("/api/editor/mesh-only")
+def editor_mesh_only(model: dict):
+    """Mesh-only pipeline: AQUA + SOFIMSHC → FE mesh as JSON (no calculation)."""
+    from tools.run_sofistik import run_mesh_only
+    name = model.get("meta", {}).get("name", "editor_model")
+    safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in name).strip("_") or "editor_model"
+    output_dir = str(Path(__file__).resolve().parent.parent / "examples")
+    return run_mesh_only(model, safe_name, output_dir)
+
+
 @app.post("/api/editor/calculate")
 def editor_calculate(model: dict):
     """Full pipeline: JSON → .dat → SPS → CDB → SQLite."""
-    global DB_PATH
+    global DB_PATH, _schema_cache
     from tools.run_sofistik import run_calculation
 
     name = model.get("meta", {}).get("name", "editor_model")
     safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in name).strip("_") or "editor_model"
     output_dir = str(Path(__file__).resolve().parent.parent / "examples")
+
+    # Release any lock on the target SQLite before the pipeline tries to delete it.
+    target = str((Path(output_dir) / f"{safe_name}.sqlite").resolve())
+    if DB_PATH == target:
+        DB_PATH = str(Path(output_dir) / "webblecbuckling.sqlite")
+        _schema_cache = {}
 
     result = run_calculation(model, safe_name, output_dir)
 
@@ -890,6 +1057,7 @@ def editor_calculate(model: dict):
         new_path = Path(output_dir) / result["sqlite"]
         if new_path.exists():
             DB_PATH = str(new_path.resolve())
+            _schema_cache = {}
 
     return result
 
@@ -901,7 +1069,7 @@ from fastapi import UploadFile, File
 @app.post("/api/import/cdb")
 async def import_cdb(file: UploadFile = File(...)):
     """Upload a CDB file, convert to SQLite via cdb_to_sqlite pipeline."""
-    global DB_PATH
+    global DB_PATH, _schema_cache
     import tempfile
     import shutil
 
@@ -924,11 +1092,12 @@ async def import_cdb(file: UploadFile = File(...)):
 
         erg_path = export_results(cdb_path, output_dir)
         if erg_path:
-            node_disps, quad_forces, beam_forces, quad_stresses = parse_erg(erg_path)
-            inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses)
+            node_disps, quad_forces, beam_forces, quad_stresses, support_reactions = parse_erg(erg_path)
+            inject(sqlite_path, node_disps, quad_forces, beam_forces, quad_stresses, support_reactions)
 
         # Switch to imported DB
         DB_PATH = str(Path(sqlite_path).resolve())
+        _schema_cache = {}
         return {"success": True, "sqlite": f"{name}.sqlite", "db_path": DB_PATH}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -1136,7 +1305,7 @@ def cfd_solve(body: dict):
     check_script.write_text("#!/bin/bash\nsource /usr/lib/openfoam/openfoam2406/etc/bashrc\nwhich simpleFoam && echo FOUND || echo NOTFOUND\n")
     wsl_check = str(check_script).replace("C:\\", "/mnt/c/").replace("\\", "/")
     try:
-        r = sp.run(["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_check}"],
+        r = sp.run([r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", wsl_check],
                     capture_output=True, timeout=15)
         out = r.stdout.decode("utf-8", errors="replace")
         if "FOUND" not in out:
@@ -1155,6 +1324,8 @@ def cfd_solve(body: dict):
     transient = body.get("transient", False)
     end_time = body.get("endTime", 2.0)
     dt = body.get("dt", 0.002)
+    bl_layers = int(body.get("blLayers", 4))
+    bl_ratio  = float(body.get("blRatio", 1.4))
 
     try:
         # Clear log queue
@@ -1178,11 +1349,11 @@ mesh = generate_cfd_mesh(polygon, mesh_size={mesh_size}, far_field_factor={far_f
 import sys as _s
 print(f"transient={transient}, end_time={end_time}, dt={dt}", file=_s.stderr)
 case = create_openfoam_case(mesh, wind_speed={wind_speed}, wind_angle={wind_angle}, output_dir=r'{case_dir}', transient={transient}, end_time={end_time}, dt={dt})
-result = run_openfoam(case, polygon, mesh_size={mesh_size}, far_field_factor={far_field})
+result = run_openfoam(case, polygon, mesh_size={mesh_size}, far_field_factor={far_field}, bl_layers={bl_layers}, bl_ratio={bl_ratio})
 result["stats"] = mesh["stats"]
 result["case_dir"] = r'{case_dir}'
 # Parse field results for visualization
-field_data = parse_cfd_results(r'{case_dir}')
+field_data = parse_cfd_results(r'{case_dir}', section_polygon=polygon)
 if field_data:
     result["field"] = field_data
 print(json.dumps(result))
@@ -1276,6 +1447,18 @@ def cfd_timestep(body: dict):
     faces = _parse_of_faces(case_path / "constant" / "polyMesh" / "faces")
     owner = _parse_of_int_list(case_path / "constant" / "polyMesh" / "owner")
 
+    # Optional section polygon for near-field filter (same as parse_cfd_results)
+    section_polygon = body.get("polygon")
+    near_r2 = None
+    sec_cx = sec_cy = 0.0
+    if section_polygon and len(section_polygon) >= 2:
+        sx = [p[0] for p in section_polygon]
+        sy = [p[1] for p in section_polygon]
+        sec_cx = sum(sx) / len(sx)
+        sec_cy = sum(sy) / len(sy)
+        char_dim = max(max(sx) - min(sx), max(sy) - min(sy), 0.1)
+        near_r2 = max(char_dim * 8, 10.0) ** 2
+
     # Build 2D nodes
     nodes_2d = []
     if points:
@@ -1283,11 +1466,9 @@ def cfd_timestep(body: dict):
             if abs(pt[2]) < 0.01:
                 nodes_2d.append({"id": i, "x": round(pt[0], 4), "y": round(pt[1], 4)})
 
-    # Build triangles on z=0
+    # Build triangles on z=0 (same near-field filter as parse_cfd_results for consistent cell ordering)
     triangles = []
     if faces and owner and points and cell_values:
-        pMin = min(cell_values)
-        pMax = max(cell_values)
         for i, face in enumerate(faces):
             if len(face) < 3:
                 continue
@@ -1297,6 +1478,11 @@ def cfd_timestep(body: dict):
             avg_z = sum(p[2] for p in face_pts) / len(face_pts)
             if abs(avg_z) > 0.01:
                 continue
+            if near_r2 is not None:
+                cx = sum(p[0] for p in face_pts) / len(face_pts)
+                cy = sum(p[1] for p in face_pts) / len(face_pts)
+                if (cx - sec_cx) ** 2 + (cy - sec_cy) ** 2 > near_r2:
+                    continue
             cell_id = owner[i] if i < len(owner) else -1
             p_val = cell_values[cell_id] if 0 <= cell_id < len(cell_values) else 0
             for j in range(1, len(face) - 1):
@@ -1308,7 +1494,7 @@ def cfd_timestep(body: dict):
     result = {
         "time": closest[0],
         "nodes": nodes_2d,
-        "triangles": triangles[:20000],
+        "triangles": triangles[:80000],
         "p_range": v_range,
     }
     # Also set the specific range key so _visualizeField picks it up

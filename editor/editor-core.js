@@ -60,6 +60,7 @@ export const SECTION_TYPES = {
     SREC: { label: 'Rechteck', params: ['H', 'B'], units: ['m', 'm'] },
     SCIR: { label: 'Kreis',    params: ['D'],       units: ['m'] },
     TUBE: { label: 'Rohr',     params: ['D', 'T'],  units: ['m', 'mm'] },
+    QPRO: { label: 'Stahlprofil', params: [], units: [] }, // rolled steel profile from catalog
 };
 
 // ─── Default Model ──────────────────────────────────────────
@@ -115,9 +116,20 @@ export class EditorModel {
 
     loadJSON(json) {
         this.data = JSON.parse(JSON.stringify(json));
+        // Ensure every load has an id (example data may omit them)
+        for (const lc of this.data.loadcases) {
+            let nextId = 1;
+            for (const load of lc.loads) {
+                if (!load.id) load.id = nextId;
+                nextId = Math.max(nextId, load.id) + 1;
+            }
+        }
         this._undo = new UndoStack();
         this._saveSnapshot();
         this._selection = { type: null, id: null };
+        // Auto-select first LC with loads so arrows are visible immediately
+        const lcWithLoads = this.data.loadcases.find(lc => lc.loads.length > 0);
+        this._activeLoadcase = (lcWithLoads || this.data.loadcases[0])?.id ?? 1;
         this.clearResults();
         this.bus.emit('model:loaded');
         this.bus.emit('model:changed');
@@ -350,7 +362,7 @@ export class EditorModel {
         const id = this._nextId(this.data.areas);
         materialId = materialId || (this.data.materials[0]?.id || 1);
         // edgeSupports: per-edge support type, edge i = node[i]→node[(i+1)%n]
-        const edgeSupports = boundaryNodeIds.map(() => 'PINNED');
+        const edgeSupports = boundaryNodeIds.map(() => 'NONE');
         const area = { id, boundaryNodeIds: [...boundaryNodeIds], edgeSupports, thickness, materialId, groupId };
         this.data.areas.push(area);
         this._commit();
@@ -445,9 +457,9 @@ export class EditorModel {
     }
 
     // ── Sections ───────────────────────────────────────────
-    addSection(type, materialId, params, label) {
+    addSection(type, materialId, params, label, meta = {}) {
         const id = this._nextId(this.data.sections);
-        const sec = { id, type, materialId, params: { ...params }, label };
+        const sec = { id, type, materialId, params: { ...params }, label, ...meta };
         this.data.sections.push(sec);
         this._commit();
         return sec;

@@ -400,7 +400,8 @@ def _write_of_file(path, class_name, object_name, content):
             f.write(content)
 
 
-def generate_gmsh_msh(polygon, msh_path, mesh_size=0.2, far_field_factor=15):
+def generate_gmsh_msh(polygon, msh_path, mesh_size=0.2, far_field_factor=15,
+                      bl_layers=4, bl_ratio=1.4):
     """Generate a Gmsh .msh file for OpenFOAM (run in subprocess due to signal issues)."""
     script = f"""
 import sys, json
@@ -454,26 +455,41 @@ ff_loop = gmsh.model.geo.addCurveLoop(ff_arcs)
 surf = gmsh.model.geo.addPlaneSurface([ff_loop, sloop])
 gmsh.model.geo.synchronize()
 
-# Size field
+# Size fields — three-zone with sigmoid transition
 df = gmsh.model.mesh.field.add("Distance")
 gmsh.model.mesh.field.setNumbers(df, "CurvesList", slines)
 tf = gmsh.model.mesh.field.add("Threshold")
-gmsh.model.mesh.field.setNumber(tf, "InField", df)
-gmsh.model.mesh.field.setNumber(tf, "SizeMin", {mesh_size})
-gmsh.model.mesh.field.setNumber(tf, "SizeMax", ff_ms)
-gmsh.model.mesh.field.setNumber(tf, "DistMin", char_dim*0.5)
-gmsh.model.mesh.field.setNumber(tf, "DistMax", ff_r*0.5)
+gmsh.model.mesh.field.setNumber(tf, "InField",  df)
+gmsh.model.mesh.field.setNumber(tf, "SizeMin",  {mesh_size} * 0.6)
+gmsh.model.mesh.field.setNumber(tf, "SizeMax",  ff_ms)
+gmsh.model.mesh.field.setNumber(tf, "DistMin",  char_dim * 0.3)
+gmsh.model.mesh.field.setNumber(tf, "DistMax",  ff_r * 0.4)
+gmsh.model.mesh.field.setNumber(tf, "Sigmoid",  1)
 gmsh.model.mesh.field.setAsBackgroundMesh(tf)
 gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
-gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+gmsh.option.setNumber("Mesh.MeshSizeFromPoints",         0)
+gmsh.option.setNumber("Mesh.MeshSizeFromCurvature",      0)
+gmsh.option.setNumber("Mesh.Smoothing",                  5)
+
+# Boundary Layer: tuned for k-epsilon wall functions (y+ 30-100)
+if {bl_layers} > 0:
+    first_layer = max(2e-4, min({mesh_size} * 0.04, char_dim * 0.004))
+    bl = gmsh.model.mesh.field.add("BoundaryLayer")
+    gmsh.model.mesh.field.setNumbers(bl, "CurvesList",       slines)
+    gmsh.model.mesh.field.setNumbers(bl, "PointsList",       spts)
+    gmsh.model.mesh.field.setNumber (bl, "Size",             first_layer)
+    gmsh.model.mesh.field.setNumber (bl, "Ratio",            {bl_ratio})
+    gmsh.model.mesh.field.setNumber (bl, "NbLayers",         {bl_layers})
+    gmsh.model.mesh.field.setNumber (bl, "Quads",            1)
+    gmsh.model.mesh.field.setNumber (bl, "IntersectMetrics", 1)
+    gmsh.model.mesh.field.setAsBoundaryLayer(bl)
 
 # Physical groups
 gmsh.model.addPhysicalGroup(1, slines, tag=1, name="section")
 gmsh.model.addPhysicalGroup(1, ff_arcs, tag=2, name="farfield")
 gmsh.model.addPhysicalGroup(2, [surf], tag=1, name="fluid")
 
-# Generate 2D mesh
+# Generate 2D mesh (BL quads + background triangles)
 gmsh.model.mesh.generate(2)
 
 # Extrude to thin 3D slab for OpenFOAM
@@ -513,7 +529,8 @@ gmsh.finalize()
         raise RuntimeError(f"Gmsh export failed: {result.stderr[:500]}")
 
 
-def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15):
+def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15,
+                 bl_layers=5, bl_ratio=1.3):
     """
     Run OpenFOAM simpleFoam via WSL.
 
@@ -530,9 +547,10 @@ def run_openfoam(case_dir, polygon, mesh_size=0.2, far_field_factor=15):
     case_dir = Path(case_dir).resolve()
     msh_path = str(case_dir / "mesh.msh")
 
-    # Step 1: Generate Gmsh .msh
-    print("  [1/4] Generating Gmsh mesh...")
-    generate_gmsh_msh(polygon, msh_path, mesh_size, far_field_factor)
+    # Step 1: Generate Gmsh .msh (with boundary layer)
+    print(f"  [1/4] Generating Gmsh mesh (BL: {bl_layers} layers, ratio {bl_ratio})...")
+    generate_gmsh_msh(polygon, msh_path, mesh_size, far_field_factor,
+                      bl_layers=bl_layers, bl_ratio=bl_ratio)
 
     # Convert Windows path to WSL path
     wsl_case = str(case_dir).replace("C:\\", "/mnt/c/").replace("\\", "/")
@@ -580,7 +598,7 @@ echo "=== DONE ==="
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_case}/run_of.sh"],
+            [r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", f"{wsl_case}/run_of.sh"],
             capture_output=True, timeout=300,
         )
         log = result.stdout.decode("utf-8", errors="replace")
@@ -629,23 +647,43 @@ def _parse_force_coeffs(case_dir):
     try:
         with open(coeffs_file) as f:
             lines = f.readlines()
+
+        # Parse column names from header (# Time  Cd  Cd(f)  Cd(r)  Cl ...)
+        col_names = []
+        for line in lines:
+            if line.startswith("# Time") or line.strip().startswith("# Time"):
+                col_names = line.lstrip("# ").split()
+                break
+
         # Last non-comment line has the final values
         for line in reversed(lines):
             if not line.startswith("#") and line.strip():
                 parts = line.split()
-                if len(parts) >= 4:
+                if len(parts) < 2:
+                    continue
+                if col_names:
+                    data = dict(zip(col_names, parts))
                     return {
                         "time": float(parts[0]),
-                        "Cd": float(parts[1]),
-                        "Cl": float(parts[2]),
-                        "Cm": float(parts[3]),
+                        "Cd": float(data.get("Cd", parts[1])),
+                        "Cl": float(data.get("Cl", parts[min(4, len(parts)-1)])),
+                        "Cm": float(data.get("CmPitch", parts[min(7, len(parts)-1)])),
                     }
+                else:
+                    # Fallback: old format (Time Cd Cl Cm)
+                    if len(parts) >= 4:
+                        return {
+                            "time": float(parts[0]),
+                            "Cd": float(parts[1]),
+                            "Cl": float(parts[2]),
+                            "Cm": float(parts[3]),
+                        }
     except Exception:
         pass
     return None
 
 
-def parse_cfd_results(case_dir):
+def parse_cfd_results(case_dir, section_polygon=None):
     """Parse OpenFOAM results: cell centers, pressure, velocity."""
     case_dir = Path(case_dir)
 
@@ -716,7 +754,19 @@ def parse_cfd_results(case_dir):
     owner = _parse_of_int_list(owner_file)
 
     # Build triangles from faces on z=0 plane
+    # Clip to near-field only: far-field faces have nearly uniform flow and
+    # would blow the triangle budget at high mesh density (was: fixed 20k cutoff).
     triangles_2d = []
+    near_r2 = None
+    sec_cx = sec_cy = 0.0
+    if section_polygon:
+        sx = [p[0] for p in section_polygon]
+        sy = [p[1] for p in section_polygon]
+        sec_cx = sum(sx) / len(sx)
+        sec_cy = sum(sy) / len(sy)
+        char_dim = max(max(sx) - min(sx), max(sy) - min(sy), 0.1)
+        near_r2 = max(char_dim * 8, 10.0) ** 2  # keep 8× char_dim, min 10 m
+
     if faces and owner and points:
         for i, face in enumerate(faces):
             if len(face) < 3:
@@ -728,6 +778,12 @@ def parse_cfd_results(case_dir):
             avg_z = sum(p[2] for p in face_pts) / len(face_pts)
             if abs(avg_z) > 0.01:
                 continue
+            # Near-field filter — skip faces far from section
+            if near_r2 is not None:
+                cx = sum(p[0] for p in face_pts) / len(face_pts)
+                cy = sum(p[1] for p in face_pts) / len(face_pts)
+                if (cx - sec_cx) ** 2 + (cy - sec_cy) ** 2 > near_r2:
+                    continue
             # Get cell (owner) pressure value
             cell_id = owner[i] if i < len(owner) else -1
             p_val = pressure[cell_id] if pressure and 0 <= cell_id < len(pressure) else 0
@@ -757,7 +813,7 @@ def parse_cfd_results(case_dir):
         "speed": speed[:n_cells] if speed else [],
         "vorticity": vorticity_z[:n_cells] if vorticity_z else [],
         "turb_k": turb_k[:n_cells] if turb_k else [],
-        "triangles": triangles_2d[:20000],
+        "triangles": triangles_2d[:80000],
         "n_cells": n_cells,
         "n_points": len(points),
         "p_range": field_range(pressure),
@@ -1459,7 +1515,7 @@ echo "=== DONE ==="
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_case}/run_snappy.sh"],
+            [r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", f"{wsl_case}/run_snappy.sh"],
             capture_output=True, timeout=900,
         )
         log = result.stdout.decode("utf-8", errors="replace")
@@ -1511,9 +1567,11 @@ def create_openfoam_case_3d(footprint, height, wind_speed=10.0, wind_angle=0.0,
     flow_x = math.cos(rad)
     flow_y = math.sin(rad)
 
-    # Turbulence parameters
-    k_inlet = 1.5 * (wind_speed * 0.05) ** 2
-    epsilon_inlet = 0.09 * k_inlet ** 1.5 / (0.1 * H)
+    # Turbulence parameters — ABL log-law based (z0-dependent)
+    kappa = 0.41
+    u_star = wind_speed * kappa / math.log(max(zref, 1.0) / max(z0, 0.001))
+    k_inlet = u_star ** 2 / math.sqrt(0.09)
+    epsilon_inlet = u_star ** 3 / (kappa * max(zref, 1.0))
     nut_inlet = 0.09 * k_inlet ** 2 / max(epsilon_inlet, 1e-10)
 
     # Footprint dimensions for force coefficients (all buildings)
@@ -1525,8 +1583,9 @@ def create_openfoam_case_3d(footprint, height, wind_speed=10.0, wind_angle=0.0,
         ys = [p[1] for p in footprint]
     char_w = max(xs) - min(xs)
     char_d = max(ys) - min(ys)
-    # Projected frontal area for force coefficients (wind in x → frontal = d × H)
-    a_ref = char_d * H
+    # Projected frontal area perpendicular to wind direction
+    frontal_width = char_w * abs(math.sin(rad)) + char_d * abs(math.cos(rad))
+    a_ref = frontal_width * H
 
     Re = wind_speed * H / nu
     print(f"  3D CFD: H={H}m, v={wind_speed}m/s, Re={Re:.0f}, z0={z0}m")
@@ -1798,7 +1857,7 @@ functions
         rho             rhoInf;
         rhoInf          1.225;
         CofR            (0 0 {H / 2});
-        liftDir         (0 1 0);
+        liftDir         ({-flow_y} {flow_x} 0);
         dragDir         ({flow_x} {flow_y} 0);
         pitchAxis       (0 0 1);
         magUInf         {wind_speed};
@@ -1939,6 +1998,9 @@ print('Boundary types patched')
 " 2>&1
 cd "{wsl_case}"
 
+echo "=== checkMesh ==="
+checkMesh 2>&1 | grep -E "cells|faces|Maximum|Minimum|FAILED|OK|WARNING" || true
+
 {"" if not use_parallel else f'''echo "=== decomposePar ({n_procs} domains) ==="
 decomposePar 2>&1 | tail -5
 '''}
@@ -1962,7 +2024,7 @@ echo "=== DONE ==="
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_case}/run_of_3d.sh"],
+            [r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", f"{wsl_case}/run_of_3d.sh"],
             capture_output=True, timeout=600,
         )
         log = result.stdout.decode("utf-8", errors="replace")
@@ -2202,6 +2264,17 @@ def extract_slice(case_dir, plane="z", value=0, field="pressure", tolerance=None
     # Interpolate field values onto regular grid (linear, NaN outside convex hull)
     grid_vals = griddata(pts, vals, (grid_x, grid_y), method='linear')
 
+    # Interpolate in-plane velocity onto grid for client-side streamline tracing
+    grid_vx_arr = grid_vy_arr = None
+    if vectors_raw:
+        pts_v  = np.array([[vr[0], vr[1]] for vr in vectors_raw])
+        vx_arr = np.array([vr[2 + axes[0]] for vr in vectors_raw])
+        vy_arr = np.array([vr[2 + axes[1]] for vr in vectors_raw])
+        grid_vx_arr = griddata(pts_v, vx_arr, (grid_x, grid_y), method='linear', fill_value=0.0)
+        grid_vy_arr = griddata(pts_v, vy_arr, (grid_x, grid_y), method='linear', fill_value=0.0)
+        np.nan_to_num(grid_vx_arr, nan=0.0, copy=False)
+        np.nan_to_num(grid_vy_arr, nan=0.0, copy=False)
+
     # Build footprint polygon mask (exclude building interior on horizontal slices)
     fp_polys = []
     if bld_list and plane == "z":
@@ -2236,7 +2309,9 @@ def extract_slice(case_dir, plane="z", value=0, field="pressure", tolerance=None
             px, py = gx[ix], gy[iy]
             if fp_polys and any(_point_in_polygon(px, py, fp) for fp in fp_polys):
                 continue
-            grid_nodes.append({"id": nid, "x": round(float(px), 4), "y": round(float(py), 4)})
+            vx_n = round(float(grid_vx_arr[iy, ix]), 4) if grid_vx_arr is not None else 0.0
+            vy_n = round(float(grid_vy_arr[iy, ix]), 4) if grid_vy_arr is not None else 0.0
+            grid_nodes.append({"id": nid, "x": round(float(px), 4), "y": round(float(py), 4), "vx": vx_n, "vy": vy_n})
             node_id_map[(iy, ix)] = nid
             nid += 1
 
@@ -2382,7 +2457,7 @@ echo "STREAMLINE_DONE"
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", f"wsl -d Ubuntu -- bash {wsl_case}/run_streamlines.sh"],
+            [r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", f"{wsl_case}/run_streamlines.sh"],
             capture_output=True, timeout=60,
         )
         log = result.stdout.decode("utf-8", errors="replace")

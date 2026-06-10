@@ -1,0 +1,2449 @@
+$
+#define project= "csm44_incremental_launching_circle_2"
+$ ******************* Construction Stage Manager **************
+$
+$ Eine Übersicht über Lastfälle, Bauzustände, Gruppenparamter
+$ sowie eine Zusammenstellung der Kriechbeiwerte ist in der
+$ CSM-Ausgabedatei zu finden.
+$
+$ ******************* Construction Stage Manager **************
+$PROG ASE
+#define ASE_CTRL
+  SEIT UNIE 0  ! Standard Eingabeeinheiten
+  ECHO vers,schn,nost,bett,last,grup,lsum nein
+  $ ECHO reak nein $ Echo fuer Moving Springs
+  STEU DIFF 1000 $ Differenzlastfälle Inkrement
+  STEU KRAG    2 $ 1 = Vorbau mit Ausgangsneigung
+                 $ 2 = tangentialer Vorbau
+#enddef
+$
+$PROG AQB
+#define AQB_CTRL
+  SEIT UNIE 0  ! Standard Eingabeeinheiten
+  ECHO schn,komb,span,eige nein
+  STEU EIGE 1+2+64
+  STEU QWF   1.00000 $ Berücksichtigung der Bewehrung bei K+S
+  STEU VM   VAL2 1.0 $ Längskraft delta-N infolge Torsion in der Biegebemessung BEME berücksichtigen
+  STEU WARN 117 $ sonst Warnung, da keine Spannglieder in Stabelementen existieren
+#enddef
+$
+$ *************************************************************
+$ *************************************************************
+$ *************************************************************
+!#!Kapitel CSM Bauphasen
+$ ----------------------------------- Construction Stage 110  ----------------
++PROG ASE urs:csmase110
+KOPF Bauabschnitt BA 110 launching s 0[m]
+sto#ba_csm 110 ; sto#takt_csm -0.795647    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF -
+GRUP   0 BA 110 FAKG 1
+GRUP   1 BA 110 FAKG 1
+GRUP   9 BA 110 FAKG 1
+GRUP  11 BA 110 FAKG 1
+GRUP  12 BA 110 FAKG 1
+GRUP  13 BA 110 FAKG 1
+GRUP  14 BA 110 FAKG 1
+GRUP 101 BA 110 FAKG 1
+GRUP 109 BA 110 FAKG 1
+GRUP 201 BA 110 FAKG 1
+GRUP 209 BA 110 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.795647
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.795647
+LF  4110  TYP - BEZ "launching s 0[m]                " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 111  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase111
+KOPF Bauabschnitt BA 111 launching s 5[m]
+sto#ba_csm 111 ; sto#takt_csm -0.778550    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4110
+GRUP   0 BA 111 FAKG 1
+GRUP   1 BA 111 FAKG 1
+GRUP   9 BA 111 FAKG 1
+GRUP  11 BA 111 FAKG 1
+GRUP  12 BA 111 FAKG 1
+GRUP  13 BA 111 FAKG 1
+GRUP  14 BA 111 FAKG 1
+GRUP 101 BA 111 FAKG 1
+GRUP 109 BA 111 FAKG 1
+GRUP 201 BA 111 FAKG 1
+GRUP 209 BA 111 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.778550
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.778550
+LF  4111  TYP - BEZ "launching s 5[m]                " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 112  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase112
+KOPF Bauabschnitt BA 112 launching s 10[m]
+sto#ba_csm 112 ; sto#takt_csm -0.761454    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4111
+GRUP   0 BA 112 FAKG 1
+GRUP   1 BA 112 FAKG 1
+GRUP   9 BA 112 FAKG 1
+GRUP  11 BA 112 FAKG 1
+GRUP  12 BA 112 FAKG 1
+GRUP  13 BA 112 FAKG 1
+GRUP  14 BA 112 FAKG 1
+GRUP 101 BA 112 FAKG 1
+GRUP 109 BA 112 FAKG 1
+GRUP 201 BA 112 FAKG 1
+GRUP 209 BA 112 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.761454
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.761454
+LF  4112  TYP - BEZ "launching s 10[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 113  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase113
+KOPF Bauabschnitt BA 113 launching s 16[m]
+sto#ba_csm 113 ; sto#takt_csm -0.744357    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4112
+GRUP   0 BA 113 FAKG 1
+GRUP   1 BA 113 FAKG 1
+GRUP   9 BA 113 FAKG 1
+GRUP  11 BA 113 FAKG 1
+GRUP  12 BA 113 FAKG 1
+GRUP  13 BA 113 FAKG 1
+GRUP  14 BA 113 FAKG 1
+GRUP 101 BA 113 FAKG 1
+GRUP 109 BA 113 FAKG 1
+GRUP 201 BA 113 FAKG 1
+GRUP 209 BA 113 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.744357
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.744357
+LF  4113  TYP - BEZ "launching s 16[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 114  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase114
+KOPF Bauabschnitt BA 114 launching s 21[m]
+sto#ba_csm 114 ; sto#takt_csm -0.727261    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4113
+GRUP   0 BA 114 FAKG 1
+GRUP   1 BA 114 FAKG 1
+GRUP   9 BA 114 FAKG 1
+GRUP  11 BA 114 FAKG 1
+GRUP  12 BA 114 FAKG 1
+GRUP  13 BA 114 FAKG 1
+GRUP  14 BA 114 FAKG 1
+GRUP 101 BA 114 FAKG 1
+GRUP 109 BA 114 FAKG 1
+GRUP 201 BA 114 FAKG 1
+GRUP 209 BA 114 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.727261
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.727261
+LF  4114  TYP - BEZ "launching s 21[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 115  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase115
+KOPF Bauabschnitt BA 115 launching s 26[m]
+sto#ba_csm 115 ; sto#takt_csm -0.710164    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4114
+GRUP   0 BA 115 FAKG 1
+GRUP   1 BA 115 FAKG 1
+GRUP   9 BA 115 FAKG 1
+GRUP  11 BA 115 FAKG 1
+GRUP  12 BA 115 FAKG 1
+GRUP  13 BA 115 FAKG 1
+GRUP  14 BA 115 FAKG 1
+GRUP 101 BA 115 FAKG 1
+GRUP 109 BA 115 FAKG 1
+GRUP 201 BA 115 FAKG 1
+GRUP 209 BA 115 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.710164
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.710164
+LF  4115  TYP - BEZ "launching s 26[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 116  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase116
+KOPF Bauabschnitt BA 116 launching s 31[m]
+sto#ba_csm 116 ; sto#takt_csm -0.693068    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4115
+GRUP   0 BA 116 FAKG 1
+GRUP   1 BA 116 FAKG 1
+GRUP   9 BA 116 FAKG 1
+GRUP  11 BA 116 FAKG 1
+GRUP  12 BA 116 FAKG 1
+GRUP  13 BA 116 FAKG 1
+GRUP  14 BA 116 FAKG 1
+GRUP 101 BA 116 FAKG 1
+GRUP 109 BA 116 FAKG 1
+GRUP 201 BA 116 FAKG 1
+GRUP 209 BA 116 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.693068
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.693068
+LF  4116  TYP - BEZ "launching s 31[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 117  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase117
+KOPF Bauabschnitt BA 117 launching s 36[m]
+sto#ba_csm 117 ; sto#takt_csm -0.675971    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4116
+GRUP   0 BA 117 FAKG 1
+GRUP   1 BA 117 FAKG 1
+GRUP   9 BA 117 FAKG 1
+GRUP  11 BA 117 FAKG 1
+GRUP  12 BA 117 FAKG 1
+GRUP  13 BA 117 FAKG 1
+GRUP  14 BA 117 FAKG 1
+GRUP 101 BA 117 FAKG 1
+GRUP 109 BA 117 FAKG 1
+GRUP 201 BA 117 FAKG 1
+GRUP 209 BA 117 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.675971
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.675971
+LF  4117  TYP - BEZ "launching s 36[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 118  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase118
+KOPF Bauabschnitt BA 118 launching s 42[m]
+sto#ba_csm 118 ; sto#takt_csm -0.658875    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4117
+GRUP   0 BA 118 FAKG 1
+GRUP   1 BA 118 FAKG 1
+GRUP   9 BA 118 FAKG 1
+GRUP  11 BA 118 FAKG 1
+GRUP  12 BA 118 FAKG 1
+GRUP  13 BA 118 FAKG 1
+GRUP  14 BA 118 FAKG 1
+GRUP 101 BA 118 FAKG 1
+GRUP 109 BA 118 FAKG 1
+GRUP 201 BA 118 FAKG 1
+GRUP 209 BA 118 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.658875
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.658875
+LF  4118  TYP - BEZ "launching s 42[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 119  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase119
+KOPF Bauabschnitt BA 119 launching s 47[m]
+sto#ba_csm 119 ; sto#takt_csm -0.641778    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4118
+GRUP   0 BA 119 FAKG 1
+GRUP   1 BA 119 FAKG 1
+GRUP   9 BA 119 FAKG 1
+GRUP  11 BA 119 FAKG 1
+GRUP  12 BA 119 FAKG 1
+GRUP  13 BA 119 FAKG 1
+GRUP  14 BA 119 FAKG 1
+GRUP 101 BA 119 FAKG 1
+GRUP 109 BA 119 FAKG 1
+GRUP 201 BA 119 FAKG 1
+GRUP 209 BA 119 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.641778
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.641778
+LF  4119  TYP - BEZ "launching s 47[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 120  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase120
+KOPF Bauabschnitt BA 120 launching s 52[m]
+sto#ba_csm 120 ; sto#takt_csm -0.624681    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4119
+GRUP   0 BA 120 FAKG 1
+GRUP   1 BA 120 FAKG 1
+GRUP   2 BA 120 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP   9 BA 120 FAKG 1
+GRUP  11 BA 120 FAKG 1
+GRUP  12 BA 120 FAKG 1
+GRUP  13 BA 120 FAKG 1
+GRUP  14 BA 120 FAKG 1
+GRUP 101 BA 120 FAKG 1
+GRUP 102 BA 120 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 109 BA 120 FAKG 1
+GRUP 201 BA 120 FAKG 1
+GRUP 202 BA 120 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 209 BA 120 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.624681
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.624681
+LF  4120  TYP - BEZ "launching s 52[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 121  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase121
+KOPF Bauabschnitt BA 121 launching s 57[m]
+sto#ba_csm 121 ; sto#takt_csm -0.607585    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4120
+GRUP   0 BA 121 FAKG 1
+GRUP   1 BA 121 FAKG 1
+GRUP   2 BA 121 FAKG 1
+GRUP   9 BA 121 FAKG 1
+GRUP  11 BA 121 FAKG 1
+GRUP  12 BA 121 FAKG 1
+GRUP  13 BA 121 FAKG 1
+GRUP  14 BA 121 FAKG 1
+GRUP 101 BA 121 FAKG 1
+GRUP 102 BA 121 FAKG 1
+GRUP 109 BA 121 FAKG 1
+GRUP 201 BA 121 FAKG 1
+GRUP 202 BA 121 FAKG 1
+GRUP 209 BA 121 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.607585
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.607585
+LF  4121  TYP - BEZ "launching s 57[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 122  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase122
+KOPF Bauabschnitt BA 122 launching s 62[m]
+sto#ba_csm 122 ; sto#takt_csm -0.590488    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4121
+GRUP   0 BA 122 FAKG 1
+GRUP   1 BA 122 FAKG 1
+GRUP   2 BA 122 FAKG 1
+GRUP   9 BA 122 FAKG 1
+GRUP  11 BA 122 FAKG 1
+GRUP  12 BA 122 FAKG 1
+GRUP  13 BA 122 FAKG 1
+GRUP  14 BA 122 FAKG 1
+GRUP 101 BA 122 FAKG 1
+GRUP 102 BA 122 FAKG 1
+GRUP 109 BA 122 FAKG 1
+GRUP 201 BA 122 FAKG 1
+GRUP 202 BA 122 FAKG 1
+GRUP 209 BA 122 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.590488
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.590488
+LF  4122  TYP - BEZ "launching s 62[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 123  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase123
+KOPF Bauabschnitt BA 123 launching s 68[m]
+sto#ba_csm 123 ; sto#takt_csm -0.573392    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4122
+GRUP   0 BA 123 FAKG 1
+GRUP   1 BA 123 FAKG 1
+GRUP   2 BA 123 FAKG 1
+GRUP   9 BA 123 FAKG 1
+GRUP  11 BA 123 FAKG 1
+GRUP  12 BA 123 FAKG 1
+GRUP  13 BA 123 FAKG 1
+GRUP  14 BA 123 FAKG 1
+GRUP 101 BA 123 FAKG 1
+GRUP 102 BA 123 FAKG 1
+GRUP 109 BA 123 FAKG 1
+GRUP 201 BA 123 FAKG 1
+GRUP 202 BA 123 FAKG 1
+GRUP 209 BA 123 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.573392
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.573392
+LF  4123  TYP - BEZ "launching s 68[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 124  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase124
+KOPF Bauabschnitt BA 124 launching s 73[m]
+sto#ba_csm 124 ; sto#takt_csm -0.556295    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4123
+GRUP   0 BA 124 FAKG 1
+GRUP   1 BA 124 FAKG 1
+GRUP   2 BA 124 FAKG 1
+GRUP   9 BA 124 FAKG 1
+GRUP  11 BA 124 FAKG 1
+GRUP  12 BA 124 FAKG 1
+GRUP  13 BA 124 FAKG 1
+GRUP  14 BA 124 FAKG 1
+GRUP 101 BA 124 FAKG 1
+GRUP 102 BA 124 FAKG 1
+GRUP 109 BA 124 FAKG 1
+GRUP 201 BA 124 FAKG 1
+GRUP 202 BA 124 FAKG 1
+GRUP 209 BA 124 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.556295
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.556295
+LF  4124  TYP - BEZ "launching s 73[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 125  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase125
+KOPF Bauabschnitt BA 125 launching s 78[m]
+sto#ba_csm 125 ; sto#takt_csm -0.539199    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4124
+GRUP   0 BA 125 FAKG 1
+GRUP   1 BA 125 FAKG 1
+GRUP   2 BA 125 FAKG 1
+GRUP   9 BA 125 FAKG 1
+GRUP  11 BA 125 FAKG 1
+GRUP  12 BA 125 FAKG 1
+GRUP  13 BA 125 FAKG 1
+GRUP  14 BA 125 FAKG 1
+GRUP 101 BA 125 FAKG 1
+GRUP 102 BA 125 FAKG 1
+GRUP 109 BA 125 FAKG 1
+GRUP 201 BA 125 FAKG 1
+GRUP 202 BA 125 FAKG 1
+GRUP 209 BA 125 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.539199
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.539199
+LF  4125  TYP - BEZ "launching s 78[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 126  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase126
+KOPF Bauabschnitt BA 126 launching s 83[m]
+sto#ba_csm 126 ; sto#takt_csm -0.522102    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4125
+GRUP   0 BA 126 FAKG 1
+GRUP   1 BA 126 FAKG 1
+GRUP   2 BA 126 FAKG 1
+GRUP   9 BA 126 FAKG 1
+GRUP  11 BA 126 FAKG 1
+GRUP  12 BA 126 FAKG 1
+GRUP  13 BA 126 FAKG 1
+GRUP  14 BA 126 FAKG 1
+GRUP 101 BA 126 FAKG 1
+GRUP 102 BA 126 FAKG 1
+GRUP 109 BA 126 FAKG 1
+GRUP 201 BA 126 FAKG 1
+GRUP 202 BA 126 FAKG 1
+GRUP 209 BA 126 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.522102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.522102
+LF  4126  TYP - BEZ "launching s 83[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 127  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase127
+KOPF Bauabschnitt BA 127 launching s 88[m]
+sto#ba_csm 127 ; sto#takt_csm -0.505006    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4126
+GRUP   0 BA 127 FAKG 1
+GRUP   1 BA 127 FAKG 1
+GRUP   2 BA 127 FAKG 1
+GRUP   9 BA 127 FAKG 1
+GRUP  11 BA 127 FAKG 1
+GRUP  12 BA 127 FAKG 1
+GRUP  13 BA 127 FAKG 1
+GRUP  14 BA 127 FAKG 1
+GRUP 101 BA 127 FAKG 1
+GRUP 102 BA 127 FAKG 1
+GRUP 109 BA 127 FAKG 1
+GRUP 201 BA 127 FAKG 1
+GRUP 202 BA 127 FAKG 1
+GRUP 209 BA 127 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.505006
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.505006
+LF  4127  TYP - BEZ "launching s 88[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 128  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase128
+KOPF Bauabschnitt BA 128 launching s 94[m]
+sto#ba_csm 128 ; sto#takt_csm -0.487909    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4127
+GRUP   0 BA 128 FAKG 1
+GRUP   1 BA 128 FAKG 1
+GRUP   2 BA 128 FAKG 1
+GRUP   9 BA 128 FAKG 1
+GRUP  11 BA 128 FAKG 1
+GRUP  12 BA 128 FAKG 1
+GRUP  13 BA 128 FAKG 1
+GRUP  14 BA 128 FAKG 1
+GRUP 101 BA 128 FAKG 1
+GRUP 102 BA 128 FAKG 1
+GRUP 109 BA 128 FAKG 1
+GRUP 201 BA 128 FAKG 1
+GRUP 202 BA 128 FAKG 1
+GRUP 209 BA 128 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.487909
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.487909
+LF  4128  TYP - BEZ "launching s 94[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 129  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase129
+KOPF Bauabschnitt BA 129 launching s 99[m]
+sto#ba_csm 129 ; sto#takt_csm -0.470813    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4128
+GRUP   0 BA 129 FAKG 1
+GRUP   1 BA 129 FAKG 1
+GRUP   2 BA 129 FAKG 1
+GRUP   9 BA 129 FAKG 1
+GRUP  11 BA 129 FAKG 1
+GRUP  12 BA 129 FAKG 1
+GRUP  13 BA 129 FAKG 1
+GRUP  14 BA 129 FAKG 1
+GRUP 101 BA 129 FAKG 1
+GRUP 102 BA 129 FAKG 1
+GRUP 109 BA 129 FAKG 1
+GRUP 201 BA 129 FAKG 1
+GRUP 202 BA 129 FAKG 1
+GRUP 209 BA 129 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.470813
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.470813
+LF  4129  TYP - BEZ "launching s 99[m]               " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 130  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase130
+KOPF Bauabschnitt BA 130 launching s 104[m]
+sto#ba_csm 130 ; sto#takt_csm -0.453716    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4129
+GRUP   0 BA 130 FAKG 1
+GRUP   1 BA 130 FAKG 1
+GRUP   2 BA 130 FAKG 1
+GRUP   3 BA 130 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP   9 BA 130 FAKG 1
+GRUP  11 BA 130 FAKG 1
+GRUP  12 BA 130 FAKG 1
+GRUP  13 BA 130 FAKG 1
+GRUP  14 BA 130 FAKG 1
+GRUP 101 BA 130 FAKG 1
+GRUP 102 BA 130 FAKG 1
+GRUP 103 BA 130 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 109 BA 130 FAKG 1
+GRUP 201 BA 130 FAKG 1
+GRUP 202 BA 130 FAKG 1
+GRUP 203 BA 130 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 209 BA 130 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.453716
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.453716
+LF  4130  TYP - BEZ "launching s 104[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 131  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase131
+KOPF Bauabschnitt BA 131 launching s 109[m]
+sto#ba_csm 131 ; sto#takt_csm -0.436948    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4130
+GRUP   0 BA 131 FAKG 1
+GRUP   1 BA 131 FAKG 1
+GRUP   2 BA 131 FAKG 1
+GRUP   3 BA 131 FAKG 1
+GRUP   9 BA 131 FAKG 1
+GRUP  11 BA 131 FAKG 1
+GRUP  12 BA 131 FAKG 1
+GRUP  13 BA 131 FAKG 1
+GRUP  14 BA 131 FAKG 1
+GRUP 101 BA 131 FAKG 1
+GRUP 102 BA 131 FAKG 1
+GRUP 103 BA 131 FAKG 1
+GRUP 109 BA 131 FAKG 1
+GRUP 201 BA 131 FAKG 1
+GRUP 202 BA 131 FAKG 1
+GRUP 203 BA 131 FAKG 1
+GRUP 209 BA 131 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.436948
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.436948
+LF  4131  TYP - BEZ "launching s 109[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 132  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase132
+KOPF Bauabschnitt BA 132 launching s 114[m]
+sto#ba_csm 132 ; sto#takt_csm -0.420180    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4131
+GRUP   0 BA 132 FAKG 1
+GRUP   1 BA 132 FAKG 1
+GRUP   2 BA 132 FAKG 1
+GRUP   3 BA 132 FAKG 1
+GRUP   9 BA 132 FAKG 1
+GRUP  11 BA 132 FAKG 1
+GRUP  12 BA 132 FAKG 1
+GRUP  13 BA 132 FAKG 1
+GRUP  14 BA 132 FAKG 1
+GRUP 101 BA 132 FAKG 1
+GRUP 102 BA 132 FAKG 1
+GRUP 103 BA 132 FAKG 1
+GRUP 109 BA 132 FAKG 1
+GRUP 201 BA 132 FAKG 1
+GRUP 202 BA 132 FAKG 1
+GRUP 203 BA 132 FAKG 1
+GRUP 209 BA 132 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.420180
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.420180
+LF  4132  TYP - BEZ "launching s 114[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 133  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase133
+KOPF Bauabschnitt BA 133 launching s 119[m]
+sto#ba_csm 133 ; sto#takt_csm -0.403413    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4132
+GRUP   0 BA 133 FAKG 1
+GRUP   1 BA 133 FAKG 1
+GRUP   2 BA 133 FAKG 1
+GRUP   3 BA 133 FAKG 1
+GRUP   9 BA 133 FAKG 1
+GRUP  11 BA 133 FAKG 1
+GRUP  12 BA 133 FAKG 1
+GRUP  13 BA 133 FAKG 1
+GRUP  14 BA 133 FAKG 1
+GRUP 101 BA 133 FAKG 1
+GRUP 102 BA 133 FAKG 1
+GRUP 103 BA 133 FAKG 1
+GRUP 109 BA 133 FAKG 1
+GRUP 201 BA 133 FAKG 1
+GRUP 202 BA 133 FAKG 1
+GRUP 203 BA 133 FAKG 1
+GRUP 209 BA 133 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.403413
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.403413
+LF  4133  TYP - BEZ "launching s 119[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 134  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase134
+KOPF Bauabschnitt BA 134 launching s 124[m]
+sto#ba_csm 134 ; sto#takt_csm -0.386645    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4133
+GRUP   0 BA 134 FAKG 1
+GRUP   1 BA 134 FAKG 1
+GRUP   2 BA 134 FAKG 1
+GRUP   3 BA 134 FAKG 1
+GRUP   9 BA 134 FAKG 1
+GRUP  11 BA 134 FAKG 1
+GRUP  12 BA 134 FAKG 1
+GRUP  13 BA 134 FAKG 1
+GRUP  14 BA 134 FAKG 1
+GRUP 101 BA 134 FAKG 1
+GRUP 102 BA 134 FAKG 1
+GRUP 103 BA 134 FAKG 1
+GRUP 109 BA 134 FAKG 1
+GRUP 201 BA 134 FAKG 1
+GRUP 202 BA 134 FAKG 1
+GRUP 203 BA 134 FAKG 1
+GRUP 209 BA 134 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.386645
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.386645
+LF  4134  TYP - BEZ "launching s 124[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 135  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase135
+KOPF Bauabschnitt BA 135 launching s 130[m]
+sto#ba_csm 135 ; sto#takt_csm -0.369877    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4134
+GRUP   0 BA 135 FAKG 1
+GRUP   1 BA 135 FAKG 1
+GRUP   2 BA 135 FAKG 1
+GRUP   3 BA 135 FAKG 1
+GRUP   9 BA 135 FAKG 1
+GRUP  11 BA 135 FAKG 1
+GRUP  12 BA 135 FAKG 1
+GRUP  13 BA 135 FAKG 1
+GRUP  14 BA 135 FAKG 1
+GRUP 101 BA 135 FAKG 1
+GRUP 102 BA 135 FAKG 1
+GRUP 103 BA 135 FAKG 1
+GRUP 109 BA 135 FAKG 1
+GRUP 201 BA 135 FAKG 1
+GRUP 202 BA 135 FAKG 1
+GRUP 203 BA 135 FAKG 1
+GRUP 209 BA 135 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.369877
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.369877
+LF  4135  TYP - BEZ "launching s 130[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 136  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase136
+KOPF Bauabschnitt BA 136 launching s 135[m]
+sto#ba_csm 136 ; sto#takt_csm -0.353109    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4135
+GRUP   0 BA 136 FAKG 1
+GRUP   1 BA 136 FAKG 1
+GRUP   2 BA 136 FAKG 1
+GRUP   3 BA 136 FAKG 1
+GRUP   9 BA 136 FAKG 1
+GRUP  11 BA 136 FAKG 1
+GRUP  12 BA 136 FAKG 1
+GRUP  13 BA 136 FAKG 1
+GRUP  14 BA 136 FAKG 1
+GRUP 101 BA 136 FAKG 1
+GRUP 102 BA 136 FAKG 1
+GRUP 103 BA 136 FAKG 1
+GRUP 109 BA 136 FAKG 1
+GRUP 201 BA 136 FAKG 1
+GRUP 202 BA 136 FAKG 1
+GRUP 203 BA 136 FAKG 1
+GRUP 209 BA 136 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.353109
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.353109
+LF  4136  TYP - BEZ "launching s 135[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 137  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase137
+KOPF Bauabschnitt BA 137 launching s 140[m]
+sto#ba_csm 137 ; sto#takt_csm -0.336342    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4136
+GRUP   0 BA 137 FAKG 1
+GRUP   1 BA 137 FAKG 1
+GRUP   2 BA 137 FAKG 1
+GRUP   3 BA 137 FAKG 1
+GRUP   9 BA 137 FAKG 1
+GRUP  11 BA 137 FAKG 1
+GRUP  12 BA 137 FAKG 1
+GRUP  13 BA 137 FAKG 1
+GRUP  14 BA 137 FAKG 1
+GRUP 101 BA 137 FAKG 1
+GRUP 102 BA 137 FAKG 1
+GRUP 103 BA 137 FAKG 1
+GRUP 109 BA 137 FAKG 1
+GRUP 201 BA 137 FAKG 1
+GRUP 202 BA 137 FAKG 1
+GRUP 203 BA 137 FAKG 1
+GRUP 209 BA 137 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.336342
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.336342
+LF  4137  TYP - BEZ "launching s 140[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 138  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase138
+KOPF Bauabschnitt BA 138 launching s 145[m]
+sto#ba_csm 138 ; sto#takt_csm -0.319574    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4137
+GRUP   0 BA 138 FAKG 1
+GRUP   1 BA 138 FAKG 1
+GRUP   2 BA 138 FAKG 1
+GRUP   3 BA 138 FAKG 1
+GRUP   9 BA 138 FAKG 1
+GRUP  11 BA 138 FAKG 1
+GRUP  12 BA 138 FAKG 1
+GRUP  13 BA 138 FAKG 1
+GRUP  14 BA 138 FAKG 1
+GRUP 101 BA 138 FAKG 1
+GRUP 102 BA 138 FAKG 1
+GRUP 103 BA 138 FAKG 1
+GRUP 109 BA 138 FAKG 1
+GRUP 201 BA 138 FAKG 1
+GRUP 202 BA 138 FAKG 1
+GRUP 203 BA 138 FAKG 1
+GRUP 209 BA 138 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.319574
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.319574
+LF  4138  TYP - BEZ "launching s 145[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 139  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase139
+KOPF Bauabschnitt BA 139 launching s 150[m]
+sto#ba_csm 139 ; sto#takt_csm -0.302806    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4138
+GRUP   0 BA 139 FAKG 1
+GRUP   1 BA 139 FAKG 1
+GRUP   2 BA 139 FAKG 1
+GRUP   3 BA 139 FAKG 1
+GRUP   9 BA 139 FAKG 1
+GRUP  11 BA 139 FAKG 1
+GRUP  12 BA 139 FAKG 1
+GRUP  13 BA 139 FAKG 1
+GRUP  14 BA 139 FAKG 1
+GRUP 101 BA 139 FAKG 1
+GRUP 102 BA 139 FAKG 1
+GRUP 103 BA 139 FAKG 1
+GRUP 109 BA 139 FAKG 1
+GRUP 201 BA 139 FAKG 1
+GRUP 202 BA 139 FAKG 1
+GRUP 203 BA 139 FAKG 1
+GRUP 209 BA 139 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.302806
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.302806
+LF  4139  TYP - BEZ "launching s 150[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 140  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase140
+KOPF Bauabschnitt BA 140 launching s 155[m]
+sto#ba_csm 140 ; sto#takt_csm -0.286038    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4139
+GRUP   0 BA 140 FAKG 1
+GRUP   1 BA 140 FAKG 1
+GRUP   2 BA 140 FAKG 1
+GRUP   3 BA 140 FAKG 1
+GRUP   4 BA 140 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP   9 BA 140 FAKG 1
+GRUP  11 BA 140 FAKG 1
+GRUP  12 BA 140 FAKG 1
+GRUP  13 BA 140 FAKG 1
+GRUP  14 BA 140 FAKG 1
+GRUP 101 BA 140 FAKG 1
+GRUP 102 BA 140 FAKG 1
+GRUP 103 BA 140 FAKG 1
+GRUP 104 BA 140 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 109 BA 140 FAKG 1
+GRUP 201 BA 140 FAKG 1
+GRUP 202 BA 140 FAKG 1
+GRUP 203 BA 140 FAKG 1
+GRUP 204 BA 140 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 209 BA 140 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.286038
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.286038
+LF  4140  TYP - BEZ "launching s 155[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 141  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase141
+KOPF Bauabschnitt BA 141 launching s 159[m]
+sto#ba_csm 141 ; sto#takt_csm -0.273545    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4140
+GRUP   0 BA 141 FAKG 1
+GRUP   1 BA 141 FAKG 1
+GRUP   2 BA 141 FAKG 1
+GRUP   3 BA 141 FAKG 1
+GRUP   4 BA 141 FAKG 1
+GRUP   9 BA 141 FAKG 1
+GRUP  11 BA 141 FAKG 1
+GRUP  12 BA 141 FAKG 1
+GRUP  13 BA 141 FAKG 1
+GRUP  14 BA 141 FAKG 1
+GRUP 101 BA 141 FAKG 1
+GRUP 102 BA 141 FAKG 1
+GRUP 103 BA 141 FAKG 1
+GRUP 104 BA 141 FAKG 1
+GRUP 109 BA 141 FAKG 1
+GRUP 201 BA 141 FAKG 1
+GRUP 202 BA 141 FAKG 1
+GRUP 203 BA 141 FAKG 1
+GRUP 204 BA 141 FAKG 1
+GRUP 209 BA 141 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.273545
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.273545
+LF  4141  TYP - BEZ "launching s 159[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 142  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase142
+KOPF Bauabschnitt BA 142 launching s 163[m]
+sto#ba_csm 142 ; sto#takt_csm -0.261051    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4141
+GRUP   0 BA 142 FAKG 1
+GRUP   1 BA 142 FAKG 1
+GRUP   2 BA 142 FAKG 1
+GRUP   3 BA 142 FAKG 1
+GRUP   4 BA 142 FAKG 1
+GRUP   9 BA 142 FAKG 1
+GRUP  11 BA 142 FAKG 1
+GRUP  12 BA 142 FAKG 1
+GRUP  13 BA 142 FAKG 1
+GRUP  14 BA 142 FAKG 1
+GRUP 101 BA 142 FAKG 1
+GRUP 102 BA 142 FAKG 1
+GRUP 103 BA 142 FAKG 1
+GRUP 104 BA 142 FAKG 1
+GRUP 109 BA 142 FAKG 1
+GRUP 201 BA 142 FAKG 1
+GRUP 202 BA 142 FAKG 1
+GRUP 203 BA 142 FAKG 1
+GRUP 204 BA 142 FAKG 1
+GRUP 209 BA 142 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.261051
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.261051
+LF  4142  TYP - BEZ "launching s 163[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 143  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase143
+KOPF Bauabschnitt BA 143 launching s 166[m]
+sto#ba_csm 143 ; sto#takt_csm -0.248557    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4142
+GRUP   0 BA 143 FAKG 1
+GRUP   1 BA 143 FAKG 1
+GRUP   2 BA 143 FAKG 1
+GRUP   3 BA 143 FAKG 1
+GRUP   4 BA 143 FAKG 1
+GRUP   9 BA 143 FAKG 1
+GRUP  11 BA 143 FAKG 1
+GRUP  12 BA 143 FAKG 1
+GRUP  13 BA 143 FAKG 1
+GRUP  14 BA 143 FAKG 1
+GRUP 101 BA 143 FAKG 1
+GRUP 102 BA 143 FAKG 1
+GRUP 103 BA 143 FAKG 1
+GRUP 104 BA 143 FAKG 1
+GRUP 109 BA 143 FAKG 1
+GRUP 201 BA 143 FAKG 1
+GRUP 202 BA 143 FAKG 1
+GRUP 203 BA 143 FAKG 1
+GRUP 204 BA 143 FAKG 1
+GRUP 209 BA 143 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.248557
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.248557
+LF  4143  TYP - BEZ "launching s 166[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 144  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase144
+KOPF Bauabschnitt BA 144 launching s 170[m]
+sto#ba_csm 144 ; sto#takt_csm -0.236064    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4143
+GRUP   0 BA 144 FAKG 1
+GRUP   1 BA 144 FAKG 1
+GRUP   2 BA 144 FAKG 1
+GRUP   3 BA 144 FAKG 1
+GRUP   4 BA 144 FAKG 1
+GRUP   9 BA 144 FAKG 1
+GRUP  11 BA 144 FAKG 1
+GRUP  12 BA 144 FAKG 1
+GRUP  13 BA 144 FAKG 1
+GRUP  14 BA 144 FAKG 1
+GRUP 101 BA 144 FAKG 1
+GRUP 102 BA 144 FAKG 1
+GRUP 103 BA 144 FAKG 1
+GRUP 104 BA 144 FAKG 1
+GRUP 109 BA 144 FAKG 1
+GRUP 201 BA 144 FAKG 1
+GRUP 202 BA 144 FAKG 1
+GRUP 203 BA 144 FAKG 1
+GRUP 204 BA 144 FAKG 1
+GRUP 209 BA 144 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.236064
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.236064
+LF  4144  TYP - BEZ "launching s 170[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 145  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase145
+KOPF Bauabschnitt BA 145 launching s 174[m]
+sto#ba_csm 145 ; sto#takt_csm -0.223570    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4144
+GRUP   0 BA 145 FAKG 1
+GRUP   1 BA 145 FAKG 1
+GRUP   2 BA 145 FAKG 1
+GRUP   3 BA 145 FAKG 1
+GRUP   4 BA 145 FAKG 1
+GRUP   9 BA 145 FAKG 1
+GRUP  11 BA 145 FAKG 1
+GRUP  12 BA 145 FAKG 1
+GRUP  13 BA 145 FAKG 1
+GRUP  14 BA 145 FAKG 1
+GRUP 101 BA 145 FAKG 1
+GRUP 102 BA 145 FAKG 1
+GRUP 103 BA 145 FAKG 1
+GRUP 104 BA 145 FAKG 1
+GRUP 109 BA 145 FAKG 1
+GRUP 201 BA 145 FAKG 1
+GRUP 202 BA 145 FAKG 1
+GRUP 203 BA 145 FAKG 1
+GRUP 204 BA 145 FAKG 1
+GRUP 209 BA 145 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.223570
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.223570
+LF  4145  TYP - BEZ "launching s 174[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 146  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase146
+KOPF Bauabschnitt BA 146 launching s 178[m]
+sto#ba_csm 146 ; sto#takt_csm -0.211077    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4145
+GRUP   0 BA 146 FAKG 1
+GRUP   1 BA 146 FAKG 1
+GRUP   2 BA 146 FAKG 1
+GRUP   3 BA 146 FAKG 1
+GRUP   4 BA 146 FAKG 1
+GRUP   9 BA 146 FAKG 1
+GRUP  11 BA 146 FAKG 1
+GRUP  12 BA 146 FAKG 1
+GRUP  13 BA 146 FAKG 1
+GRUP  14 BA 146 FAKG 1
+GRUP 101 BA 146 FAKG 1
+GRUP 102 BA 146 FAKG 1
+GRUP 103 BA 146 FAKG 1
+GRUP 104 BA 146 FAKG 1
+GRUP 109 BA 146 FAKG 1
+GRUP 201 BA 146 FAKG 1
+GRUP 202 BA 146 FAKG 1
+GRUP 203 BA 146 FAKG 1
+GRUP 204 BA 146 FAKG 1
+GRUP 209 BA 146 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.211077
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.211077
+LF  4146  TYP - BEZ "launching s 178[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 147  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase147
+KOPF Bauabschnitt BA 147 launching s 182[m]
+sto#ba_csm 147 ; sto#takt_csm -0.198583    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4146
+GRUP   0 BA 147 FAKG 1
+GRUP   1 BA 147 FAKG 1
+GRUP   2 BA 147 FAKG 1
+GRUP   3 BA 147 FAKG 1
+GRUP   4 BA 147 FAKG 1
+GRUP   9 BA 147 FAKG 1
+GRUP  11 BA 147 FAKG 1
+GRUP  12 BA 147 FAKG 1
+GRUP  13 BA 147 FAKG 1
+GRUP  14 BA 147 FAKG 1
+GRUP 101 BA 147 FAKG 1
+GRUP 102 BA 147 FAKG 1
+GRUP 103 BA 147 FAKG 1
+GRUP 104 BA 147 FAKG 1
+GRUP 109 BA 147 FAKG 1
+GRUP 201 BA 147 FAKG 1
+GRUP 202 BA 147 FAKG 1
+GRUP 203 BA 147 FAKG 1
+GRUP 204 BA 147 FAKG 1
+GRUP 209 BA 147 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.198583
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.198583
+LF  4147  TYP - BEZ "launching s 182[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 148  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase148
+KOPF Bauabschnitt BA 148 launching s 185[m]
+sto#ba_csm 148 ; sto#takt_csm -0.186089    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4147
+GRUP   0 BA 148 FAKG 1
+GRUP   1 BA 148 FAKG 1
+GRUP   2 BA 148 FAKG 1
+GRUP   3 BA 148 FAKG 1
+GRUP   4 BA 148 FAKG 1
+GRUP   9 BA 148 FAKG 1
+GRUP  11 BA 148 FAKG 1
+GRUP  12 BA 148 FAKG 1
+GRUP  13 BA 148 FAKG 1
+GRUP  14 BA 148 FAKG 1
+GRUP 101 BA 148 FAKG 1
+GRUP 102 BA 148 FAKG 1
+GRUP 103 BA 148 FAKG 1
+GRUP 104 BA 148 FAKG 1
+GRUP 109 BA 148 FAKG 1
+GRUP 201 BA 148 FAKG 1
+GRUP 202 BA 148 FAKG 1
+GRUP 203 BA 148 FAKG 1
+GRUP 204 BA 148 FAKG 1
+GRUP 209 BA 148 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.186089
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.186089
+LF  4148  TYP - BEZ "launching s 185[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 149  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase149
+KOPF Bauabschnitt BA 149 launching s 189[m]
+sto#ba_csm 149 ; sto#takt_csm -0.173596    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4148
+GRUP   0 BA 149 FAKG 1
+GRUP   1 BA 149 FAKG 1
+GRUP   2 BA 149 FAKG 1
+GRUP   3 BA 149 FAKG 1
+GRUP   4 BA 149 FAKG 1
+GRUP   9 BA 149 FAKG 1
+GRUP  11 BA 149 FAKG 1
+GRUP  12 BA 149 FAKG 1
+GRUP  13 BA 149 FAKG 1
+GRUP  14 BA 149 FAKG 1
+GRUP 101 BA 149 FAKG 1
+GRUP 102 BA 149 FAKG 1
+GRUP 103 BA 149 FAKG 1
+GRUP 104 BA 149 FAKG 1
+GRUP 109 BA 149 FAKG 1
+GRUP 201 BA 149 FAKG 1
+GRUP 202 BA 149 FAKG 1
+GRUP 203 BA 149 FAKG 1
+GRUP 204 BA 149 FAKG 1
+GRUP 209 BA 149 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.173596
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.173596
+LF  4149  TYP - BEZ "launching s 189[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 150  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase150
+KOPF Bauabschnitt BA 150 launching s 193[m]
+sto#ba_csm 150 ; sto#takt_csm -0.161102    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4149
+GRUP   0 BA 150 FAKG 1
+GRUP   1 BA 150 FAKG 1
+GRUP   2 BA 150 FAKG 1
+GRUP   3 BA 150 FAKG 1
+GRUP   4 BA 150 FAKG 1
+GRUP   5 BA 150 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP   9 BA 150 FAKG 1
+GRUP  11 BA 150 FAKG 1
+GRUP  12 BA 150 FAKG 1
+GRUP  13 BA 150 FAKG 1
+GRUP  14 BA 150 FAKG 1
+GRUP 101 BA 150 FAKG 1
+GRUP 102 BA 150 FAKG 1
+GRUP 103 BA 150 FAKG 1
+GRUP 104 BA 150 FAKG 1
+GRUP 105 BA 150 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 109 BA 150 FAKG 1
+GRUP 201 BA 150 FAKG 1
+GRUP 202 BA 150 FAKG 1
+GRUP 203 BA 150 FAKG 1
+GRUP 204 BA 150 FAKG 1
+GRUP 205 BA 150 FAKG 1 PLF 0 $ erste Aktivierung
+GRUP 209 BA 150 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.161102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.161102
+LF  4150  TYP - BEZ "launching s 193[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 151  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase151
+KOPF Bauabschnitt BA 151 launching s 198[m]
+sto#ba_csm 151 ; sto#takt_csm -0.144992    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4150
+GRUP   0 BA 151 FAKG 1
+GRUP   1 BA 151 FAKG 1
+GRUP   2 BA 151 FAKG 1
+GRUP   3 BA 151 FAKG 1
+GRUP   4 BA 151 FAKG 1
+GRUP   5 BA 151 FAKG 1
+GRUP   9 BA 151 FAKG 1
+GRUP  11 BA 151 FAKG 1
+GRUP  12 BA 151 FAKG 1
+GRUP  13 BA 151 FAKG 1
+GRUP  14 BA 151 FAKG 1
+GRUP 101 BA 151 FAKG 1
+GRUP 102 BA 151 FAKG 1
+GRUP 103 BA 151 FAKG 1
+GRUP 104 BA 151 FAKG 1
+GRUP 105 BA 151 FAKG 1
+GRUP 109 BA 151 FAKG 1
+GRUP 201 BA 151 FAKG 1
+GRUP 202 BA 151 FAKG 1
+GRUP 203 BA 151 FAKG 1
+GRUP 204 BA 151 FAKG 1
+GRUP 205 BA 151 FAKG 1
+GRUP 209 BA 151 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.144992
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.144992
+LF  4151  TYP - BEZ "launching s 198[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 152  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase152
+KOPF Bauabschnitt BA 152 launching s 203[m]
+sto#ba_csm 152 ; sto#takt_csm -0.128882    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4151
+GRUP   0 BA 152 FAKG 1
+GRUP   1 BA 152 FAKG 1
+GRUP   2 BA 152 FAKG 1
+GRUP   3 BA 152 FAKG 1
+GRUP   4 BA 152 FAKG 1
+GRUP   5 BA 152 FAKG 1
+GRUP   9 BA 152 FAKG 1
+GRUP  11 BA 152 FAKG 1
+GRUP  12 BA 152 FAKG 1
+GRUP  13 BA 152 FAKG 1
+GRUP  14 BA 152 FAKG 1
+GRUP 101 BA 152 FAKG 1
+GRUP 102 BA 152 FAKG 1
+GRUP 103 BA 152 FAKG 1
+GRUP 104 BA 152 FAKG 1
+GRUP 105 BA 152 FAKG 1
+GRUP 109 BA 152 FAKG 1
+GRUP 201 BA 152 FAKG 1
+GRUP 202 BA 152 FAKG 1
+GRUP 203 BA 152 FAKG 1
+GRUP 204 BA 152 FAKG 1
+GRUP 205 BA 152 FAKG 1
+GRUP 209 BA 152 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.128882
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.128882
+LF  4152  TYP - BEZ "launching s 203[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 153  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase153
+KOPF Bauabschnitt BA 153 launching s 208[m]
+sto#ba_csm 153 ; sto#takt_csm -0.112771    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4152
+GRUP   0 BA 153 FAKG 1
+GRUP   1 BA 153 FAKG 1
+GRUP   2 BA 153 FAKG 1
+GRUP   3 BA 153 FAKG 1
+GRUP   4 BA 153 FAKG 1
+GRUP   5 BA 153 FAKG 1
+GRUP   9 BA 153 FAKG 1
+GRUP  11 BA 153 FAKG 1
+GRUP  12 BA 153 FAKG 1
+GRUP  13 BA 153 FAKG 1
+GRUP  14 BA 153 FAKG 1
+GRUP 101 BA 153 FAKG 1
+GRUP 102 BA 153 FAKG 1
+GRUP 103 BA 153 FAKG 1
+GRUP 104 BA 153 FAKG 1
+GRUP 105 BA 153 FAKG 1
+GRUP 109 BA 153 FAKG 1
+GRUP 201 BA 153 FAKG 1
+GRUP 202 BA 153 FAKG 1
+GRUP 203 BA 153 FAKG 1
+GRUP 204 BA 153 FAKG 1
+GRUP 205 BA 153 FAKG 1
+GRUP 209 BA 153 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.112771
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.112771
+LF  4153  TYP - BEZ "launching s 208[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 154  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase154
+KOPF Bauabschnitt BA 154 launching s 213[m]
+sto#ba_csm 154 ; sto#takt_csm -0.0966612    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4153
+GRUP   0 BA 154 FAKG 1
+GRUP   1 BA 154 FAKG 1
+GRUP   2 BA 154 FAKG 1
+GRUP   3 BA 154 FAKG 1
+GRUP   4 BA 154 FAKG 1
+GRUP   5 BA 154 FAKG 1
+GRUP   9 BA 154 FAKG 1
+GRUP  11 BA 154 FAKG 1
+GRUP  12 BA 154 FAKG 1
+GRUP  13 BA 154 FAKG 1
+GRUP  14 BA 154 FAKG 1
+GRUP 101 BA 154 FAKG 1
+GRUP 102 BA 154 FAKG 1
+GRUP 103 BA 154 FAKG 1
+GRUP 104 BA 154 FAKG 1
+GRUP 105 BA 154 FAKG 1
+GRUP 109 BA 154 FAKG 1
+GRUP 201 BA 154 FAKG 1
+GRUP 202 BA 154 FAKG 1
+GRUP 203 BA 154 FAKG 1
+GRUP 204 BA 154 FAKG 1
+GRUP 205 BA 154 FAKG 1
+GRUP 209 BA 154 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0966612
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0966612
+LF  4154  TYP - BEZ "launching s 213[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 155  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase155
+KOPF Bauabschnitt BA 155 launching s 218[m]
+sto#ba_csm 155 ; sto#takt_csm -0.0805510    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4154
+GRUP   0 BA 155 FAKG 1
+GRUP   1 BA 155 FAKG 1
+GRUP   2 BA 155 FAKG 1
+GRUP   3 BA 155 FAKG 1
+GRUP   4 BA 155 FAKG 1
+GRUP   5 BA 155 FAKG 1
+GRUP   9 BA 155 FAKG 1
+GRUP  11 BA 155 FAKG 1
+GRUP  12 BA 155 FAKG 1
+GRUP  13 BA 155 FAKG 1
+GRUP  14 BA 155 FAKG 1
+GRUP 101 BA 155 FAKG 1
+GRUP 102 BA 155 FAKG 1
+GRUP 103 BA 155 FAKG 1
+GRUP 104 BA 155 FAKG 1
+GRUP 105 BA 155 FAKG 1
+GRUP 109 BA 155 FAKG 1
+GRUP 201 BA 155 FAKG 1
+GRUP 202 BA 155 FAKG 1
+GRUP 203 BA 155 FAKG 1
+GRUP 204 BA 155 FAKG 1
+GRUP 205 BA 155 FAKG 1
+GRUP 209 BA 155 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0805510
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0805510
+LF  4155  TYP - BEZ "launching s 218[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 156  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase156
+KOPF Bauabschnitt BA 156 launching s 222[m]
+sto#ba_csm 156 ; sto#takt_csm -0.0644408    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4155
+GRUP   0 BA 156 FAKG 1
+GRUP   1 BA 156 FAKG 1
+GRUP   2 BA 156 FAKG 1
+GRUP   3 BA 156 FAKG 1
+GRUP   4 BA 156 FAKG 1
+GRUP   5 BA 156 FAKG 1
+GRUP   9 BA 156 FAKG 1
+GRUP  11 BA 156 FAKG 1
+GRUP  12 BA 156 FAKG 1
+GRUP  13 BA 156 FAKG 1
+GRUP  14 BA 156 FAKG 1
+GRUP 101 BA 156 FAKG 1
+GRUP 102 BA 156 FAKG 1
+GRUP 103 BA 156 FAKG 1
+GRUP 104 BA 156 FAKG 1
+GRUP 105 BA 156 FAKG 1
+GRUP 109 BA 156 FAKG 1
+GRUP 201 BA 156 FAKG 1
+GRUP 202 BA 156 FAKG 1
+GRUP 203 BA 156 FAKG 1
+GRUP 204 BA 156 FAKG 1
+GRUP 205 BA 156 FAKG 1
+GRUP 209 BA 156 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0644408
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0644408
+LF  4156  TYP - BEZ "launching s 222[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 157  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase157
+KOPF Bauabschnitt BA 157 launching s 227[m]
+sto#ba_csm 157 ; sto#takt_csm -0.0483306    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4156
+GRUP   0 BA 157 FAKG 1
+GRUP   1 BA 157 FAKG 1
+GRUP   2 BA 157 FAKG 1
+GRUP   3 BA 157 FAKG 1
+GRUP   4 BA 157 FAKG 1
+GRUP   5 BA 157 FAKG 1
+GRUP   9 BA 157 FAKG 1
+GRUP  11 BA 157 FAKG 1
+GRUP  12 BA 157 FAKG 1
+GRUP  13 BA 157 FAKG 1
+GRUP  14 BA 157 FAKG 1
+GRUP 101 BA 157 FAKG 1
+GRUP 102 BA 157 FAKG 1
+GRUP 103 BA 157 FAKG 1
+GRUP 104 BA 157 FAKG 1
+GRUP 105 BA 157 FAKG 1
+GRUP 109 BA 157 FAKG 1
+GRUP 201 BA 157 FAKG 1
+GRUP 202 BA 157 FAKG 1
+GRUP 203 BA 157 FAKG 1
+GRUP 204 BA 157 FAKG 1
+GRUP 205 BA 157 FAKG 1
+GRUP 209 BA 157 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0483306
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0483306
+LF  4157  TYP - BEZ "launching s 227[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 158  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase158
+KOPF Bauabschnitt BA 158 launching s 232[m]
+sto#ba_csm 158 ; sto#takt_csm -0.0322204    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4157
+GRUP   0 BA 158 FAKG 1
+GRUP   1 BA 158 FAKG 1
+GRUP   2 BA 158 FAKG 1
+GRUP   3 BA 158 FAKG 1
+GRUP   4 BA 158 FAKG 1
+GRUP   5 BA 158 FAKG 1
+GRUP   9 BA 158 FAKG 1
+GRUP  11 BA 158 FAKG 1
+GRUP  12 BA 158 FAKG 1
+GRUP  13 BA 158 FAKG 1
+GRUP  14 BA 158 FAKG 1
+GRUP 101 BA 158 FAKG 1
+GRUP 102 BA 158 FAKG 1
+GRUP 103 BA 158 FAKG 1
+GRUP 104 BA 158 FAKG 1
+GRUP 105 BA 158 FAKG 1
+GRUP 109 BA 158 FAKG 1
+GRUP 201 BA 158 FAKG 1
+GRUP 202 BA 158 FAKG 1
+GRUP 203 BA 158 FAKG 1
+GRUP 204 BA 158 FAKG 1
+GRUP 205 BA 158 FAKG 1
+GRUP 209 BA 158 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0322204
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0322204
+LF  4158  TYP - BEZ "launching s 232[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 159  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase159
+KOPF Bauabschnitt BA 159 launching s 237[m]
+sto#ba_csm 159 ; sto#takt_csm -0.0161102    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4158
+GRUP   0 BA 159 FAKG 1
+GRUP   1 BA 159 FAKG 1
+GRUP   2 BA 159 FAKG 1
+GRUP   3 BA 159 FAKG 1
+GRUP   4 BA 159 FAKG 1
+GRUP   5 BA 159 FAKG 1
+GRUP   9 BA 159 FAKG 1
+GRUP  11 BA 159 FAKG 1
+GRUP  12 BA 159 FAKG 1
+GRUP  13 BA 159 FAKG 1
+GRUP  14 BA 159 FAKG 1
+GRUP 101 BA 159 FAKG 1
+GRUP 102 BA 159 FAKG 1
+GRUP 103 BA 159 FAKG 1
+GRUP 104 BA 159 FAKG 1
+GRUP 105 BA 159 FAKG 1
+GRUP 109 BA 159 FAKG 1
+GRUP 201 BA 159 FAKG 1
+GRUP 202 BA 159 FAKG 1
+GRUP 203 BA 159 FAKG 1
+GRUP 204 BA 159 FAKG 1
+GRUP 205 BA 159 FAKG 1
+GRUP 209 BA 159 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI -0.0161102
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI -0.0161102
+LF  4159  TYP - BEZ "launching s 237[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 160  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase160
+KOPF Bauabschnitt BA 160 launching s 242[m]
+sto#ba_csm 160 ; sto#takt_csm     0.000    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4159
+GRUP   0 BA 160 FAKG 1
+GRUP   1 BA 160 FAKG 1
+GRUP   2 BA 160 FAKG 1
+GRUP   3 BA 160 FAKG 1
+GRUP   4 BA 160 FAKG 1
+GRUP   5 BA 160 FAKG 1
+GRUP   9 BA 160 FAKG 1
+GRUP  11 BA 160 FAKG 1
+GRUP  12 BA 160 FAKG 1
+GRUP  13 BA 160 FAKG 1
+GRUP  14 BA 160 FAKG 1
+GRUP 101 BA 160 FAKG 1
+GRUP 102 BA 160 FAKG 1
+GRUP 103 BA 160 FAKG 1
+GRUP 104 BA 160 FAKG 1
+GRUP 105 BA 160 FAKG 1
+GRUP 109 BA 160 FAKG 1
+GRUP 201 BA 160 FAKG 1
+GRUP 202 BA 160 FAKG 1
+GRUP 203 BA 160 FAKG 1
+GRUP 204 BA 160 FAKG 1
+GRUP 205 BA 160 FAKG 1
+GRUP 209 BA 160 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+LF  4160  TYP - BEZ "launching s 242[m]              " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 200  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase200
+KOPF Bauabschnitt BA 200 remove launching nose
+sto#ba_csm 200 ; sto#takt_csm     0.000    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4160
+GRUP   0 BA 200 FAKG 1
+GRUP   1 BA 200 FAKG 1
+GRUP   2 BA 200 FAKG 1
+GRUP   3 BA 200 FAKG 1
+GRUP   4 BA 200 FAKG 1
+GRUP   5 BA 200 FAKG 1
+GRUP  11 BA 200 FAKG 1
+GRUP  12 BA 200 FAKG 1
+GRUP  13 BA 200 FAKG 1
+GRUP  14 BA 200 FAKG 1
+GRUP 101 BA 200 FAKG 1
+GRUP 102 BA 200 FAKG 1
+GRUP 103 BA 200 FAKG 1
+GRUP 104 BA 200 FAKG 1
+GRUP 105 BA 200 FAKG 1
+GRUP 201 BA 200 FAKG 1
+GRUP 202 BA 200 FAKG 1
+GRUP 203 BA 200 FAKG 1
+GRUP 204 BA 200 FAKG 1
+GRUP 205 BA 200 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+LF  4200  TYP - BEZ "remove launching nose           " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+ENDE
+$ ----------------------------------- Construction Stage 210  ----------------
+$ Diesen LF in gleichem PROG ASE rechnen =schneller
+$ PROG ASE urs:csmase210
+KOPF Bauabschnitt BA 210 additional G_2
+sto#ba_csm 210 ; sto#takt_csm     0.000    $ Verwendung der Variable #ba_csm in STEU ASE TEXT siehe Handbuch -> STEU KRAG
+#include ASE_CTRL
+SYST PLF 4200
+GRUP   0 BA 210 FAKG 1
+GRUP   1 BA 210 FAKG 1
+GRUP   2 BA 210 FAKG 1
+GRUP   3 BA 210 FAKG 1
+GRUP   4 BA 210 FAKG 1
+GRUP   5 BA 210 FAKG 1
+GRUP  11 BA 210 FAKG 1
+GRUP  12 BA 210 FAKG 1
+GRUP  13 BA 210 FAKG 1
+GRUP  14 BA 210 FAKG 1
+GRUP 101 BA 210 FAKG 1
+GRUP 102 BA 210 FAKG 1
+GRUP 103 BA 210 FAKG 1
+GRUP 104 BA 210 FAKG 1
+GRUP 105 BA 210 FAKG 1
+GRUP 201 BA 210 FAKG 1
+GRUP 202 BA 210 FAKG 1
+GRUP 203 BA 210 FAKG 1
+GRUP 204 BA 210 FAKG 1
+GRUP 205 BA 210 FAKG 1
+TAKT GRP (   1   5 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP (   9   9 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 101 105 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 109 109 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP ( 201 205 1) XM     0.000[m] YM     0.000[m] PHI     0.000
+TAKT GRP 209 XM     0.000[m] YM     0.000[m] PHI     0.000
+LF  4210  TYP - BEZ "additional G_2                  " $ Eigengewicht ueber GRUP FAKG anstelle EGZ
+   LC     2 PLF NEU $ zum ersten Mal angesetzt
+ENDE
+ENDE
+ENDE
+#include "$(project)_csmlf.dat"  $ includiert z.B. Gruppenincludes!
+ENDE
+$
+$ *************************************************************
+$ *************************************************************
+$ *************************************************************
+!#!Kapitel Check Print Spannungen in den Bauphasen
+$
+$ *************************************************************
+-PROG AQB urs:check0 $ Check Print Spannungen in den Bauphasen
+KOPF Check Print Spannungen in den Bauphasen
+$ Bitte suchen Sie im AQB-Ausdruck nach "Untersuchter Schnitt - Normalspannungen"
+ECHO QUER,KOMB,SCHN,BEW,SPAN,AUSN NEIN
+ECHO TABS 1+2 $ 1+2 = Spannstraenge einzeln ausgeben
+$ Geben Sie ein: STEU AQB ETXT 'ECHO TABS 2' $ um nur die Summe aller Straenge zu erhalten
+  STEU QWF   1.00000 $ Berücksichtigung der Bewehrung bei K+S
+  STEU VM   VAL2 1.0 $ Längskraft delta-N infolge Torsion in der Biegebemessung BEME berücksichtigen
+  STEU WARN 117 $ sonst Warnung, da keine Spannglieder in Stabelementen existieren
+$
+$ zu bearbeitende Stäbe:
+STAB      3079 x     0.000[m] BA - $ Querschnitte ohne Bauabschnitte
+$
+$ zu verwendende Lastfälle:
+LF  5??? $ alle 5000...GPC-Lastfälle entsprechend der LF-Liste in der Datei _csmlf.dat
+ECHO SCHN JA $ zur Kontrolle der automatisch gefundenen und angesetzten Lastfälle -> Untersuchte Lastfälle
+$
+$ Kombinationen:
+$ *************************************************************
+$ Spannungen der Einzellastfälle:
+KOMB SOLO LF1 5110           BEZ "Solo_110 launching s 0[m"  QT  110
+KOMB SOLO LF1 5111           BEZ "Solo_111 launching s 5[m"  QT  111
+KOMB SOLO LF1 5112           BEZ "Solo_112 launching s 10["  QT  112
+KOMB SOLO LF1 5113           BEZ "Solo_113 launching s 16["  QT  113
+KOMB SOLO LF1 5114           BEZ "Solo_114 launching s 21["  QT  114
+KOMB SOLO LF1 5115           BEZ "Solo_115 launching s 26["  QT  115
+KOMB SOLO LF1 5116           BEZ "Solo_116 launching s 31["  QT  116
+KOMB SOLO LF1 5117           BEZ "Solo_117 launching s 36["  QT  117
+KOMB SOLO LF1 5118           BEZ "Solo_118 launching s 42["  QT  118
+KOMB SOLO LF1 5119           BEZ "Solo_119 launching s 47["  QT  119
+KOMB SOLO LF1 5120           BEZ "Solo_120 launching s 52["  QT  120
+KOMB SOLO LF1 5121           BEZ "Solo_121 launching s 57["  QT  121
+KOMB SOLO LF1 5122           BEZ "Solo_122 launching s 62["  QT  122
+KOMB SOLO LF1 5123           BEZ "Solo_123 launching s 68["  QT  123
+KOMB SOLO LF1 5124           BEZ "Solo_124 launching s 73["  QT  124
+KOMB SOLO LF1 5125           BEZ "Solo_125 launching s 78["  QT  125
+KOMB SOLO LF1 5126           BEZ "Solo_126 launching s 83["  QT  126
+KOMB SOLO LF1 5127           BEZ "Solo_127 launching s 88["  QT  127
+KOMB SOLO LF1 5128           BEZ "Solo_128 launching s 94["  QT  128
+KOMB SOLO LF1 5129           BEZ "Solo_129 launching s 99["  QT  129
+KOMB SOLO LF1 5130           BEZ "Solo_130 launching s 104"  QT  130
+KOMB SOLO LF1 5131           BEZ "Solo_131 launching s 109"  QT  131
+KOMB SOLO LF1 5132           BEZ "Solo_132 launching s 114"  QT  132
+KOMB SOLO LF1 5133           BEZ "Solo_133 launching s 119"  QT  133
+KOMB SOLO LF1 5134           BEZ "Solo_134 launching s 124"  QT  134
+KOMB SOLO LF1 5135           BEZ "Solo_135 launching s 130"  QT  135
+KOMB SOLO LF1 5136           BEZ "Solo_136 launching s 135"  QT  136
+KOMB SOLO LF1 5137           BEZ "Solo_137 launching s 140"  QT  137
+KOMB SOLO LF1 5138           BEZ "Solo_138 launching s 145"  QT  138
+KOMB SOLO LF1 5139           BEZ "Solo_139 launching s 150"  QT  139
+KOMB SOLO LF1 5140           BEZ "Solo_140 launching s 155"  QT  140
+KOMB SOLO LF1 5141           BEZ "Solo_141 launching s 159"  QT  141
+KOMB SOLO LF1 5142           BEZ "Solo_142 launching s 163"  QT  142
+KOMB SOLO LF1 5143           BEZ "Solo_143 launching s 166"  QT  143
+KOMB SOLO LF1 5144           BEZ "Solo_144 launching s 170"  QT  144
+KOMB SOLO LF1 5145           BEZ "Solo_145 launching s 174"  QT  145
+KOMB SOLO LF1 5146           BEZ "Solo_146 launching s 178"  QT  146
+KOMB SOLO LF1 5147           BEZ "Solo_147 launching s 182"  QT  147
+KOMB SOLO LF1 5148           BEZ "Solo_148 launching s 185"  QT  148
+KOMB SOLO LF1 5149           BEZ "Solo_149 launching s 189"  QT  149
+KOMB SOLO LF1 5150           BEZ "Solo_150 launching s 193"  QT  150
+KOMB SOLO LF1 5151           BEZ "Solo_151 launching s 198"  QT  151
+KOMB SOLO LF1 5152           BEZ "Solo_152 launching s 203"  QT  152
+KOMB SOLO LF1 5153           BEZ "Solo_153 launching s 208"  QT  153
+KOMB SOLO LF1 5154           BEZ "Solo_154 launching s 213"  QT  154
+KOMB SOLO LF1 5155           BEZ "Solo_155 launching s 218"  QT  155
+KOMB SOLO LF1 5156           BEZ "Solo_156 launching s 222"  QT  156
+KOMB SOLO LF1 5157           BEZ "Solo_157 launching s 227"  QT  157
+KOMB SOLO LF1 5158           BEZ "Solo_158 launching s 232"  QT  158
+KOMB SOLO LF1 5159           BEZ "Solo_159 launching s 237"  QT  159
+KOMB SOLO LF1 5160           BEZ "Solo_160 launching s 242"  QT  160
+KOMB SOLO LF1 5200           BEZ "Solo_200 remove launchin"  QT  200
+KOMB SOLO LF1 5210           BEZ "Solo_210 additional G_2 "  QT  210
+$ *************************************************************
+$ Spannungen der Summenlastfälle:
+KOMB LINE $ ***************** Trennlinie
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7110  QT=110  BEZ="Sum_110 launching s 0[m]"
+      SUM 5110
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7111  QT=111  BEZ="Sum_111 launching s 5[m]"
+      SUM 5110 5111
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7112  QT=112  BEZ="Sum_112 launching s 10[m"
+      SUM 5110 5111 5112
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7113  QT=113  BEZ="Sum_113 launching s 16[m"
+      SUM 5110 5111 5112 5113
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7114  QT=114  BEZ="Sum_114 launching s 21[m"
+      SUM 5110 5111 5112 5113 5114
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7115  QT=115  BEZ="Sum_115 launching s 26[m"
+      SUM 5110 5111 5112 5113 5114 5115
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7116  QT=116  BEZ="Sum_116 launching s 31[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7117  QT=117  BEZ="Sum_117 launching s 36[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7118  QT=118  BEZ="Sum_118 launching s 42[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7119  QT=119  BEZ="Sum_119 launching s 47[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7120  QT=120  BEZ="Sum_120 launching s 52[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7121  QT=121  BEZ="Sum_121 launching s 57[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7122  QT=122  BEZ="Sum_122 launching s 62[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7123  QT=123  BEZ="Sum_123 launching s 68[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7124  QT=124  BEZ="Sum_124 launching s 73[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7125  QT=125  BEZ="Sum_125 launching s 78[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7126  QT=126  BEZ="Sum_126 launching s 83[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7127  QT=127  BEZ="Sum_127 launching s 88[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7128  QT=128  BEZ="Sum_128 launching s 94[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7129  QT=129  BEZ="Sum_129 launching s 99[m"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7130  QT=130  BEZ="Sum_130 launching s 104["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7131  QT=131  BEZ="Sum_131 launching s 109["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7132  QT=132  BEZ="Sum_132 launching s 114["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7133  QT=133  BEZ="Sum_133 launching s 119["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7134  QT=134  BEZ="Sum_134 launching s 124["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7135  QT=135  BEZ="Sum_135 launching s 130["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7136  QT=136  BEZ="Sum_136 launching s 135["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7137  QT=137  BEZ="Sum_137 launching s 140["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7138  QT=138  BEZ="Sum_138 launching s 145["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7139  QT=139  BEZ="Sum_139 launching s 150["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7140  QT=140  BEZ="Sum_140 launching s 155["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7141  QT=141  BEZ="Sum_141 launching s 159["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7142  QT=142  BEZ="Sum_142 launching s 163["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7143  QT=143  BEZ="Sum_143 launching s 166["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7144  QT=144  BEZ="Sum_144 launching s 170["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7145  QT=145  BEZ="Sum_145 launching s 174["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7146  QT=146  BEZ="Sum_146 launching s 178["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7147  QT=147  BEZ="Sum_147 launching s 182["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7148  QT=148  BEZ="Sum_148 launching s 185["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7149  QT=149  BEZ="Sum_149 launching s 189["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7150  QT=150  BEZ="Sum_150 launching s 193["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7151  QT=151  BEZ="Sum_151 launching s 198["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7152  QT=152  BEZ="Sum_152 launching s 203["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7153  QT=153  BEZ="Sum_153 launching s 208["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7154  QT=154  BEZ="Sum_154 launching s 213["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7155  QT=155  BEZ="Sum_155 launching s 218["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7156  QT=156  BEZ="Sum_156 launching s 222["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7157  QT=157  BEZ="Sum_157 launching s 227["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7158  QT=158  BEZ="Sum_158 launching s 232["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+      UND 5158
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7159  QT=159  BEZ="Sum_159 launching s 237["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+      UND 5158 5159
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7160  QT=160  BEZ="Sum_160 launching s 242["
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+      UND 5158 5159 5160
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7200  QT=200  BEZ="Sum_200 remove launching"
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+      UND 5158 5159 5160 5200
+KOMB EXTR LF1  LF2  LF3  LF4  LF5  LF6 LFSP=7210  QT=210  BEZ="Sum_210 additional G_2  "
+      SUM 5110 5111 5112 5113 5114 5115
+      UND 5116 5117 5118 5119 5120 5121
+      UND 5122 5123 5124 5125 5126 5127
+      UND 5128 5129 5130 5131 5132 5133
+      UND 5134 5135 5136 5137 5138 5139
+      UND 5140 5141 5142 5143 5144 5145
+      UND 5146 5147 5148 5149 5150 5151
+      UND 5152 5153 5154 5155 5156 5157
+      UND 5158 5159 5160 5200 5210
+KOMB GMAX LFSP  7999 $ legt Extremwerte der Spannungen aller vorangegangenen KOMB-s ab.
+SPAN E $ Drucken der linearen Spannungen
+$ Bitte suchen Sie im AQB-Ausdruck nach "Untersuchter Schnitt - Normalspannungen"
+ENDE
+$ *************************************************************
+$ Folgend eine PICT-Bildeingabe mit AQB Erläuterungen - siehe Report
+$ *************************************************************
+$
+$ PICT - defining a picture - all in [cm]
+<PICT> XCM 18.0 YCM 12.0 TEXT 'Check Print Spannungen in den Bauphasen                                                                                                                                                                '
+$
+$ GNT – scaling of the pict area: from 0.0->1.0 :
+GNT 1 -1 XMIN 0.0 XMAX 1.0 YMIN 0.0 YMAX 1.05
+$
+$ draw lines: - here a surrounding box:
+GPL x1 0.02 0.02 x2 0.98 0.02 x3 0.98 1.03 x4 0.02 1.03 x5 0.02 0.02
+$
+$ GTXI - Test attributes : H in [cm]
+GTXI H 0.37 HALI LEFT VALI HALF
+$
+$ text:
+GTXT  X 0.05 Y 0.98 TEXT 'Check Print Spannungen in den Bauphasen                                                                                                                                                                '
+GPL x1 0.05 0.95 x2 0.60 0.95
+GPL x1 0.05 0.94 x2 0.60 0.94
+GTXT  X 0.05 Y 0.90 TEXT 'Bitte suchen Sie im AQB-Ausdruck nach "Untersuchter Schnitt - Normalspannungen":                   '
+GTXT  X 0.05 Y 0.85 TEXT '(im Results Report direkt über diesem Bild)                                                        '
+GTXI H 0.26 HALI LEFT VALI HALF
+GTXT  X 0.06 Y 0.80 TEXT '- Untersuchter Schnitt                                                                             '
+GTXT  X 0.06 Y 0.76 TEXT '  - Normalspannungen                                                                               '
+GTXT  X 0.06 Y 0.72 TEXT 'Q     Lastfall      N[kN]  My[kNm]  Mz[kNm]    Pkt  TOP    Pkt  BOT    Str 1                       '
+GTXT  X 0.06 Y 0.68 TEXT 'BA0   Solo_10 G_1 ...                                                                              '
+GTXT  X 0.586 Y 0.68 TEXT      0.0
+GTXT  X 0.51  Y 0.68 TEXT +5.0
+GPL x1 0.05 0.82   x2 0.70 0.82   x3 0.70 0.65   x4 0.05 0.65   x5 0.05 0.82
+GTXI H 0.37 HALI LEFT VALI HALF
+GTXT  X 0.05 Y 0.60 TEXT 'Mit Solo werden dabei zunächst die Differenzspannungen der Bauphasen ausgedruckt.                  '
+GTXT  X 0.05 Y 0.45 TEXT 'Am Ende der Tabelle folgen dann die Gesamtspannungen (aufsummierte Spannungen):                    '
+GTXI H 0.26 HALI LEFT VALI HALF
+GTXT  X 0.06 Y 0.40 TEXT 'Q     Lastfall      N[kN]  My[kNm]  Mz[kNm]    Pkt  TOP    Pkt  BOT    Str 1                       '
+GTXT  X 0.06 Y 0.36 TEXT 'BA0   10 G_1 ...                                                                                   '
+GTXT  X 0.06 Y 0.32 TEXT 'Brutt 11 Vorspannung                                                                               '
+GTXT  X 0.06 Y 0.28 TEXT 'Brutt 15 Kriechen ...                                                                              '
+GTXT  X 0.06 Y 0.24 TEXT 'Brutt 25 Kriechen ...                                                                              '
+GTXT  X 0.06 Y 0.20 TEXT 'Brutt 35 Kriechen ...                                                                              '
+GTXT  X 0.586 Y 0.36 TEXT   0.0
+GTXT  X 0.56 Y 0.32 TEXT 1220.0
+GTXT  X 0.56 Y 0.28 TEXT 1160.0
+GTXT  X 0.56 Y 0.24 TEXT 1140.0
+GTXT  X 0.56 Y 0.20 TEXT 1095.0
+GTXT  X 0.51 Y 0.36 TEXT +5.0
+GTXT  X 0.51 Y 0.32 TEXT -4.3
+GTXT  X 0.51 Y 0.28 TEXT -3.2
+GTXT  X 0.51 Y 0.24 TEXT -2.5
+GTXT  X 0.51 Y 0.20 TEXT -2.1
+GPL x1 0.05 0.42 x2 0.70 0.42 x3 0.70 0.17 x4 0.05 0.17 x5 0.05 0.42
+GPL x1 0.63  0.33 x2 0.63  0.21
+GPL x1 0.636 0.33 x2 0.636 0.21
+GPL x1 0.62  0.22 x2 0.633 0.20
+GPL x1 0.633 0.20 x2 0.646 0.22
+GPL x1 0.64  0.25 x2 0.71  0.31
+GTXI H 0.31 HALI LEFT VALI HALF
+GTXT  X 0.72 Y 0.32 TEXT 'Unter Str 1 findet man sehr                                                                        '
+GTXT  X 0.72 Y 0.28 TEXT 'gut den Spannkraftverlust                                                                          '
+GTXT  X 0.72 Y 0.24 TEXT 'in den Spanngliedern                                                                               '
+GPL x1 0.50 0.23 x2 0.39 0.15
+GTXT  X 0.12 Y 0.13 TEXT 'Unter Pkt BOT findet man die realen Spannungen in einem Spannungspunkt BOT. Die hier               '
+GTXT  X 0.12 Y 0.09 TEXT 'abgedruckten Spannungen beinhalten alle Effekte incl. Kriech- und Schwindverlusten und sind        '
+GTXT  X 0.12 Y 0.05 TEXT 'über die 7000-er Kombinationslastfälle in WINGRAF und RESULTS abrufbar (folgende Plots).           '
+GTXT  X 0.72 Y 0.40 TEXT '(Beispiel)                                                                                         '
+</PICT>
+$ End of picture
+ENDE
+$
+-PROG RESULTS urs:result1
+KOPF Plot Check print Gesamtspannungen der Summenlastfälle
+SIZE URS M  0
+let#AQUP_sig     20000 $ 1 cm entspricht #AQUP_sig kN/m2
+let#AQUP_sss    100000 $ Betonstahlspannungen
+  STEU WARN 802,821 $ falls der Querschnitt keine Bewehrung hat kommt sonst eine Warnung
+$
+$ next element
+LET#N      3079 ; LET#x     0.000[m]
+ BILD BEZ "CSM BA 110 Stab 3079 x= 0.00 launching s 0[m]"
+ LF 7110 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 111 Stab 3079 x= 0.00 launching s 5[m]"
+ LF 7111 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 112 Stab 3079 x= 0.00 launching s 10[m]"
+ LF 7112 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 113 Stab 3079 x= 0.00 launching s 16[m]"
+ LF 7113 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 114 Stab 3079 x= 0.00 launching s 21[m]"
+ LF 7114 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 115 Stab 3079 x= 0.00 launching s 26[m]"
+ LF 7115 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 116 Stab 3079 x= 0.00 launching s 31[m]"
+ LF 7116 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 117 Stab 3079 x= 0.00 launching s 36[m]"
+ LF 7117 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 118 Stab 3079 x= 0.00 launching s 42[m]"
+ LF 7118 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 119 Stab 3079 x= 0.00 launching s 47[m]"
+ LF 7119 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 120 Stab 3079 x= 0.00 launching s 52[m]"
+ LF 7120 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 121 Stab 3079 x= 0.00 launching s 57[m]"
+ LF 7121 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 122 Stab 3079 x= 0.00 launching s 62[m]"
+ LF 7122 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 123 Stab 3079 x= 0.00 launching s 68[m]"
+ LF 7123 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 124 Stab 3079 x= 0.00 launching s 73[m]"
+ LF 7124 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 125 Stab 3079 x= 0.00 launching s 78[m]"
+ LF 7125 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 126 Stab 3079 x= 0.00 launching s 83[m]"
+ LF 7126 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 127 Stab 3079 x= 0.00 launching s 88[m]"
+ LF 7127 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 128 Stab 3079 x= 0.00 launching s 94[m]"
+ LF 7128 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 129 Stab 3079 x= 0.00 launching s 99[m]"
+ LF 7129 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 130 Stab 3079 x= 0.00 launching s 104[m]"
+ LF 7130 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 131 Stab 3079 x= 0.00 launching s 109[m]"
+ LF 7131 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 132 Stab 3079 x= 0.00 launching s 114[m]"
+ LF 7132 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 133 Stab 3079 x= 0.00 launching s 119[m]"
+ LF 7133 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 134 Stab 3079 x= 0.00 launching s 124[m]"
+ LF 7134 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 135 Stab 3079 x= 0.00 launching s 130[m]"
+ LF 7135 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 136 Stab 3079 x= 0.00 launching s 135[m]"
+ LF 7136 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 137 Stab 3079 x= 0.00 launching s 140[m]"
+ LF 7137 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 138 Stab 3079 x= 0.00 launching s 145[m]"
+ LF 7138 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 139 Stab 3079 x= 0.00 launching s 150[m]"
+ LF 7139 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 140 Stab 3079 x= 0.00 launching s 155[m]"
+ LF 7140 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 141 Stab 3079 x= 0.00 launching s 159[m]"
+ LF 7141 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 142 Stab 3079 x= 0.00 launching s 163[m]"
+ LF 7142 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 143 Stab 3079 x= 0.00 launching s 166[m]"
+ LF 7143 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 144 Stab 3079 x= 0.00 launching s 170[m]"
+ LF 7144 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 145 Stab 3079 x= 0.00 launching s 174[m]"
+ LF 7145 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 146 Stab 3079 x= 0.00 launching s 178[m]"
+ LF 7146 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 147 Stab 3079 x= 0.00 launching s 182[m]"
+ LF 7147 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 148 Stab 3079 x= 0.00 launching s 185[m]"
+ LF 7148 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 149 Stab 3079 x= 0.00 launching s 189[m]"
+ LF 7149 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 150 Stab 3079 x= 0.00 launching s 193[m]"
+ LF 7150 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 151 Stab 3079 x= 0.00 launching s 198[m]"
+ LF 7151 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 152 Stab 3079 x= 0.00 launching s 203[m]"
+ LF 7152 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 153 Stab 3079 x= 0.00 launching s 208[m]"
+ LF 7153 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 154 Stab 3079 x= 0.00 launching s 213[m]"
+ LF 7154 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 155 Stab 3079 x= 0.00 launching s 218[m]"
+ LF 7155 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 156 Stab 3079 x= 0.00 launching s 222[m]"
+ LF 7156 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 157 Stab 3079 x= 0.00 launching s 227[m]"
+ LF 7157 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 158 Stab 3079 x= 0.00 launching s 232[m]"
+ LF 7158 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 159 Stab 3079 x= 0.00 launching s 237[m]"
+ LF 7159 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 160 Stab 3079 x= 0.00 launching s 242[m]"
+ LF 7160 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 200 Stab 3079 x= 0.00 remove launching nose"
+ LF 7200 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ BILD BEZ "CSM BA 210 Stab 3079 x= 0.00 additional G_2"
+ LF 7210 ENR #N x #x
+        QUER TYP SIG ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN $ UNIT #AQUP_sig $ 1 cm = ... N/mm2
+  und ; QUER TYP BWS ETYP STAB RTYP NONL SCHR 0.25 DARS DLIN FILL NEIN UNIT #AQUP_sss $ Betonstahlspannungen
+ENDE
+$
+ENDE
+ENDE
+Ãœbersicht Ã¼ber CSM Lastfallnummern (siehe auch CSM Handbuch Kapitel 2)
+---------------------------------------------------------------------
+SummenlastfÃ¤lle mit Gesamtverschiebungen und -SchnittgrÃ¶ÃŸen ab Nr. 4000
+Differenzverschiebungen und Diff.-SchnittgrÃ¶ÃŸen ab Lastfallnummer. 5000
+AQB-Eigenspannungen aus Kriechen und Schwinden  ab Lastfallnummer. 6000
+Ergebnisspannungen der AQB-LFSP-Auswertung      ab Lastfallnummer. 7000
+  [zu verwenden fÃ¼r Vorspann-Normalkraft nach Kriechen+Schwinden:
+   -> WINGRAF Stabnormalkraft LF 7000ff                          ]
+$

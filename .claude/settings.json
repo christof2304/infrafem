@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:*)",
+      "Bash(curl -s http://127.0.0.1:*)",
+      "Bash(curl -sv http://localhost:*)",
+      "Bash(sqlite3 examples/* *)",
+      "Bash(grep -n *)",
+      "Bash(grep -rn *)",
+      "Bash(sed -n *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell(python3 -c *)",
+      "PowerShell(pdftotext *)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  }
+}

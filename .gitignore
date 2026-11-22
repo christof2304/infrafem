@@ -57,3 +57,13 @@ Thumbs.db
 .vscode/
 .idea/
 # Note: editor/stabileo/*.wasm is NOT ignored — needed for Stabileo browser solver
+
+# Claude Code: rechnerspezifische Einstellungen
+.claude/settings.local.json
+
+# Logs
+*.log
+
+# SOFiSTiK Hilfsdateien
+*.#0*
+*.pl#

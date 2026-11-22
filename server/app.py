@@ -1519,7 +1519,7 @@ def cfd_solve3d(body: dict):
     z0 = body.get("z0", 0.1)
     mesh_size = body.get("meshSize", None)
     n_iterations = body.get("nIterations", 500)
-    n_procs = body.get("nProcs", 4)
+    n_procs = body.get("nProcs", 1)
     domain_factor = body.get("domainFactor", 3)
 
     if not buildings and len(footprint) < 3:
@@ -1597,13 +1597,22 @@ def cfd_slice3d(body: dict):
     value = body.get("value", 0)
     field = body.get("field", "pressure")
 
-    if not case_dir or not os.path.isdir(case_dir):
-        raise HTTPException(status_code=400, detail="Invalid case directory")
+    if not case_dir:
+        raise HTTPException(status_code=400, detail="No caseDir in request")
+    if not os.path.isdir(case_dir):
+        raise HTTPException(status_code=400, detail=f"Case dir not found: {case_dir!r}")
+
+    # List what's in the case dir for debugging
+    import pathlib
+    case_path = pathlib.Path(case_dir)
+    top_dirs  = [d.name for d in case_path.iterdir() if d.is_dir()]
 
     from tools.cfd_openfoam import extract_slice
     result = extract_slice(case_dir, plane=plane, value=value, field=field)
     if not result:
-        raise HTTPException(status_code=404, detail="No data for this slice")
+        raise HTTPException(status_code=404,
+            detail=f"No slice data. plane={plane} value={value} field={field}. "
+                   f"Case dirs: {top_dirs}")
     return result
 
 
@@ -1653,7 +1662,7 @@ def cfd_solve3d_stl(body: dict):
     z0 = body.get("z0", 0.03)
     mesh_size = body.get("meshSize", 10)
     domain_factor = body.get("domainFactor", 2)
-    n_procs = body.get("nProcs", 4)
+    n_procs = body.get("nProcs", 1)
     n_iterations = body.get("nIterations", 300)
     rot_x = body.get("rotX", 0)
     rot_y = body.get("rotY", 0)

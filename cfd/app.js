@@ -1324,9 +1324,13 @@ class CFDApp {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ caseDir: this._3dCaseDir, plane, value, field })
             });
-            if (!res.ok) return null;
+            if (!res.ok) {
+                const detail = await res.text();
+                console.error(`slice3d ${plane}=${value} ${field}: ${detail}`);
+                return null;
+            }
             return await res.json();
-        } catch { return null; }
+        } catch (e) { console.error('slice3d fetch error:', e); return null; }
     }
 
     async _update3DStreamlines() {

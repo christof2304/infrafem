@@ -1302,13 +1302,19 @@ def cfd_solve(body: dict):
     # Check WSL + OpenFOAM via script file
     check_script = Path(__file__).resolve().parent.parent / "tests" / "_output" / "check_of.sh"
     check_script.parent.mkdir(parents=True, exist_ok=True)
-    check_script.write_text("#!/bin/bash\nsource /usr/lib/openfoam/openfoam2406/etc/bashrc\nwhich simpleFoam && echo FOUND || echo NOTFOUND\n")
+    # Same lookup order as tools/cfd_openfoam.py; newline="\n" so bash does not choke on CRLF under Windows
+    check_script.write_text(
+        "#!/bin/bash\n"
+        "for _of in /usr/lib/openfoam/openfoam2412/etc/bashrc /usr/lib/openfoam/openfoam2406/etc/bashrc /opt/openfoam*/etc/bashrc; do [ -f \"$_of\" ] && source \"$_of\" && break; done\n"
+        "which simpleFoam && echo FOUND || echo NOTFOUND\n",
+        newline="\n",
+    )
     wsl_check = str(check_script).replace("C:\\", "/mnt/c/").replace("\\", "/")
     try:
         r = sp.run([r"C:\Windows\system32\wsl.exe", "-d", "Ubuntu", "--", "bash", wsl_check],
                     capture_output=True, timeout=15)
         out = r.stdout.decode("utf-8", errors="replace")
-        if "FOUND" not in out:
+        if "FOUND" not in out.split():
             raise HTTPException(status_code=503, detail="OpenFOAM not found in WSL.")
     except (FileNotFoundError, sp.TimeoutExpired):
         raise HTTPException(status_code=503, detail="WSL not available.")
